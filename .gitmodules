@@ -1,0 +1,3 @@
+[submodule "SnkLib_GooglePlus"]
+	path = SnkLib_GooglePlus
+	url = git@bitbucket.org:lyrvnrtn/snklb.winnet.googlepluslibrary.git

@@ -1,0 +1,310 @@
+﻿<Window x:Class="GPlusBrowser.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+        xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions"
+        xmlns:local="clr-namespace:GPlusBrowser"
+        xmlns:localVm="clr-namespace:GPlusBrowser.ViewModel"
+        xmlns:localCtrl="clr-namespace:GPlusBrowser.Controls"
+        Title="MainWindow" Height="600" Width="900">
+    <Grid>
+        <Grid.Resources>
+            <Storyboard x:Key="expandOptionPanelStoryboard">
+                <DoubleAnimation Storyboard.TargetName="optionPanel" Storyboard.TargetProperty="Height" BeginTime="0:0:0" From="0" To="200" Duration="0:0:0.4" AccelerationRatio="0.01" DecelerationRatio="0.99" />
+            </Storyboard>
+            <Storyboard x:Key="dexpandOptionPanelStoryboard">
+                <DoubleAnimation Storyboard.TargetName="optionPanel" Storyboard.TargetProperty="Height" BeginTime="0:0:0" From="200" To="0" Duration="0:0:0.4" AccelerationRatio="0.01" DecelerationRatio="0.99" />
+            </Storyboard>
+            <localVm:SettingStatusToBooleanConverter x:Key="statusToBooleanConverter" />
+        </Grid.Resources>
+        <localCtrl:ItemSelecter ItemsSource="{Binding Pages}" SelectedIndex="{Binding SelectedPageIndex}">
+            <localCtrl:ItemSelecter.Resources>
+                <ControlTemplate x:Key="accountIconButtonTemplate" TargetType="{x:Type Button}">
+                    <Image Source="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}, Path=Content}" />
+                </ControlTemplate>
+                <DataTemplate DataType="{x:Type localVm:LoginerViewModel}">
+                    <DataTemplate.Resources>
+                        <localVm:LoginSequenceStatusToButtonText x:Key="loginSequenceStatusToButtonText" />
+                    </DataTemplate.Resources>
+                    <Grid Background="Black">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="auto" />
+                            <RowDefinition Height="auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="auto" />
+                            <ColumnDefinition Width="250" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Border Width="120" Height="120" Grid.Row="1" Grid.Column="1" Margin="0,0,20,0">
+                            <Image Source="{Binding IconImageUrl}" />
+                        </Border>
+                        <Grid Grid.Row="1" Grid.Column="2" VerticalAlignment="Top">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="30" />
+                                <RowDefinition Height="30" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <TextBox Grid.Row="0" VerticalAlignment="Top" Text="{Binding EmailAddress}" local:PlaceHolderBehavior.PlaceHolderText="メールアドレス" />
+                            <TextBox Grid.Row="1" VerticalAlignment="Top" Text="{Binding Password}" local:PlaceHolderBehavior.PlaceHolderText="パスワード" />
+                            <TextBlock Grid.Row="2" Text="{Binding NotificationText}" Foreground="Red" TextWrapping="Wrap" />
+                        </Grid>
+                        <StackPanel Grid.Row="2" Grid.Column="2" VerticalAlignment="Top" HorizontalAlignment="Right" Orientation="Horizontal">
+                            <Button Height="25" Margin="0,5,5,0" Padding="10,2,10,2" Command="{Binding LoginCommand}" Content="{Binding Status,Converter={StaticResource loginSequenceStatusToButtonText}}" />
+                            <Button Height="25" Margin="0,5,0,0" Padding="10,2,10,2" Command="{Binding CancelCommand}">キャンセル</Button>
+                        </StackPanel>
+                    </Grid>
+                </DataTemplate>
+                <DataTemplate DataType="{x:Type localVm:AccountManagerViewModel}">
+                    <Grid>
+                        <Grid.Resources>
+                            <localVm:LoginSequenceStatusToVisibility x:Key="statusToVisibility" />
+                        </Grid.Resources>
+                        <DockPanel>
+                            <Button DockPanel.Dock="Bottom" Content="AddAccount" Command="{Binding OpenAddAccountPanelCommand}" />
+                            <ItemsControl ItemsSource="{Binding Accounts}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel IsItemsHost="True" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type localVm:AccountPanelViewModel}">
+                                        <StackPanel Margin="10,10,15,15">
+                                            <StackPanel Orientation="Horizontal">
+                                                <Border Width="35" Height="35" BorderBrush="White" Background="White" BorderThickness="0">
+                                                    <Image Margin="0" HorizontalAlignment="Left" VerticalAlignment="Top" Source="{Binding UserIconUrl}" />
+                                                    <Border.Effect>
+                                                        <DropShadowEffect Color="Black" Direction="315" Opacity="0.3" BlurRadius="5" ShadowDepth="0" />
+                                                    </Border.Effect>
+                                                </Border>
+                                                <Label Padding="0" Margin="10,0,0,0" VerticalContentAlignment="Center" Content="{Binding UserName}" FontSize="18" FontWeight="SemiBold" />
+                                            </StackPanel>
+                                            <WrapPanel Margin="15,10,0,0">
+                                                <Button Padding="8,5,8,5" Command="{Binding OpenStreamPanelCommand}">ストリームを開く</Button>
+                                            </WrapPanel>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </DockPanel>
+                        <ContentPresenter Content="{Binding Loginer}" Height="280" Visibility="{Binding Status, Converter={StaticResource statusToVisibility}}" />
+                    </Grid>
+                </DataTemplate>
+                <DataTemplate DataType="{x:Type localVm:AccountViewModel}">
+                    <Grid>
+                        <Button Width="35" Height="35" Margin="10" HorizontalAlignment="Left" VerticalAlignment="Top" Template="{StaticResource accountIconButtonTemplate}" Content="{Binding AccountIconUrl}" Command="{Binding BackToAccountManagerCommand}">
+                            <Button.Effect>
+                                <DropShadowEffect Color="Black" Direction="315" Opacity="0.3" BlurRadius="5" ShadowDepth="0" />
+                            </Button.Effect>
+                        </Button>
+                        <ItemsControl Margin="55,10,0,0" ItemsSource="{Binding Stream.DisplayStreams, Mode=OneWay}">
+                            <ItemsControl.Resources>
+                                <ControlTemplate x:Key="treeViewRootTemplate" TargetType="{x:Type TreeView}">
+                                    <Grid Background="Gray">
+                                        <Rectangle VerticalAlignment="Bottom" Height="20">
+                                            <Rectangle.Fill>
+                                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                    <GradientStop Color="#00000000" Offset="0" />
+                                                    <GradientStop Color="#22000000" Offset="0.7" />
+                                                    <GradientStop Color="#66000000" Offset="1" />
+                                                </LinearGradientBrush>
+                                            </Rectangle.Fill>
+                                        </Rectangle>
+                                        <ScrollViewer Padding="0,8,0,0" Background="{TemplateBinding Background}">
+                                            <ItemsPresenter />
+                                        </ScrollViewer>
+                                        <!--メニューバーの影-->
+                                        <Rectangle Name="menuShaddow" VerticalAlignment="Top" Height="3">
+                                            <Rectangle.Fill>
+                                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                    <GradientStop Color="#30000000" Offset="0" />
+                                                    <GradientStop Color="#10000000" Offset="0.5" />
+                                                    <GradientStop Color="#00000000" Offset="1" />
+                                                </LinearGradientBrush>
+                                            </Rectangle.Fill>
+                                        </Rectangle>
+                                    </Grid>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="HasItems" Value="true">
+                                            <!--<Setter TargetName="itemArrayShadow" Property="Visibility" Value="Visible" />-->
+                                            <Setter TargetName="menuShaddow" Property="Visibility" Value="Visible" />
+                                        </Trigger>
+                                        <Trigger Property="HasItems" Value="false">
+                                            <!--<Setter TargetName="itemArrayShadow" Property="Visibility" Value="Collapsed" />-->
+                                            <Setter TargetName="menuShaddow" Property="Visibility" Value="Collapsed" />
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                                <ControlTemplate x:Key="postItemTemplate" TargetType="{x:Type TreeViewItem}" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+                                    <Grid Margin="0">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition />
+                                        </Grid.RowDefinitions>
+                                        <ContentPresenter Content="{TemplateBinding HeaderedContentControl.Header}" ContentTemplate="{TemplateBinding HeaderedContentControl.HeaderTemplate}" ContentStringFormat="{TemplateBinding HeaderedItemsControl.HeaderStringFormat}" ContentSource="Header" Name="PART_Header" HorizontalAlignment="{TemplateBinding Control.HorizontalContentAlignment}" SnapsToDevicePixels="{TemplateBinding UIElement.SnapsToDevicePixels}" />
+                                        <ItemsPresenter Name="ItemsHost" Margin="15,0,0,0" Grid.Row="1" />
+                                    </Grid>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="TreeViewItem.IsExpanded">
+                                            <Setter TargetName="ItemsHost" Property="UIElement.Visibility" Value="{x:Static Visibility.Collapsed}" />
+                                            <Trigger.Value>
+                                                <s:Boolean>False</s:Boolean>
+                                            </Trigger.Value>
+                                        </Trigger>
+                                        <Trigger Property="UIElement.IsEnabled">
+                                            <Setter Property="TextElement.Foreground">
+                                                <Setter.Value>
+                                                    <DynamicResource ResourceKey="{x:Static SystemColors.GrayTextBrushKey}" />
+                                                </Setter.Value>
+                                            </Setter>
+                                            <Trigger.Value>
+                                                <s:Boolean>False</s:Boolean>
+                                            </Trigger.Value>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                                <DataTemplate DataType="{x:Type localVm:CommentViewModel}">
+                                    <Border BorderBrush="LightGray" BorderThickness="0,1,0,0" Padding="5">
+                                        <DockPanel Margin="0" Focusable="False">
+                                            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0">
+                                                <ContentControl Focusable="False" Width="25" Height="25">
+                                                    <Image Source="{Binding OwnerIconUrl}" />
+                                                    <ContentControl.Effect>
+                                                        <DropShadowEffect Color="Black" Direction="315" Opacity="0.3" BlurRadius="5" ShadowDepth="0" />
+                                                    </ContentControl.Effect>
+                                                </ContentControl>
+                                                <TextBlock Margin="5,0,0,0" VerticalAlignment="Center" Text="{Binding OwnerName}" />
+                                            </StackPanel>
+                                            <TextBlock Margin="0,3,0,3" local:InlineBehavior.Inline="{Binding PostContentInline}" TextWrapping="Wrap" />
+                                        </DockPanel>
+                                    </Border>
+                                </DataTemplate>
+                                <DataTemplate DataType="{x:Type localVm:ActivityViewModel}">
+                                    <Border BorderBrush="LightGray" BorderThickness="0,1,0,0" Padding="5">
+                                        <DockPanel Margin="0" Focusable="False">
+                                            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0">
+                                                <ContentControl Focusable="False" Width="25" Height="25">
+                                                    <Image Source="{Binding IconUrl}" />
+                                                    <ContentControl.Effect>
+                                                        <DropShadowEffect Color="Black" Direction="315" Opacity="0.3" BlurRadius="5" ShadowDepth="0" />
+                                                    </ContentControl.Effect>
+                                                </ContentControl>
+                                                <TextBlock Margin="5,0,0,0" VerticalAlignment="Center" Text="{Binding PostUserName}" />
+                                                <TextBlock Margin="5,0,0,0" VerticalAlignment="Center" Text="{Binding PostDate, StringFormat='- {0} -'}" />
+                                            </StackPanel>
+                                            <TextBlock DockPanel.Dock="Top" Margin="0,3,0,3" local:InlineBehavior.Inline="{Binding PostContentInline}" TextWrapping="Wrap" />
+                                            <localCtrl:CommentListBox Margin="15,0,0,0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" />
+                                            <!--<ItemsControl Margin="15,0,0,0" ItemsSource="{Binding Comments}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <StackPanel />
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                            </ItemsControl>-->
+                                        </DockPanel>
+                                    </Border>
+                                </DataTemplate>
+                                <DataTemplate DataType="{x:Type localVm:CircleStreamViewModel}">
+                                    <DockPanel>
+                                        <Label Content="{Binding CircleName}" FontSize="16" DockPanel.Dock="Top" />
+                                        <TreeView Focusable="False" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                              ScrollViewer.VerticalScrollBarVisibility="Visible"
+                                              ItemsSource="{Binding Activities}"
+                                              Template="{StaticResource treeViewRootTemplate}">
+                                            <TreeView.ItemContainerStyle>
+                                                <Style TargetType="TreeViewItem">
+                                                    <Setter Property="Template" Value="{StaticResource postItemTemplate}" />
+                                                    <!--<Setter Property="HeaderTemplate" Value="{StaticResource activityTemplate}" />-->
+                                                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                                </Style>
+                                            </TreeView.ItemContainerStyle>
+                                        </TreeView>
+                                    </DockPanel>
+                                </DataTemplate>
+                                <DataTemplate DataType="{x:Type localVm:BaseStreamViewModel}">
+                                    <DataTemplate.Resources>
+                                        <DataTemplate DataType="{x:Type localVm:CircleStreamViewModel}">
+                                            <DockPanel>
+                                                <TreeView Focusable="False" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                                      ScrollViewer.VerticalScrollBarVisibility="Visible"
+                                                      ItemsSource="{Binding Activities}"
+                                                      Template="{StaticResource treeViewRootTemplate}">
+                                                    <TreeView.ItemContainerStyle>
+                                                        <Style TargetType="TreeViewItem">
+                                                            <Setter Property="Template" Value="{StaticResource postItemTemplate}" />
+                                                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                                        </Style>
+                                                    </TreeView.ItemContainerStyle>
+                                                </TreeView>
+                                            </DockPanel>
+                                        </DataTemplate>
+                                    </DataTemplate.Resources>
+                                    <DockPanel>
+                                        <Label Content="{Binding CircleName}" FontSize="16" DockPanel.Dock="Top" />
+                                        <localCtrl:ItemSelecter ItemsSource="{Binding DisplayStreams}" SelectedIndex="{Binding SelectedCircleIndex}" />
+                                    </DockPanel>
+                                </DataTemplate>
+                            </ItemsControl.Resources>
+                            <ItemsControl.Template>
+                                <ControlTemplate TargetType="{x:Type ItemsControl}">
+                                    <Border Background="{TemplateBinding Background}"
+                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                        BorderThickness="{TemplateBinding BorderThickness}">
+                                        <ScrollViewer VerticalScrollBarVisibility="Disabled" HorizontalScrollBarVisibility="Visible">
+                                            <ItemsPresenter />
+                                        </ScrollViewer>
+                                    </Border>
+                                </ControlTemplate>
+                            </ItemsControl.Template>
+                            <ItemsControl.ItemContainerStyle>
+                                <Style TargetType="ContentPresenter">
+                                    <Setter Property="localCtrl:ColumnPanel.Order" Value="{Binding Order}" />
+                                    <Setter Property="Width" Value="300" />
+                                    <Setter Property="HorizontalAlignment" Value="Left" />
+                                </Style>
+                            </ItemsControl.ItemContainerStyle>
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <localCtrl:ColumnPanel IsItemsHost="True" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                        <StackPanel Orientation="Horizontal" Margin="0,65,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" DataContext="{Binding CircleSelecter}">
+                            <ListBox Name="circleSelecterList" Margin="0" SelectedIndex="{Binding SelectedCircleIndex}" ItemsSource="{Binding Items}">
+                                <ListBox.ItemContainerStyle>
+                                    <Style TargetType="ListBoxItem">
+                                        <Setter Property="Content" Value="{Binding CircleName}" />
+                                        <Setter Property="Padding" Value="8,5,40,5" />
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+                            </ListBox>
+                            <StackPanel Margin="0,15,0,0">
+                                <Button Width="35" Height="35" Margin="0,0,0,10" />
+                                <Button Width="35" Height="35" Margin="0,0,0,10" />
+                            </StackPanel>
+                            <StackPanel.RenderTransform>
+                                <TranslateTransform>
+                                    <TranslateTransform.X>
+                                        <MultiBinding Mode="OneWay">
+                                            <MultiBinding.Converter>
+                                                <localVm:circleSelecterBoolToLeftDouble />
+                                            </MultiBinding.Converter>
+                                            <MultiBinding.Bindings>
+                                                <Binding Path="DisplayCircleSelecter" />
+                                                <Binding ElementName="circleSelecterList" Path="ActualWidth" />
+                                            </MultiBinding.Bindings>
+                                        </MultiBinding>
+                                    </TranslateTransform.X>
+                                </TranslateTransform>
+                            </StackPanel.RenderTransform>
+                        </StackPanel>
+                    </Grid>
+                </DataTemplate>
+            </localCtrl:ItemSelecter.Resources>
+        </localCtrl:ItemSelecter>
+    </Grid>
+</Window>
