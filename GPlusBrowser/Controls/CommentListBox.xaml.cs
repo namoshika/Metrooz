@@ -143,8 +143,8 @@ namespace GPlusBrowser.Controls
                 if (child == null)
                     return base.ArrangeOverride(arrangeBounds);
                 extendHeight += child.DesiredSize.Height;
-                if (i <= 1 || i <= 2 && Items.Count <= 3)
-                    viewportHeight = extendHeight;
+                if (i >= Items.Count - 2)
+                    viewportHeight += child.DesiredSize.Height;
             }
 
             var flg = ExtendHeight != extendHeight || ViewportHeight != viewportHeight;
