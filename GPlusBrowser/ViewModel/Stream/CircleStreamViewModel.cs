@@ -53,6 +53,9 @@ namespace GPlusBrowser.ViewModel
         public override void Dispose()
         {
             Circle = null;
+            foreach (var item in _activities)
+                item.Dispose();
+            _activities.Clear();
         }
         protected void OnActivitiesCollectionChanged(
             object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)

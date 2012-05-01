@@ -11,7 +11,7 @@ namespace GPlusBrowser.ViewModel
 {
     using GPlusBrowser.Model;
 
-    public class ActivityViewModel : ViewModelBase
+    public class ActivityViewModel : ViewModelBase, IDisposable
     {
         public ActivityViewModel(Activity activity, Dispatcher uiThreadDispatcher)
             : base(uiThreadDispatcher)
@@ -108,6 +108,10 @@ namespace GPlusBrowser.ViewModel
                 _postContentInline = value;
                 OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("PostContentInline"));
             }
+        }
+        public void Dispose()
+        {
+            _activity.Updated -= _activity_Refreshed;
         }
 
         async void _activity_Refreshed(object sender, EventArgs e)
