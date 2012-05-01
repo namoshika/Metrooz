@@ -74,7 +74,7 @@ namespace GPlusBrowser.Model
             switch (comment.Status)
             {
                 case PostStatusType.Removed:
-                    var item = Comments.FirstOrDefault(cmme => comment.Id == comment.Id);
+                    var item = Comments.FirstOrDefault(cmme => cmme.CommentInfo.Id == comment.Id);
                     if (item != null)
                         Comments.Remove(item);
                     break;
