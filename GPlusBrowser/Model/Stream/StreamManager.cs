@@ -31,9 +31,9 @@ namespace GPlusBrowser.Model
                 if (_selectedCircleIndex == value)
                     return;
                 _selectedCircleIndex = value;
-                if (_circleStreams.Count >= 0 && _selectedCircleIndex >= 0)
+                if (_displayStreams.Count >= 0 && _selectedCircleIndex >= 0)
                 {
-                    var selectedStream = _circleStreams[_selectedCircleIndex];
+                    var selectedStream = _displayStreams[_selectedCircleIndex];
                     if (!selectedStream.IsRefreshed)
                         selectedStream.Refresh();
                 }
@@ -68,11 +68,8 @@ namespace GPlusBrowser.Model
                     _displayStreams.Clear();
                     OnChangedDisplayStreams(new NotifyCollectionChangedEventArgs(
                         NotifyCollectionChangedAction.Reset));
-                    foreach (var item in _circleStreams.Skip(1).Take(3))
-                    {
+                    foreach (var item in _circleStreams)
                         _displayStreams.Add(item);
-                        item.Refresh();
-                    }
                 }
                 IsInitialized = true;
             }

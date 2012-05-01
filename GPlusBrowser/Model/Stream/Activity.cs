@@ -12,10 +12,10 @@ namespace GPlusBrowser.Model
     {
         public Activity(ActivityInfo info)
         {
+            Comments = new ObservableCollection<Comment>();
             _info = info;
             _info.Refreshed += _info_Refreshed;
             _commentObj = _info.GetComments(false, true).Subscribe(_info_comment_OnNext);
-            Comments = new ObservableCollection<Comment>();
             Update(_info);
         }
         ActivityInfo _info;

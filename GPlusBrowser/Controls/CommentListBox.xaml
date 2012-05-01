@@ -6,15 +6,60 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
-    <DockPanel>
-        <Button DockPanel.Dock="Top" Height="25" />
-        <Button DockPanel.Dock="Bottom" Height="25" />
-        <ItemsControl Name="itemContainer" ItemsSource="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type localCtrl:CommentListBox}}, Mode=OneWay}">
-            <ItemsControl.ItemsPanel>
+    <UserControl.Resources>
+        <localCtrl:BoolToVisibility x:Key="boolToVisibilityConverter" />
+        <localCtrl:BoolBoolToVisibility x:Key="boolBoolToVisibilityConverter" />
+        <localCtrl:BoolIntToString x:Key="boolIntToStringConverter" />
+    </UserControl.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="auto" />
+            <RowDefinition Height="auto" />
+        </Grid.RowDefinitions>
+        <Button Grid.Row="0" Height="30" Click="ExpandButton_Click" FontWeight="Bold" FontSize="13" Visibility="{Binding Expandable, ElementName=itemContainer, Converter={StaticResource boolToVisibilityConverter}}">
+            <Button.Content>
+                <MultiBinding Converter="{StaticResource boolIntToStringConverter}">
+                    <Binding Path="IsExpand" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type localCtrl:CommentListBox}}" />
+                    <Binding Path="CommentCount" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type localCtrl:CommentListBox}}" />
+                </MultiBinding>
+            </Button.Content>
+            <Button.Template>
+                <ControlTemplate TargetType="{x:Type Button}">
+                    <Border BorderBrush="LightGray" BorderThickness="0,1,0,0">
+                        <Grid Background="#f0f0f0">
+                            <ContentPresenter Margin="10,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center" />
+                        </Grid>
+                    </Border>
+                </ControlTemplate>
+            </Button.Template>
+        </Button>
+        <localCtrl:ExListBox x:Name="itemContainer" Grid.Row="1" Margin="0,0,5,0">
+            <localCtrl:ExListBox.ItemsPanel>
                 <ItemsPanelTemplate>
                     <StackPanel VerticalAlignment="Bottom" HorizontalAlignment="Stretch" IsItemsHost="True" />
                 </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-        </ItemsControl>
-    </DockPanel>
+            </localCtrl:ExListBox.ItemsPanel>
+        </localCtrl:ExListBox>
+        <Grid Grid.Row="2" Margin="0,8,5,5">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="auto" />
+            </Grid.ColumnDefinitions>
+            <TextBox Grid.Column="0" Height="28" BorderBrush="LightGray" BorderThickness="1" VerticalAlignment="Center" Margin="0" localCtrl:PlaceHolderBehavior.PlaceHolderText="コメントを追加..." />
+            <Button Grid.Column="1" Height="28" Width="28" Margin="5,0,0,0" Click="ExpandButton_Click">
+                <Button.Visibility>
+                    <MultiBinding Converter="{StaticResource boolBoolToVisibilityConverter}">
+                        <Binding RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type localCtrl:CommentListBox}}" Path="IsExpand" Mode="OneWay" />
+                        <Binding ElementName="itemContainer" Path="Expandable" />
+                    </MultiBinding>
+                </Button.Visibility>
+            </Button>
+        </Grid>
+        <StackPanel Grid.Row="3" Margin="0,0,5,5" Orientation="Horizontal">
+            <Button Padding="10,3,10,3" Margin="0,0,8,0">コメントを投稿</Button>
+            <Button Padding="10,3,10,3" Margin="0,0,8,0">キャンセル</Button>
+        </StackPanel>
+    </Grid>
 </UserControl>

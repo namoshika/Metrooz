@@ -16,11 +16,8 @@ namespace GPlusBrowser.ViewModel
             : base(uiThreadDispatcher)
         {
             Activities = new DispatchObservableCollection<ActivityViewModel>(uiThreadDispatcher);
-            if (circle != null)
-            {
-                Circle = circle;
-                Order = order;
-            }
+            Order = order;
+            Circle = circle;
         }
         Stream _circle;
         DispatchObservableCollection<ActivityViewModel> _activities;
@@ -66,7 +63,15 @@ namespace GPlusBrowser.ViewModel
                     for (var i = 0; i < e.NewItems.Count; i++)
                     {
                         var viewModel = new ActivityViewModel((Activity)e.NewItems[i], UiThreadDispatcher);
-                        Activities.Insert(Activities.Count - (e.NewStartingIndex + i), viewModel);
+                        try
+                        {
+                            Activities.Insert(Activities.Count - (e.NewStartingIndex + i), viewModel);
+                        }
+                        catch (ArgumentOutOfRangeException)
+                        {
+                            if (System.Diagnostics.Debugger.IsAttached)
+                                System.Diagnostics.Debugger.Break();
+                        }
                     }
                     break;
                 case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:

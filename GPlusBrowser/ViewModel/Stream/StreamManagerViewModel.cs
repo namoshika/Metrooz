@@ -16,21 +16,24 @@ namespace GPlusBrowser.ViewModel
         {
             _streamManagerModel = streamManager;
             _streamManagerModel.ChangedDisplayStreams += _stream_ChangedDisplayStreams;
-            _baseStream = new BaseStreamViewModel(streamManager, uiThreadDispatcher);
+            _streamManagerModel.ChangedSelectedCircleIndex += _streamManagerModel_ChangedSelectedCircleIndex;
             _displayStreams = new DispatchObservableCollection<StreamViewModel>(uiThreadDispatcher);
-            _displayStreams.Add(_baseStream);
+            _selectedCircleIndex = -1;
         }
+        int _selectedCircleIndex;
         StreamManager _streamManagerModel;
-        BaseStreamViewModel _baseStream;
         DispatchObservableCollection<StreamViewModel> _displayStreams;
 
-        public BaseStreamViewModel BaseStream
+        public int SelectedCircleIndex
         {
-            get { return _baseStream; }
+            get { return _selectedCircleIndex; }
             set
             {
-                _baseStream = value;
-                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("BaseStream"));
+                if (_selectedCircleIndex == value)
+                    return;
+                _selectedCircleIndex = value;
+                _streamManagerModel.SelectedCircleIndex = value;
+                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("SelectedCircleIndex"));
             }
         }
         public DispatchObservableCollection<StreamViewModel> DisplayStreams
@@ -48,8 +51,7 @@ namespace GPlusBrowser.ViewModel
                 item.Dispose();
         }
 
-        void _stream_ChangedDisplayStreams(
-            object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        void _stream_ChangedDisplayStreams(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
             switch (e.Action)
             {
@@ -78,11 +80,13 @@ namespace GPlusBrowser.ViewModel
                         item.Order -= e.NewItems.Count;
                     break;
                 case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:
-                    var tmp = DisplayStreams[0];
                     DisplayStreams.Clear();
-                    DisplayStreams.Add(tmp);
                     break;
             }
+        }
+        void _streamManagerModel_ChangedSelectedCircleIndex(object sender, EventArgs e)
+        {
+            SelectedCircleIndex = _streamManagerModel.SelectedCircleIndex;
         }
     }
 }

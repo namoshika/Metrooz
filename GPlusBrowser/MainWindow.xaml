@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:GPlusBrowser"
         xmlns:localVm="clr-namespace:GPlusBrowser.ViewModel"
         xmlns:localCtrl="clr-namespace:GPlusBrowser.Controls"
-        Title="MainWindow" Height="600" Width="900">
+        Title="MainWindow" Height="600" Width="500">
     <Grid>
         <Grid.Resources>
             <Storyboard x:Key="expandOptionPanelStoryboard">
@@ -101,8 +101,8 @@
                                 <DropShadowEffect Color="Black" Direction="315" Opacity="0.3" BlurRadius="5" ShadowDepth="0" />
                             </Button.Effect>
                         </Button>
-                        <ItemsControl Margin="55,10,0,0" ItemsSource="{Binding Stream.DisplayStreams, Mode=OneWay}">
-                            <ItemsControl.Resources>
+                        <localCtrl:ItemSelecter Margin="55,10,0,0" ItemsSource="{Binding Stream.DisplayStreams, Mode=OneWay}" SelectedIndex="{Binding Stream.SelectedCircleIndex}">
+                            <localCtrl:ItemSelecter.Resources>
                                 <ControlTemplate x:Key="treeViewRootTemplate" TargetType="{x:Type TreeView}">
                                     <Grid Background="Gray">
                                         <Rectangle VerticalAlignment="Bottom" Height="20">
@@ -197,7 +197,7 @@
                                                 <TextBlock Margin="5,0,0,0" VerticalAlignment="Center" Text="{Binding PostDate, StringFormat='- {0} -'}" />
                                             </StackPanel>
                                             <TextBlock DockPanel.Dock="Top" Margin="0,3,0,3" local:InlineBehavior.Inline="{Binding PostContentInline}" TextWrapping="Wrap" />
-                                            <localCtrl:CommentListBox Margin="15,0,0,0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" />
+                                            <localCtrl:CommentListBox Comments="{Binding Comments}" Margin="15,0,0,0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" />
                                             <!--<ItemsControl Margin="15,0,0,0" ItemsSource="{Binding Comments}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
                                                 <ItemsControl.ItemsPanel>
                                                     <ItemsPanelTemplate>
@@ -213,8 +213,7 @@
                                         <Label Content="{Binding CircleName}" FontSize="16" DockPanel.Dock="Top" />
                                         <TreeView Focusable="False" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                               ScrollViewer.VerticalScrollBarVisibility="Visible"
-                                              ItemsSource="{Binding Activities}"
-                                              Template="{StaticResource treeViewRootTemplate}">
+                                              ItemsSource="{Binding Activities}">
                                             <TreeView.ItemContainerStyle>
                                                 <Style TargetType="TreeViewItem">
                                                     <Setter Property="Template" Value="{StaticResource postItemTemplate}" />
@@ -225,54 +224,8 @@
                                         </TreeView>
                                     </DockPanel>
                                 </DataTemplate>
-                                <DataTemplate DataType="{x:Type localVm:BaseStreamViewModel}">
-                                    <DataTemplate.Resources>
-                                        <DataTemplate DataType="{x:Type localVm:CircleStreamViewModel}">
-                                            <DockPanel>
-                                                <TreeView Focusable="False" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                                      ScrollViewer.VerticalScrollBarVisibility="Visible"
-                                                      ItemsSource="{Binding Activities}"
-                                                      Template="{StaticResource treeViewRootTemplate}">
-                                                    <TreeView.ItemContainerStyle>
-                                                        <Style TargetType="TreeViewItem">
-                                                            <Setter Property="Template" Value="{StaticResource postItemTemplate}" />
-                                                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                                                        </Style>
-                                                    </TreeView.ItemContainerStyle>
-                                                </TreeView>
-                                            </DockPanel>
-                                        </DataTemplate>
-                                    </DataTemplate.Resources>
-                                    <DockPanel>
-                                        <Label Content="{Binding CircleName}" FontSize="16" DockPanel.Dock="Top" />
-                                        <localCtrl:ItemSelecter ItemsSource="{Binding DisplayStreams}" SelectedIndex="{Binding SelectedCircleIndex}" />
-                                    </DockPanel>
-                                </DataTemplate>
-                            </ItemsControl.Resources>
-                            <ItemsControl.Template>
-                                <ControlTemplate TargetType="{x:Type ItemsControl}">
-                                    <Border Background="{TemplateBinding Background}"
-                                        BorderBrush="{TemplateBinding BorderBrush}"
-                                        BorderThickness="{TemplateBinding BorderThickness}">
-                                        <ScrollViewer VerticalScrollBarVisibility="Disabled" HorizontalScrollBarVisibility="Visible">
-                                            <ItemsPresenter />
-                                        </ScrollViewer>
-                                    </Border>
-                                </ControlTemplate>
-                            </ItemsControl.Template>
-                            <ItemsControl.ItemContainerStyle>
-                                <Style TargetType="ContentPresenter">
-                                    <Setter Property="localCtrl:ColumnPanel.Order" Value="{Binding Order}" />
-                                    <Setter Property="Width" Value="300" />
-                                    <Setter Property="HorizontalAlignment" Value="Left" />
-                                </Style>
-                            </ItemsControl.ItemContainerStyle>
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <localCtrl:ColumnPanel IsItemsHost="True" />
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                        </ItemsControl>
+                            </localCtrl:ItemSelecter.Resources>
+                        </localCtrl:ItemSelecter>
                         <StackPanel Orientation="Horizontal" Margin="0,65,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" DataContext="{Binding CircleSelecter}">
                             <ListBox Name="circleSelecterList" Margin="0" SelectedIndex="{Binding SelectedCircleIndex}" ItemsSource="{Binding Items}">
                                 <ListBox.ItemContainerStyle>
