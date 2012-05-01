@@ -22,7 +22,7 @@ namespace GPlusBrowser.Controls
     {
         public CommentListBox()
         {
-            ExpandAnimationDuration = new Duration(TimeSpan.FromMilliseconds(300));
+            ExpandAnimationDuration = new Duration(TimeSpan.FromMilliseconds(200));
             InitializeComponent();
             itemContainer.ItemContainerGenerator.ItemsChanged += ItemContainerGenerator_ItemsChanged;
             itemContainer.ChangedStatus += itemContainer_ChangedStatus;
@@ -62,7 +62,7 @@ namespace GPlusBrowser.Controls
         public Duration ExpandAnimationDuration { get; set; }
 
         void ExpandButton_Click(object sender, RoutedEventArgs e) { IsExpand = !IsExpand; }
-        void itemContainer_ChangedStatus(object sender, EventArgs e) { StartExpandAnimation(this, ExpandAnimationDuration, IsExpand); }
+        void itemContainer_ChangedStatus(object sender, EventArgs e) { itemContainer.StartExpandAnimation(IsExpand); }
         void ItemContainerGenerator_ItemsChanged(object sender, System.Windows.Controls.Primitives.ItemsChangedEventArgs e)
         {
             CommentCount = itemContainer.Items.Count;
@@ -99,7 +99,7 @@ namespace GPlusBrowser.Controls
         static void Changed_IsExpand(object sender, DependencyPropertyChangedEventArgs e)
         {
             var element = (CommentListBox)sender;
-            StartExpandAnimation(element, element.ExpandAnimationDuration, (bool)e.NewValue);
+            element.itemContainer.StartExpandAnimation((bool)e.NewValue);
         }
         static void Changed_Comments(object sender, DependencyPropertyChangedEventArgs e)
         {
@@ -116,47 +116,13 @@ namespace GPlusBrowser.Controls
                     break;
             }
         }
-        static void StartExpandAnimation(CommentListBox element, Duration duration, bool isExpand)
-        {
-            if (isExpand)
-            {
-                element.itemContainer.BeginAnimation(
-                    CommentListBox.HeightProperty,
-                    new DoubleAnimation()
-                    {
-                        From = element.itemContainer.ActualHeight,
-                        To = element.itemContainer.ExtendHeight,
-                        Duration = duration,
-                        AccelerationRatio = 0.5,
-                        DecelerationRatio = 0.5,
-                    },
-                    HandoffBehavior.SnapshotAndReplace);
-            }
-            else
-            {
-                element.itemContainer.BeginAnimation(
-                    CommentListBox.HeightProperty,
-                    new DoubleAnimation()
-                    {
-                        From = element.itemContainer.ActualHeight,
-                        To = element.itemContainer.ViewportHeight,
-                        Duration = duration,
-                        AccelerationRatio = 0.5,
-                        DecelerationRatio = 0.5,
-                    },
-                    HandoffBehavior.SnapshotAndReplace);
-            }
-        }
     }
     public enum CommentListBoxMode { View, Write, Sending }
 
     public class ExListBox : ItemsControl
     {
-        public ExListBox()
-        {
-            ItemContainerGenerator.ItemsChanged += ItemContainerGenerator_ItemsChanged;
-        }
-
+        public ExListBox() { ItemContainerGenerator.ItemsChanged += ItemContainerGenerator_ItemsChanged; }
+        bool _measureExtendHeightFlg = true;
         public bool Expandable
         {
             get { return (bool)GetValue(ExpandableProperty); }
@@ -173,36 +139,101 @@ namespace GPlusBrowser.Controls
             set { SetValue(ViewportHeightProperty, value); }
         }
 
+        public void StartExpandAnimation(bool isExpand)
+        {
+            if (isExpand)
+            {
+                BeginAnimation(
+                    CommentListBox.HeightProperty,
+                    new DoubleAnimation(ActualHeight, ExtendHeight, new Duration(TimeSpan.FromMilliseconds(250)))
+                    {
+                        AccelerationRatio = 0.1,
+                        DecelerationRatio = 0.9,
+                    }, HandoffBehavior.SnapshotAndReplace);
+            }
+            else
+            {
+                BeginAnimation(
+                    CommentListBox.HeightProperty,
+                    new DoubleAnimation(ActualHeight, ViewportHeight, new Duration(TimeSpan.FromMilliseconds(250)))
+                    {
+                        AccelerationRatio = 0.1,
+                        DecelerationRatio = 0.9,
+                    }, HandoffBehavior.SnapshotAndReplace);
+            }
+        }
         protected override Size ArrangeOverride(Size arrangeBounds)
         {
             var size = base.ArrangeOverride(arrangeBounds);
 
-            var viewportHeight = 0.0;
-            var extendHeight = 0.0;
-            FrameworkElement child;
-            for (var i = 0; i < Items.Count; i++)
+            if (_measureExtendHeightFlg)
             {
-                child = (FrameworkElement)ItemContainerGenerator.ContainerFromIndex(i);
-                if (child == null)
-                    //childがnullだったら今回は諦めて次回以降に計算する
-                    return size;
+                var viewportHeight = 0.0;
+                var extendHeight = 0.0;
+                FrameworkElement child;
+                for (var i = 0; i < Items.Count; i++)
+                {
+                    child = (FrameworkElement)ItemContainerGenerator.ContainerFromIndex(i);
+                    if (child == null)
+                        //childがnullだったら今回は諦めて次回以降に計算する
+                        return size;
 
-                extendHeight += child.DesiredSize.Height;
-                if (i >= Items.Count - 2)
-                    viewportHeight += child.DesiredSize.Height;
+                    extendHeight += child.DesiredSize.Height;
+                    if (i >= Items.Count - 2 || Items.Count <= 3)
+                        viewportHeight += child.DesiredSize.Height;
+                }
+
+                var flg = ExtendHeight != extendHeight || ViewportHeight != viewportHeight;
+                ExtendHeight = extendHeight;
+                ViewportHeight = viewportHeight;
+                Expandable = extendHeight != viewportHeight;
+                _measureExtendHeightFlg = false;
+                if (flg)
+                    OnChangedStatus(new EventArgs());
             }
-
-            var flg = ExtendHeight != extendHeight || ViewportHeight != viewportHeight;
-            ExtendHeight = extendHeight;
-            ViewportHeight = viewportHeight;
-            Expandable = extendHeight != viewportHeight;
-            if (flg)
-                OnChangedStatus(new EventArgs());
 
             return size;
         }
-        void ItemContainerGenerator_ItemsChanged(
-            object sender, System.Windows.Controls.Primitives.ItemsChangedEventArgs e) { InvalidateArrange(); }
+        protected override DependencyObject GetContainerForItemOverride()
+        {
+            var element = new ContentPresenter();
+            element.RenderTransform = new TranslateTransform();
+            element.SizeChanged += element_SizeChanged;
+            element.Loaded += element_Loaded;
+            return element;
+        }
+        void ItemContainerGenerator_ItemsChanged(object sender, System.Windows.Controls.Primitives.ItemsChangedEventArgs e)
+        {
+            _measureExtendHeightFlg = true;
+            InvalidateArrange();
+        }
+        void element_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            _measureExtendHeightFlg = true;
+            InvalidateArrange();
+        }
+        void element_Loaded(object sender, RoutedEventArgs e)
+        {
+            var element = (ContentPresenter)sender;
+            var duration = new Duration(TimeSpan.FromMilliseconds(250));
+            var storyboard = new Storyboard();
+
+            FrameworkElement child;
+                for (var i = 0; i < Items.Count; i++)
+                {
+                    child = (ContentPresenter)ItemContainerGenerator.ContainerFromIndex(i);
+                    if (child == null)
+                        break;
+                    var childAnime = new DoubleAnimation(element.ActualHeight, 0, duration);
+                    childAnime.BeginTime = new TimeSpan();
+                    childAnime.AccelerationRatio = 0.1;
+                    childAnime.DecelerationRatio = 0.9;
+                    Storyboard.SetTarget(childAnime, child);
+                    Storyboard.SetTargetProperty(childAnime, new PropertyPath("RenderTransform.Y"));
+                    storyboard.Children.Add(childAnime);
+                }
+            BeginStoryboard(storyboard, HandoffBehavior.SnapshotAndReplace, true);
+        }
 
         public event EventHandler ChangedStatus;
         protected virtual void OnChangedStatus(EventArgs e)
