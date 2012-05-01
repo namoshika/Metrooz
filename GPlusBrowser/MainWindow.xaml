@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:GPlusBrowser"
         xmlns:localVm="clr-namespace:GPlusBrowser.ViewModel"
         xmlns:localCtrl="clr-namespace:GPlusBrowser.Controls"
-        Title="MainWindow" Height="600" Width="500">
+        Title="MainWindow" Height="650" Width="550">
     <Grid>
         <Grid.Resources>
             <Storyboard x:Key="expandOptionPanelStoryboard">
@@ -198,14 +198,7 @@
                                                 <TextBlock Margin="5,0,0,0" VerticalAlignment="Center" Text="{Binding PostDate, StringFormat='- {0} -'}" />
                                             </StackPanel>
                                             <TextBlock DockPanel.Dock="Top" Margin="0,3,0,3" local:InlineBehavior.Inline="{Binding PostContentInline}" TextWrapping="Wrap" />
-                                            <localCtrl:CommentListBox Comments="{Binding Comments}" Margin="15,0,0,0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" />
-                                            <!--<ItemsControl Margin="15,0,0,0" ItemsSource="{Binding Comments}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
-                                                <ItemsControl.ItemsPanel>
-                                                    <ItemsPanelTemplate>
-                                                        <StackPanel />
-                                                    </ItemsPanelTemplate>
-                                                </ItemsControl.ItemsPanel>
-                                            </ItemsControl>-->
+                                            <localCtrl:CommentListBox Mode="{Binding ModeA, Mode=TwoWay}" PostCommentText="{Binding PostCommentTextA, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}" PostCommentCommand="{Binding PostCommentCommand}" Comments="{Binding Comments}" Margin="15,0,0,0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" />
                                         </DockPanel>
                                     </Border>
                                 </DataTemplate>

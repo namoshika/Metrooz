@@ -33,10 +33,10 @@ namespace GPlusBrowser.Controls
             get { return (bool)GetValue(IsExpandProperty); }
             set { SetValue(IsExpandProperty, value); }
         }
-        public bool IsCommentAddMode
+        public CommentListBoxMode Mode
         {
-            get { return (bool)GetValue(IsCommentAddModeProperty); }
-            set { SetValue(IsCommentAddModeProperty, value); }
+            get { return (CommentListBoxMode)GetValue(ModeProperty); }
+            set { SetValue(ModeProperty, value); }
         }
         public int CommentCount
         {
@@ -48,6 +48,16 @@ namespace GPlusBrowser.Controls
             get { return (System.Collections.IEnumerable)GetValue(CommentsProperty); }
             set { SetValue(CommentsProperty, value); }
         }
+        public string PostCommentText
+        {
+            get { return (string)GetValue(PostCommentTextProperty); }
+            set { SetValue(PostCommentTextProperty, value); }
+        }
+        public ICommand PostCommentCommand
+        {
+            get { return (ICommand)GetValue(PostCommentCommandProperty); }
+            set { SetValue(PostCommentCommandProperty, value); }
+        }
 
         public Duration ExpandAnimationDuration { get; set; }
 
@@ -57,15 +67,34 @@ namespace GPlusBrowser.Controls
         {
             CommentCount = itemContainer.Items.Count;
         }
+        void TxtBxCommentArea_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (Mode == CommentListBoxMode.View)
+                Mode = CommentListBoxMode.Write;
+        }
+        void BtnCommentCancel_Click(object sender, RoutedEventArgs e)
+        {
+            switch (Mode)
+            {
+                case CommentListBoxMode.Write:
+                case CommentListBoxMode.Sending:
+                    Mode = CommentListBoxMode.View;
+                    break;
+            }
+        }
 
         public static readonly DependencyProperty IsExpandProperty = DependencyProperty.Register(
             "IsExpand", typeof(bool), typeof(CommentListBox), new UIPropertyMetadata(false, Changed_IsExpand));
-        public static readonly DependencyProperty IsCommentAddModeProperty = DependencyProperty.Register(
-            "IsCommentAddMode", typeof(bool), typeof(CommentListBox), new UIPropertyMetadata(false));
+        public static readonly DependencyProperty ModeProperty = DependencyProperty.Register(
+            "Mode", typeof(CommentListBoxMode), typeof(CommentListBox), new UIPropertyMetadata(CommentListBoxMode.View, Changed_Mode));
         public static readonly DependencyProperty CommentsProperty = DependencyProperty.Register(
             "Comments", typeof(System.Collections.IEnumerable), typeof(CommentListBox), new UIPropertyMetadata(null, Changed_Comments));
         public static readonly DependencyProperty CommentCountProperty = DependencyProperty.Register(
             "CommentCount", typeof(int), typeof(CommentListBox), new UIPropertyMetadata(0));
+        public static readonly DependencyProperty PostCommentTextProperty = DependencyProperty.Register(
+            "PostCommentText", typeof(string), typeof(CommentListBox), new UIPropertyMetadata(null));
+        public static readonly DependencyProperty PostCommentCommandProperty = DependencyProperty.Register(
+            "PostCommentCommand", typeof(ICommand), typeof(CommentListBox), new UIPropertyMetadata(null));
 
         static void Changed_IsExpand(object sender, DependencyPropertyChangedEventArgs e)
         {
@@ -77,16 +106,26 @@ namespace GPlusBrowser.Controls
             var element = (CommentListBox)sender;
             element.itemContainer.ItemsSource = element.Comments;
         }
+        static void Changed_Mode(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            var element = (CommentListBox)sender;
+            switch (element.Mode)
+            {
+                case CommentListBoxMode.View:
+                    element.PostCommentText = null;
+                    break;
+            }
+        }
         static void StartExpandAnimation(CommentListBox element, Duration duration, bool isExpand)
         {
             if (isExpand)
             {
-                element.BeginAnimation(
+                element.itemContainer.BeginAnimation(
                     CommentListBox.HeightProperty,
                     new DoubleAnimation()
                     {
-                        From = element.ActualHeight,
-                        By = element.itemContainer.ExtendHeight - element.itemContainer.ActualHeight,
+                        From = element.itemContainer.ActualHeight,
+                        To = element.itemContainer.ExtendHeight,
                         Duration = duration,
                         AccelerationRatio = 0.5,
                         DecelerationRatio = 0.5,
@@ -95,12 +134,12 @@ namespace GPlusBrowser.Controls
             }
             else
             {
-                element.BeginAnimation(
+                element.itemContainer.BeginAnimation(
                     CommentListBox.HeightProperty,
                     new DoubleAnimation()
                     {
-                        From = element.ActualHeight,
-                        By = element.itemContainer.ViewportHeight - element.itemContainer.ActualHeight,
+                        From = element.itemContainer.ActualHeight,
+                        To = element.itemContainer.ViewportHeight,
                         Duration = duration,
                         AccelerationRatio = 0.5,
                         DecelerationRatio = 0.5,
@@ -109,6 +148,8 @@ namespace GPlusBrowser.Controls
             }
         }
     }
+    public enum CommentListBoxMode { View, Write, Sending }
+
     public class ExListBox : ItemsControl
     {
         public ExListBox()
@@ -134,14 +175,18 @@ namespace GPlusBrowser.Controls
 
         protected override Size ArrangeOverride(Size arrangeBounds)
         {
+            var size = base.ArrangeOverride(arrangeBounds);
+
             var viewportHeight = 0.0;
             var extendHeight = 0.0;
             FrameworkElement child;
             for (var i = 0; i < Items.Count; i++)
             {
-                child = (FrameworkElement)ItemContainerGenerator.ContainerFromItem(Items[Items.Count - i - 1]);
+                child = (FrameworkElement)ItemContainerGenerator.ContainerFromIndex(i);
                 if (child == null)
-                    return base.ArrangeOverride(arrangeBounds);
+                    //childがnullだったら今回は諦めて次回以降に計算する
+                    return size;
+
                 extendHeight += child.DesiredSize.Height;
                 if (i >= Items.Count - 2)
                     viewportHeight += child.DesiredSize.Height;
@@ -154,7 +199,7 @@ namespace GPlusBrowser.Controls
             if (flg)
                 OnChangedStatus(new EventArgs());
 
-            return base.ArrangeOverride(arrangeBounds);
+            return size;
         }
         void ItemContainerGenerator_ItemsChanged(
             object sender, System.Windows.Controls.Primitives.ItemsChangedEventArgs e) { InvalidateArrange(); }
@@ -173,20 +218,7 @@ namespace GPlusBrowser.Controls
         public static readonly DependencyProperty ViewportHeightProperty = DependencyProperty.Register(
             "ViewportHeight", typeof(double), typeof(ExListBox), new UIPropertyMetadata(0.0));
     }
-    public class BoolToVisibility : IValueConverter
-    {
-        public object Convert(object values, Type targetType, object parameter, System.Globalization.CultureInfo culture)
-        {
-            if (values == DependencyProperty.UnsetValue)
-                return DependencyProperty.UnsetValue;
-            return (bool)values ? Visibility.Visible : Visibility.Hidden;
-        }
-        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
-        {
-            throw new NotImplementedException();
-        }
-    }
-    public class BoolBoolToVisibility : IMultiValueConverter
+    public class IsExpandExpandableToVisibility : IMultiValueConverter
     {
         public object Convert(object[] values, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
@@ -199,7 +231,7 @@ namespace GPlusBrowser.Controls
             throw new NotImplementedException();
         }
     }
-    public class BoolIntToString : IMultiValueConverter
+    public class IsExpandCommentCountToStringConverter : IMultiValueConverter
     {
         public object Convert(object[] values, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
@@ -216,11 +248,10 @@ namespace GPlusBrowser.Controls
     public static class PlaceHolderBehavior
     {
         // プレースホルダーとして表示するテキスト
-        public static readonly DependencyProperty PlaceHolderTextProperty = DependencyProperty.RegisterAttached(
-            "PlaceHolderText",
-            typeof(string),
-            typeof(PlaceHolderBehavior),
-            new PropertyMetadata(null, OnPlaceHolderChanged));
+        public static readonly DependencyProperty TextProperty = DependencyProperty.RegisterAttached(
+            "Text", typeof(string), typeof(PlaceHolderBehavior), new PropertyMetadata(null, OnPlaceHolderChanged));
+        public static readonly DependencyProperty VerticalAlignmentProperty = DependencyProperty.RegisterAttached(
+            "VerticalAlignment", typeof(VerticalAlignment), typeof(PlaceHolderBehavior), new PropertyMetadata(VerticalAlignment.Top, OnPlaceHolderChanged));
 
         static void OnPlaceHolderChanged(DependencyObject sender, DependencyPropertyChangedEventArgs e)
         {
@@ -263,14 +294,15 @@ namespace GPlusBrowser.Controls
         }
         static VisualBrush CreateVisualBrush(TextBox target, string placeHolder)
         {
+            var align = GetVerticalAlignment(target);
             var visual = new Label()
             {
                 Content = placeHolder,
                 Padding = new Thickness(5, 1, 1, 1),
                 Foreground = new SolidColorBrush(Colors.LightGray),
                 HorizontalAlignment = HorizontalAlignment.Left,
-                VerticalAlignment = VerticalAlignment.Center,
-                VerticalContentAlignment = VerticalAlignment.Center,
+                VerticalAlignment = align,
+                VerticalContentAlignment = align,
             };
             visual.SetBinding(Label.BackgroundProperty, new Binding() { Source = target, Path = new PropertyPath(TextBlock.BackgroundProperty) });
             visual.SetBinding(Label.WidthProperty, new Binding() { Source = target, Path = new PropertyPath(TextBlock.ActualWidthProperty) });
@@ -285,13 +317,21 @@ namespace GPlusBrowser.Controls
             };
         }
 
-        public static void SetPlaceHolderText(TextBox textBox, string placeHolder)
+        public static void SetText(TextBox textBox, string placeHolder)
         {
-            textBox.SetValue(PlaceHolderTextProperty, placeHolder);
+            textBox.SetValue(TextProperty, placeHolder);
         }
-        public static string GetPlaceHolderText(TextBox textBox)
+        public static string GetText(TextBox textBox)
         {
-            return textBox.GetValue(PlaceHolderTextProperty) as string;
+            return textBox.GetValue(TextProperty) as string;
+        }
+        public static void SetVerticalAlignment(TextBox target, VerticalAlignment value)
+        {
+            target.SetValue(VerticalAlignmentProperty, value);
+        }
+        public static VerticalAlignment GetVerticalAlignment(TextBox target)
+        {
+            return (VerticalAlignment)target.GetValue(VerticalAlignmentProperty);
         }
     }
 }

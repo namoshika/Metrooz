@@ -66,11 +66,11 @@ namespace GPlusBrowser.ViewModel
                     for (var i = 0; i < e.NewItems.Count; i++)
                     {
                         var viewModel = new ActivityViewModel((Activity)e.NewItems[i], UiThreadDispatcher);
-                        try
+                        if(Activities.Count - (e.NewStartingIndex + i) >= 0)
                         {
-                            Activities.Insert(Activities.Count - (e.NewStartingIndex + i), viewModel);
+                            Activities.Insert(Math.Max(0, Activities.Count - (e.NewStartingIndex + i)), viewModel);
                         }
-                        catch (ArgumentOutOfRangeException)
+                        else
                         {
                             if (System.Diagnostics.Debugger.IsAttached)
                                 System.Diagnostics.Debugger.Break();

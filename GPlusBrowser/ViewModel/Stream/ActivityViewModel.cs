@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using System.Windows.Threading;
 using SunokoLibrary.GooglePlus;
 
@@ -26,6 +27,7 @@ namespace GPlusBrowser.ViewModel
 
             _activity.Comments.CollectionChanged += Comments_CollectionChanged;
             _activity.Updated += _activity_Refreshed;
+            PostCommentCommand = new RelayCommand(PostCommentCommand_Executed);
         }
         Activity _activity;
         Uri _iconUrl;
@@ -34,8 +36,10 @@ namespace GPlusBrowser.ViewModel
         string _postUserName;
         string _postContent;
         string _postDate;
+        string _postCommentText;
         DispatchObservableCollection<CommentViewModel> _comments;
         System.Windows.Documents.Inline _postContentInline;
+        GPlusBrowser.Controls.CommentListBoxMode _mode;
 
         public Uri PostUserIconUrl
         {
@@ -91,6 +95,15 @@ namespace GPlusBrowser.ViewModel
                 OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("PostDate"));
             }
         }
+        public string PostCommentTextA
+        {
+            get { return _postCommentText; }
+            set
+            {
+                _postCommentText = value;
+                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("PostCommentTextA"));
+            }
+        }
         public DispatchObservableCollection<CommentViewModel> Comments
         {
             get { return _comments; }
@@ -109,6 +122,16 @@ namespace GPlusBrowser.ViewModel
                 OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("PostContentInline"));
             }
         }
+        public GPlusBrowser.Controls.CommentListBoxMode ModeA
+        {
+            get { return _mode; }
+            set
+            {
+                _mode = value;
+                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("ModeA"));
+            }
+        }
+        public ICommand PostCommentCommand { get; private set; }
         public void Dispose()
         {
             _activity.Updated -= _activity_Refreshed;
@@ -129,6 +152,16 @@ namespace GPlusBrowser.ViewModel
                     ActivityUrl = _activity.ActivityInfo.PostUrl;
                 }
             }
+        }
+        async void PostCommentCommand_Executed(object arg)
+        {
+            if (string.IsNullOrEmpty(PostCommentTextA))
+                return;
+            var tsk = _activity.CommentPost(PostCommentTextA);
+            ModeA = Controls.CommentListBoxMode.Sending;
+            await tsk;
+            PostCommentTextA = null;
+            ModeA = Controls.CommentListBoxMode.View;
         }
         void Comments_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
