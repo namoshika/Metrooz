@@ -58,17 +58,17 @@
                         <ei:ChangePropertyAction PropertyName="Padding" Value="0" />
                     </ei:DataTrigger>
                     <ei:DataTrigger Binding="{Binding Mode, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type localCtrl:CommentListBox}}}" Value="Write">
-                        <ei:ChangePropertyAction PropertyName="Padding" Value="0,0,0,15" />
+                        <ei:ChangePropertyAction PropertyName="Padding" Value="0,0,0,25" />
                     </ei:DataTrigger>
                     <ei:DataTrigger Binding="{Binding Mode, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type localCtrl:CommentListBox}}}" Value="Sending">
-                        <ei:ChangePropertyAction PropertyName="Padding" Value="0,0,0,15" />
+                        <ei:ChangePropertyAction PropertyName="Padding" Value="0,0,0,25" />
                     </ei:DataTrigger>
                 </i:Interaction.Triggers>
                 <TextBox.InputBindings>
                     <KeyBinding Key="Enter" Modifiers="Shift" Command="{Binding PostCommentCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type localCtrl:CommentListBox}}}" />
                 </TextBox.InputBindings>
             </TextBox>
-            <Button Grid.Column="1" Height="28" Width="28" Margin="5,0,0,0" Click="ExpandButton_Click">
+            <Button Grid.Column="1" Margin="5,0,0,0" Padding="8,0,8,0" Content="閉" Click="ExpandButton_Click">
                 <Button.Visibility>
                     <MultiBinding Converter="{StaticResource isExpandExpandableToVisibility}">
                         <Binding RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type localCtrl:CommentListBox}}" Path="IsExpand" Mode="OneWay" />

@@ -206,8 +206,9 @@
                                     <DockPanel>
                                         <Label Content="{Binding CircleName}" FontSize="16" DockPanel.Dock="Top" />
                                         <TreeView Focusable="False" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                              ScrollViewer.VerticalScrollBarVisibility="Visible"
-                                              ItemsSource="{Binding Activities}">
+                                                  ScrollViewer.VerticalScrollBarVisibility="Visible"
+                                                  BorderThickness="0"
+                                                  ItemsSource="{Binding Activities}">
                                             <TreeView.ItemContainerStyle>
                                                 <Style TargetType="TreeViewItem">
                                                     <Setter Property="Template" Value="{StaticResource postItemTemplate}" />
