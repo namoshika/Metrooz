@@ -23,7 +23,7 @@ namespace GPlusBrowser.ViewModel
         Uri _ownerIconUrl;
         string _id;
         string _ownerName;
-        string _content;
+        string _commentContent;
         System.Windows.Documents.Inline _postContentInline;
 
         public string Id
@@ -37,10 +37,10 @@ namespace GPlusBrowser.ViewModel
         }
         public string CommentContent
         {
-            get { return _content; }
+            get { return _commentContent; }
             set
             {
-                _content = value;
+                _commentContent = value;
                 OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("CommentContent"));
             }
         }
@@ -74,10 +74,10 @@ namespace GPlusBrowser.ViewModel
 
         void model_Refreshed(object sender, EventArgs e)
         {
-            CommentContent = _model.CommentContent;
-            OwnerName = _model.OwnerName;
-            OwnerIconUrl = _model.OwnerIcon;
-            ActivityViewModel.ConvertInlines(_model.CommentContentElement)
+            OwnerName = _model.CommentInfo.Owner.Name;
+            OwnerIconUrl = new Uri(_model.CommentInfo.Owner.IconImageUrlText
+                .Replace("$SIZE_SEGMENT", "s25-c-k"));
+            ActivityViewModel.ConvertInlines(_model.CommentInfo.ParsedContent)
                 .ContinueWith(tsk => PostContentInline = tsk.Result);
         }
     }

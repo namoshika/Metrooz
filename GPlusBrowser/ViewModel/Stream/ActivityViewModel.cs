@@ -37,13 +37,13 @@ namespace GPlusBrowser.ViewModel
         DispatchObservableCollection<CommentViewModel> _comments;
         System.Windows.Documents.Inline _postContentInline;
 
-        public Uri IconUrl
+        public Uri PostUserIconUrl
         {
             get { return _iconUrl; }
             set
             {
                 _iconUrl = value;
-                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("IconUrl"));
+                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("PostUserIconUrl"));
             }
         }
         public Uri ActivityUrl
@@ -116,14 +116,19 @@ namespace GPlusBrowser.ViewModel
 
         async void _activity_Refreshed(object sender, EventArgs e)
         {
-            PostUserName = _activity.OwnerName;
-            PostDate = _activity.PostDate >= DateTime.Today
-                ? _activity.PostDate.ToString("HH:mm")
-                : _activity.PostDate.ToString("yyyy/MM/dd");
-            PostContent = _activity.Content;
-            PostContentInline = await ConvertInlines(_activity.ContentElement);
-            IconUrl = _activity.OwnerIcon;
-            ActivityUrl = _activity.Url;
+            using (_activity.ActivityInfo.GetParseLocker())
+            {
+                if (_activity.ActivityInfo.PostStatus != PostStatusType.Removed)
+                {
+                    PostUserName = _activity.ActivityInfo.PostUser.Name;
+                    PostUserIconUrl = new Uri(_activity.ActivityInfo.PostUser.IconImageUrlText.Replace("$SIZE_SEGMENT", "s25-c-k"));
+                    PostDate = _activity.ActivityInfo.PostDate >= DateTime.Today
+                        ? _activity.ActivityInfo.PostDate.ToString("HH:mm")
+                        : _activity.ActivityInfo.PostDate.ToString("yyyy/MM/dd");
+                    PostContentInline = await ConvertInlines(_activity.ActivityInfo.ParsedContent);
+                    ActivityUrl = _activity.ActivityInfo.PostUrl;
+                }
+            }
         }
         void Comments_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {

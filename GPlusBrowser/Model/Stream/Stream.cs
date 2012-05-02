@@ -96,7 +96,7 @@ namespace GPlusBrowser.Model
                             item, Activities.Count - 1));
                         break;
                     case PostStatusType.Edited:
-                        item = Activities.FirstOrDefault(activity => activity.Id == info.Id);
+                        item = Activities.FirstOrDefault(activity => activity.ActivityInfo.Id == info.Id);
                         //itemがnullの場合は更新する。nullでない場合はすでにある値を更新する。
                         //しかし更新はActivityオブジェクト自体が行うため、Streamでは行わない
                         if (item == null)
@@ -110,7 +110,7 @@ namespace GPlusBrowser.Model
                         }
                         break;
                     case PostStatusType.Removed:
-                        item = Activities.FirstOrDefault(activity => activity.Id == info.Id);
+                        item = Activities.FirstOrDefault(activity => activity.ActivityInfo.Id == info.Id);
                         var idx = Activities.IndexOf(item);
                         if (idx < 0)
                             return;
