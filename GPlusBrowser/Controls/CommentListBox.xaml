@@ -54,6 +54,7 @@
                      localCtrl:PlaceHolderBehavior.Text="コメントを追加..." localCtrl:PlaceHolderBehavior.VerticalAlignment="Top"
                      Text="{Binding PostCommentText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type localCtrl:CommentListBox}}}">
                 <i:Interaction.Triggers>
+                    <!--Paddingの設定-->
                     <ei:DataTrigger Binding="{Binding Mode, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type localCtrl:CommentListBox}}}" Value="View">
                         <ei:ChangePropertyAction PropertyName="Padding" Value="0" />
                     </ei:DataTrigger>
@@ -62,6 +63,16 @@
                     </ei:DataTrigger>
                     <ei:DataTrigger Binding="{Binding Mode, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type localCtrl:CommentListBox}}}" Value="Sending">
                         <ei:ChangePropertyAction PropertyName="Padding" Value="0,0,0,25" />
+                    </ei:DataTrigger>
+                    <!--IsEnableの設定-->
+                    <ei:DataTrigger Binding="{Binding Mode, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type localCtrl:CommentListBox}}}" Value="View">
+                        <ei:ChangePropertyAction PropertyName="IsEnabled" Value="true" />
+                    </ei:DataTrigger>
+                    <ei:DataTrigger Binding="{Binding Mode, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type localCtrl:CommentListBox}}}" Value="Write">
+                        <ei:ChangePropertyAction PropertyName="IsEnabled" Value="true" />
+                    </ei:DataTrigger>
+                    <ei:DataTrigger Binding="{Binding Mode, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type localCtrl:CommentListBox}}}" Value="Sending">
+                        <ei:ChangePropertyAction PropertyName="IsEnabled" Value="false" />
                     </ei:DataTrigger>
                 </i:Interaction.Triggers>
                 <TextBox.InputBindings>
@@ -89,8 +100,20 @@
                     <ei:ChangePropertyAction PropertyName="Visibility" Value="Visible" />
                 </ei:DataTrigger>
             </i:Interaction.Triggers>
-            <Button Padding="10,3,10,3" Margin="0,0,8,0"
-                    Command="{Binding PostCommentCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type localCtrl:CommentListBox}}}">コメントを投稿</Button>
+            <Button Padding="10,3,10,3" Margin="0,0,8,0" Content="コメントを投稿"
+                    Command="{Binding PostCommentCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type localCtrl:CommentListBox}}}">
+                <i:Interaction.Triggers>
+                    <ei:DataTrigger Binding="{Binding Mode, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type localCtrl:CommentListBox}}}" Value="View">
+                        <ei:ChangePropertyAction PropertyName="IsEnabled" Value="true" />
+                    </ei:DataTrigger>
+                    <ei:DataTrigger Binding="{Binding Mode, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type localCtrl:CommentListBox}}}" Value="Write">
+                        <ei:ChangePropertyAction PropertyName="IsEnabled" Value="true" />
+                    </ei:DataTrigger>
+                    <ei:DataTrigger Binding="{Binding Mode, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type localCtrl:CommentListBox}}}" Value="Sending">
+                        <ei:ChangePropertyAction PropertyName="IsEnabled" Value="false" />
+                    </ei:DataTrigger>
+                </i:Interaction.Triggers>
+            </Button>
             <Button Padding="10,3,10,3" Margin="0,0,8,0" Click="BtnCommentCancel_Click">キャンセル</Button>
         </StackPanel>
     </Grid>

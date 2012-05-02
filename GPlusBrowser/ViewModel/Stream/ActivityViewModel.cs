@@ -155,7 +155,7 @@ namespace GPlusBrowser.ViewModel
         }
         async void PostCommentCommand_Executed(object arg)
         {
-            if (string.IsNullOrEmpty(PostCommentTextA))
+            if (string.IsNullOrEmpty(PostCommentTextA) || ModeA != Controls.CommentListBoxMode.Write)
                 return;
             var tsk = _activity.CommentPost(PostCommentTextA);
             ModeA = Controls.CommentListBoxMode.Sending;
