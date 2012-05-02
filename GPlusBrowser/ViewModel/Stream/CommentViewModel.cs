@@ -24,6 +24,7 @@ namespace GPlusBrowser.ViewModel
         string _id;
         string _ownerName;
         string _commentContent;
+        string _commentDate;
         System.Windows.Documents.Inline _postContentInline;
 
         public string Id
@@ -53,6 +54,15 @@ namespace GPlusBrowser.ViewModel
                 OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("OwnerName"));
             }
         }
+        public string CommentDate
+        {
+            get { return _commentDate; }
+            set
+            {
+                _commentDate = value;
+                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("CommentDate"));
+            }
+        }
         public Uri OwnerIconUrl
         {
             get { return _ownerIconUrl; }
@@ -74,6 +84,9 @@ namespace GPlusBrowser.ViewModel
 
         void model_Refreshed(object sender, EventArgs e)
         {
+            CommentDate = _model.CommentInfo.CommentDate >= DateTime.Today
+                ? _model.CommentInfo.CommentDate.ToString("HH:mm")
+                : _model.CommentInfo.CommentDate.ToString("yyyy/MM/dd");
             OwnerName = _model.CommentInfo.Owner.Name;
             OwnerIconUrl = new Uri(_model.CommentInfo.Owner.IconImageUrlText
                 .Replace("$SIZE_SEGMENT", "s25-c-k"));

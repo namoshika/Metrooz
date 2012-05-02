@@ -178,6 +178,7 @@
                                                     </ContentControl.Effect>
                                                 </ContentControl>
                                                 <TextBlock Margin="5,0,0,0" VerticalAlignment="Center" Text="{Binding OwnerName}" />
+                                                <TextBlock Margin="5,0,0,0" VerticalAlignment="Center" Text="{Binding CommentDate, StringFormat='- {0} -'}" />
                                             </StackPanel>
                                             <TextBlock Margin="0,3,0,3" local:InlineBehavior.Inline="{Binding PostContentInline}" TextWrapping="Wrap" />
                                         </DockPanel>
