@@ -139,25 +139,27 @@ namespace GPlusBrowser.ViewModel
 
         async void _activity_Refreshed(object sender, EventArgs e)
         {
-            using (_activity.ActivityInfo.GetParseLocker())
+            if (_activity.ActivityInfo.PostStatus != PostStatusType.Removed)
             {
-                if (_activity.ActivityInfo.PostStatus != PostStatusType.Removed)
+                StyleElement content;
+                using (_activity.ActivityInfo.GetParseLocker())
                 {
                     PostUserName = _activity.ActivityInfo.PostUser.Name;
                     PostUserIconUrl = new Uri(_activity.ActivityInfo.PostUser.IconImageUrlText.Replace("$SIZE_SEGMENT", "s25-c-k"));
                     PostDate = _activity.ActivityInfo.PostDate >= DateTime.Today
                         ? _activity.ActivityInfo.PostDate.ToString("HH:mm")
                         : _activity.ActivityInfo.PostDate.ToString("yyyy/MM/dd");
-                    PostContentInline = await ConvertInlines(_activity.ActivityInfo.ParsedContent).ConfigureAwait(false);
+                    content = _activity.ActivityInfo.ParsedContent;
                     ActivityUrl = _activity.ActivityInfo.PostUrl;
                 }
+                PostContentInline = await ConvertInlines(content).ConfigureAwait(false);
             }
         }
         async void PostCommentCommand_Executed(object arg)
         {
             if (string.IsNullOrEmpty(PostCommentTextA) || ModeA != Controls.CommentListBoxMode.Write)
                 return;
-            var tsk = _activity.CommentPost(PostCommentTextA);
+            var tsk = _activity.CommentPost(PostCommentTextA).ConfigureAwait(false);
             ModeA = Controls.CommentListBoxMode.Sending;
             await tsk;
             PostCommentTextA = null;
