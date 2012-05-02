@@ -39,12 +39,12 @@ namespace GPlusBrowser.Model
             var client = new PlatformClient(Setting.Cookies);
             try
             {
-                await client.UpdateHomeInitDataAsync();
+                await client.UpdateHomeInitDataAsync().ConfigureAwait(false);
                 IsLogined = true;
 
                 GooglePlusClient = client;
                 Circles.Initialize();
-                MyProfile = await client.Relation.GetProfileOfMe(false);
+                MyProfile = await client.Relation.GetProfileOfMe(false).ConfigureAwait(false);
                 AccountIconUrl = MyProfile.IconImageUrlText;
                 if (Setting.UserIconUrl != MyProfile.IconImageUrlText)
                     Setting.UserIconUrl = MyProfile.IconImageUrlText;
@@ -65,7 +65,7 @@ namespace GPlusBrowser.Model
                 Setting.MailAddress = mail;
                 Setting.Cookies = cookie;
                 GooglePlusClient = new PlatformClient(Setting.Cookies);
-                MyProfile = await GooglePlusClient.Relation.GetProfileOfMe(false);
+                MyProfile = await GooglePlusClient.Relation.GetProfileOfMe(false).ConfigureAwait(false);
                 Setting.UserName = MyProfile.Name;
                 Setting.UserIconUrl = MyProfile.IconImageUrlText;
                 AccountIconUrl = MyProfile.IconImageUrlText;

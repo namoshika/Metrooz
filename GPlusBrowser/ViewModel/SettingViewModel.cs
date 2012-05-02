@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Windows.Threading;
 
@@ -22,7 +23,7 @@ namespace GPlusBrowser.ViewModel
                 {
                     NotificationText = string.Empty;
                     Status = SettingStatusType.Checking;
-                    if (EmailAddress != null && Password != null && !await mainWinModel.Login(EmailAddress, Password))
+                    if (EmailAddress != null && Password != null && !await mainWinModel.Login(EmailAddress, Password).ConfigureAwait(false))
                     {
                         Status = SettingStatusType.FailLogin;
                         NotificationText = "ログインに失敗しました。";

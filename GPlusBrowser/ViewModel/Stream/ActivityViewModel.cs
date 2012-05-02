@@ -148,7 +148,7 @@ namespace GPlusBrowser.ViewModel
                     PostDate = _activity.ActivityInfo.PostDate >= DateTime.Today
                         ? _activity.ActivityInfo.PostDate.ToString("HH:mm")
                         : _activity.ActivityInfo.PostDate.ToString("yyyy/MM/dd");
-                    PostContentInline = await ConvertInlines(_activity.ActivityInfo.ParsedContent);
+                    PostContentInline = await ConvertInlines(_activity.ActivityInfo.ParsedContent).ConfigureAwait(false);
                     ActivityUrl = _activity.ActivityInfo.PostUrl;
                 }
             }

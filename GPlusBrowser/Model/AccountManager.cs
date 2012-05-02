@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace GPlusBrowser.Model
 {
@@ -55,7 +56,7 @@ namespace GPlusBrowser.Model
             foreach (var item in _accounts)
                 item.Dispose();
             _accounts.Clear();
-            await SettingManager.Reload();
+            await SettingManager.Reload().ConfigureAwait(false);
             foreach (var item in SettingManager.Items)
             {
                 var account = new Model.Account(item);

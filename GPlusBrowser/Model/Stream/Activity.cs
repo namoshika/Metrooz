@@ -26,7 +26,7 @@ namespace GPlusBrowser.Model
         {
             try
             {
-                await ActivityInfo.PostComment(content);
+                await ActivityInfo.PostComment(content).ConfigureAwait(false);
                 return true;
             }
             catch (FailToOperationException)
