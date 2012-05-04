@@ -9,6 +9,7 @@
         Title="MainWindow" Height="650" Width="550">
     <Grid>
         <Grid.Resources>
+            <BooleanToVisibilityConverter x:Key="booleanToVisibilityConverter" />
             <Storyboard x:Key="expandOptionPanelStoryboard">
                 <DoubleAnimation Storyboard.TargetName="optionPanel" Storyboard.TargetProperty="Height" BeginTime="0:0:0" From="0" To="200" Duration="0:0:0.4" AccelerationRatio="0.01" DecelerationRatio="0.99" />
             </Storyboard>
@@ -167,6 +168,29 @@
                                         </Trigger>
                                     </ControlTemplate.Triggers>
                                 </ControlTemplate>
+                                <DataTemplate DataType="{x:Type localVm:AttachedLinkViewModel}">
+                                    <Border BorderBrush="LightGray" BorderThickness="0,1,0,0" Margin="0,8,0,0">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Image Grid.Column="0" Source="{Binding ThumnailUrl}" MaxWidth="150" MaxHeight="150" Stretch="Uniform" VerticalAlignment="Top" Margin="0,8,8,0" Visibility="{Binding ExistThumnailUrl, Converter={StaticResource booleanToVisibilityConverter}}" />
+                                            <TextBlock Grid.Column="1" Margin="0,8,0,0" TextWrapping="Wrap">
+                                            <Hyperlink>
+                                                <i:Interaction.Triggers>
+                                                    <i:EventTrigger EventName="Click">
+                                                        <ei:LaunchUriOrFileAction Path="{Binding AncourUrl}" />
+                                                    </i:EventTrigger>
+                                                </i:Interaction.Triggers>
+                                                <Run FontWeight="Bold" Text="{Binding AncourTitle}" />
+                                            </Hyperlink>
+                                            <LineBreak />
+                                            <Run Text="{Binding AncourIntroductionText}" />
+                                            </TextBlock>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
                                 <DataTemplate DataType="{x:Type localVm:CommentViewModel}">
                                     <Border BorderBrush="LightGray" BorderThickness="0,1,0,0" Padding="5">
                                         <DockPanel Margin="0" Focusable="False">
@@ -198,6 +222,7 @@
                                                 <TextBlock Margin="5,0,0,0" VerticalAlignment="Center" Text="{Binding PostDate, StringFormat='- {0} -'}" />
                                             </StackPanel>
                                             <TextBlock DockPanel.Dock="Top" Margin="0,3,0,3" local:InlineBehavior.Inline="{Binding PostContentInline}" TextWrapping="Wrap" />
+                                            <ContentPresenter DockPanel.Dock="Top" Content="{Binding AttachedContent}" />
                                             <localCtrl:CommentListBox Mode="{Binding ModeA, Mode=TwoWay}" PostCommentText="{Binding PostCommentTextA, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}" PostCommentCommand="{Binding PostCommentCommand}" Comments="{Binding Comments}" Margin="15,0,0,0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" />
                                         </DockPanel>
                                     </Border>

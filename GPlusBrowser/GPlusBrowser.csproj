@@ -117,6 +117,7 @@
     <Compile Include="ViewModel\AccountManagerPanel\StreamItemViewModel.cs" />
     <Compile Include="ViewModel\AccountSwitcherViewModel.cs" />
     <Compile Include="ViewModel\AccountManagerPanel\LoginerViewModel.cs" />
+    <Compile Include="ViewModel\Stream\AttachedLinkViewModel.cs" />
     <Compile Include="ViewModel\Stream\CircleSelecterViewModel.cs" />
     <Compile Include="ViewModel\Stream\CircleSeleterManagerViewModel.cs" />
     <Compile Include="Model\Stream\Comment.cs" />

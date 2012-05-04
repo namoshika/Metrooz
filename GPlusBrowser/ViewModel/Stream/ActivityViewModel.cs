@@ -37,6 +37,7 @@ namespace GPlusBrowser.ViewModel
         string _postContent;
         string _postDate;
         string _postCommentText;
+        object _attachedContent;
         DispatchObservableCollection<CommentViewModel> _comments;
         System.Windows.Documents.Inline _postContentInline;
         GPlusBrowser.Controls.CommentListBoxMode _mode;
@@ -104,6 +105,15 @@ namespace GPlusBrowser.ViewModel
                 OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("PostCommentTextA"));
             }
         }
+        public object AttachedContent
+        {
+            get { return _attachedContent; }
+            set
+            {
+                _attachedContent = value;
+                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("AttachedContent"));
+            }
+        }
         public DispatchObservableCollection<CommentViewModel> Comments
         {
             get { return _comments; }
@@ -151,6 +161,19 @@ namespace GPlusBrowser.ViewModel
                         : _activity.ActivityInfo.PostDate.ToString("yyyy/MM/dd");
                     content = _activity.ActivityInfo.ParsedContent;
                     ActivityUrl = _activity.ActivityInfo.PostUrl;
+
+                    switch (_activity.ActivityInfo.AttachedContentType)
+                    {
+                        case ContentType.Link:
+                            var attachedLink = (AttachedLink)_activity.ActivityInfo.AttachedContent;
+                            AttachedContent = new AttachedLinkViewModel(
+                                attachedLink.AncourTitle,
+                                string.IsNullOrEmpty(attachedLink.AncourBeginningText)
+                                    ? null : attachedLink.AncourBeginningText.Trim('\n', '\r', ' '),
+                                attachedLink.AncourFavicon, attachedLink.AncourUrl, attachedLink.Thumbnail,
+                                UiThreadDispatcher);
+                            break;
+                    }
                 }
                 UiThreadDispatcher.InvokeAsync(() => PostContentInline = PrivateConvertInlines(content));
             }
