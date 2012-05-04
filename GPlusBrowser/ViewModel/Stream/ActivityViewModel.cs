@@ -219,8 +219,12 @@ namespace GPlusBrowser.ViewModel
                     }
                     break;
                 case ElementType.Hyperlink:
+                    var hyperEle = (HyperlinkElement)tree;
+                    var target = hyperEle.Target;
                     inline = new System.Windows.Documents.Hyperlink(
-                        new System.Windows.Documents.Run(((HyperlinkElement)tree).Text));
+                        new System.Windows.Documents.Run(hyperEle.Text));
+                    ((System.Windows.Documents.Hyperlink)inline).Click += (sender, e) =>
+                        { System.Diagnostics.Process.Start(target.AbsoluteUri); };
                     break;
                 case ElementType.Mension:
                     var spanInline = new System.Windows.Documents.Span();
