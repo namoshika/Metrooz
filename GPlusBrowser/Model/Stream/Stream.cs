@@ -60,14 +60,17 @@ namespace GPlusBrowser.Model
             _reader.GetActivitiesAsync(20, null)
                 .ContinueWith(tsk =>
                     {
-                        var infos = tsk.Result;
-                        _activities.Clear();
-                        OnUpdatedActivities(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+                        lock (_activities)
+                        {
+                            var infos = tsk.Result;
+                            _activities.Clear();
+                            OnUpdatedActivities(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
 
-                        var activities = infos.Items.Where(info => info != null)
-                            .Select(info => new Activity(info)).Reverse().ToArray();
-                        _activities.InsertRange(0, activities);
-                        OnUpdatedActivities(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, activities, 0));
+                            var activities = infos.Items.Where(info => info != null)
+                                .Select(info => new Activity(info)).Reverse().ToArray();
+                            _activities.InsertRange(0, activities);
+                            OnUpdatedActivities(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, activities, 0));
+                        }
                     });
         }
         public void Post(string content)
@@ -85,41 +88,33 @@ namespace GPlusBrowser.Model
         void activity_OnNext(ActivityInfo info)
         {
             using (info.GetParseLocker())
-                switch (info.PostStatus)
-                {
-                    case PostStatusType.First:
-                        var item = new Activity(info);
-                        lock (_activities)
+                lock (_activities)
+                    switch (info.PostStatus)
+                    {
+                        case PostStatusType.First:
+                            var item = new Activity(info);
                             _activities.Add(item);
-                        OnUpdatedActivities(new System.Collections.Specialized.NotifyCollectionChangedEventArgs(
-                            System.Collections.Specialized.NotifyCollectionChangedAction.Add,
-                            item, Activities.Count - 1));
-                        break;
-                    case PostStatusType.Edited:
-                        item = Activities.FirstOrDefault(activity => activity.ActivityInfo.Id == info.Id);
-                        //itemがnullの場合は更新する。nullでない場合はすでにある値を更新する。
-                        //しかし更新はActivityオブジェクト自体が行うため、Streamでは行わない
-                        if (item == null)
-                        {
-                            item = new Activity(info);
-                            lock (_activities)
-                                _activities.Add(item);
                             OnUpdatedActivities(new System.Collections.Specialized.NotifyCollectionChangedEventArgs(
                                 System.Collections.Specialized.NotifyCollectionChangedAction.Add,
                                 item, Activities.Count - 1));
-                        }
-                        break;
-                    case PostStatusType.Removed:
-                        item = Activities.FirstOrDefault(activity => activity.ActivityInfo.Id == info.Id);
-                        var idx = Activities.IndexOf(item);
-                        if (idx < 0)
-                            return;
-                        lock (_activities)
+                            break;
+                        case PostStatusType.Edited:
+                            item = Activities.FirstOrDefault(activity => activity.ActivityInfo.Id == info.Id);
+                            //itemがnullの場合は更新する。nullでない場合はすでにある値を更新する。
+                            //しかし更新はActivityオブジェクト自体が行うため、Streamでは行わない
+                            if (item == null)
+                                goto case PostStatusType.First;
+                            break;
+                        case PostStatusType.Removed:
+                            item = Activities.FirstOrDefault(activity => activity.ActivityInfo.Id == info.Id);
+                            var idx = Activities.IndexOf(item);
+                            if (idx < 0)
+                                return;
                             _activities.Remove(item);
-                        OnUpdatedActivities(new System.Collections.Specialized.NotifyCollectionChangedEventArgs(
-                            System.Collections.Specialized.NotifyCollectionChangedAction.Remove, item, idx));
-                        break;
-                }
+                            OnUpdatedActivities(new System.Collections.Specialized.NotifyCollectionChangedEventArgs(
+                                System.Collections.Specialized.NotifyCollectionChangedAction.Remove, item, idx));
+                            break;
+                    }
         }
 
         public event System.Collections.Specialized.NotifyCollectionChangedEventHandler UpdatedActivities;
