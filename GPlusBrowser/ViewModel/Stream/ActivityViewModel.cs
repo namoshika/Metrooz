@@ -137,7 +137,7 @@ namespace GPlusBrowser.ViewModel
             _activity.Updated -= _activity_Refreshed;
         }
 
-        async void _activity_Refreshed(object sender, EventArgs e)
+        void _activity_Refreshed(object sender, EventArgs e)
         {
             if (_activity.ActivityInfo.PostStatus != PostStatusType.Removed)
             {
@@ -152,7 +152,7 @@ namespace GPlusBrowser.ViewModel
                     content = _activity.ActivityInfo.ParsedContent;
                     ActivityUrl = _activity.ActivityInfo.PostUrl;
                 }
-                PostContentInline = await ConvertInlines(content).ConfigureAwait(false);
+                UiThreadDispatcher.InvokeAsync(() => PostContentInline = PrivateConvertInlines(content));
             }
         }
         async void PostCommentCommand_Executed(object arg)
@@ -187,8 +187,6 @@ namespace GPlusBrowser.ViewModel
                 }
         }
 
-        public static Task<System.Windows.Documents.Inline> ConvertInlines(ContentElement tree)
-        { return App.Current.Dispatcher.InvokeAsync(() => PrivateConvertInlines(tree)); }
         public static System.Windows.Documents.Inline PrivateConvertInlines(ContentElement tree)
         {
             System.Windows.Documents.Inline inline = null;

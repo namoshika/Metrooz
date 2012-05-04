@@ -90,8 +90,10 @@ namespace GPlusBrowser.ViewModel
             OwnerName = _model.CommentInfo.Owner.Name;
             OwnerIconUrl = new Uri(_model.CommentInfo.Owner.IconImageUrlText
                 .Replace("$SIZE_SEGMENT", "s25-c-k"));
-            ActivityViewModel.ConvertInlines(_model.CommentInfo.ParsedContent)
-                .ContinueWith(tsk => PostContentInline = tsk.Result);
+
+            UiThreadDispatcher.InvokeAsync(
+                () => PostContentInline = ActivityViewModel
+                    .PrivateConvertInlines(_model.CommentInfo.ParsedContent));
         }
     }
 }
