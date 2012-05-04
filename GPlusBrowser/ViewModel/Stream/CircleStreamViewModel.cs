@@ -18,10 +18,23 @@ namespace GPlusBrowser.ViewModel
             Activities = new DispatchObservableCollection<ActivityViewModel>(uiThreadDispatcher);
             Order = order;
             Circle = circle;
+            MaxActivitiesCount = 40;
         }
+        int _maxActivityCount;
         Stream _circle;
         DispatchObservableCollection<ActivityViewModel> _activities;
 
+        public int MaxActivitiesCount
+        {
+            get { return _maxActivityCount; }
+            set
+            {
+                _maxActivityCount = value;
+                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("MaxActivitiesCount"));
+                lock (_activities)
+                    ActivitiesCompaction(value);
+            }
+        }
         public Stream Circle
         {
             get { return _circle; }
@@ -60,30 +73,53 @@ namespace GPlusBrowser.ViewModel
         protected void OnActivitiesCollectionChanged(
             object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
-            switch (e.Action)
+            lock (Activities)
             {
-                case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
-                    for (var i = 0; i < e.NewItems.Count; i++)
-                    {
-                        var viewModel = new ActivityViewModel((Activity)e.NewItems[i], UiThreadDispatcher);
-                        if(Activities.Count - (e.NewStartingIndex + i) >= 0)
+                switch (e.Action)
+                {
+                    case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
+                        for (var i = e.NewItems.Count - 1; i >= 0; i--)
                         {
-                            Activities.Insert(Math.Max(0, Activities.Count - (e.NewStartingIndex + i)), viewModel);
+                            var viewModel = new ActivityViewModel((Activity)e.NewItems[i], UiThreadDispatcher);
+                            var idx = _circle.Activities.Count - (e.NewStartingIndex + i) - 1;
+                            if (idx >= 0 && idx < MaxActivitiesCount - 1)
+                                Activities.Insert(idx, viewModel);
                         }
-                        else
+                        break;
+                    case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
+                        for (var i = 0; i < e.OldItems.Count; i++)
                         {
-                            if (System.Diagnostics.Debugger.IsAttached)
-                                System.Diagnostics.Debugger.Break();
+                            var idx = _circle.Activities.Count - (e.OldStartingIndex) - 1;
+                            if (idx >= 0 && idx < MaxActivitiesCount - 1)
+                            {
+                                Activities[idx].Dispose();
+                                Activities.RemoveAt(idx);
+                            }
                         }
-                    }
-                    break;
-                case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
-                    for (var i = 0; i < e.OldItems.Count; i++)
-                        Activities.RemoveAt(Activities.Count - (e.OldStartingIndex) - 1);
-                    break;
-                case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:
-                    Activities.Clear();
-                    break;
+                        break;
+                    case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:
+                        for (var i = 0; i < Activities.Count; i++)
+                            Activities[i].Dispose();
+                        Activities.Clear();
+                        break;
+                }
+                ActivitiesCompaction(MaxActivitiesCount);
+            }
+        }
+        void ActivitiesCompaction(int ActivitiesCapacity)
+        {
+            if (Activities.Count > ActivitiesCapacity)
+            {
+                for (var i = ActivitiesCapacity; i < Activities.Count; i++)
+                {
+                    Activities[i].Dispose();
+                    Activities.RemoveAt(i);
+                }
+            }
+            else
+            {
+                for (var i = _circle.Activities.Count - Activities.Count - 1; i >= 0 && i < _circle.Activities.Count; i++)
+                    Activities.Add(new ActivityViewModel(_circle.Activities[i], UiThreadDispatcher));
             }
         }
     }
