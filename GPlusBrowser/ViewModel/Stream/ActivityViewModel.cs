@@ -167,24 +167,23 @@ namespace GPlusBrowser.ViewModel
         }
         void Comments_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
-            if (App.Current != null)
-                switch (e.Action)
-                {
-                    case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
-                        foreach (var item in e.NewItems)
-                            Comments.Add(new CommentViewModel((Comment)item, UiThreadDispatcher));
-                        break;
-                    case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
-                        for (var i = 0; i < e.OldItems.Count; i++)
-                        {
-                            var tmp = Comments.First(vm => vm.Id == ((Comment)e.OldItems[i]).CommentInfo.Id);
-                            Comments.Remove(tmp);
-                        }
-                        break;
-                    case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:
-                        Comments.Clear();
-                        break;
-                }
+            switch (e.Action)
+            {
+                case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
+                    foreach (var item in e.NewItems)
+                        Comments.Add(new CommentViewModel((Comment)item, UiThreadDispatcher));
+                    break;
+                case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
+                    for (var i = 0; i < e.OldItems.Count; i++)
+                    {
+                        var tmp = Comments.First(vm => vm.Id == ((Comment)e.OldItems[i]).CommentInfo.Id);
+                        Comments.Remove(tmp);
+                    }
+                    break;
+                case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:
+                    Comments.Clear();
+                    break;
+            }
         }
 
         public static System.Windows.Documents.Inline PrivateConvertInlines(ContentElement tree)
