@@ -218,8 +218,27 @@
                                                         <DropShadowEffect Color="Black" Direction="315" Opacity="0.3" BlurRadius="5" ShadowDepth="0" />
                                                     </ContentControl.Effect>
                                                 </ContentControl>
-                                                <TextBlock Margin="5,0,0,0" VerticalAlignment="Center" Text="{Binding PostUserName}" />
-                                                <TextBlock Margin="5,0,0,0" VerticalAlignment="Center" Text="{Binding PostDate, StringFormat='- {0} -'}" />
+                                                <TextBlock Margin="5,0,0,0" VerticalAlignment="Center">
+                                                    <Run Text="{Binding PostUserName}" />
+                                                    <Span Foreground="Gray">
+                                                        -
+                                                        <Hyperlink TextDecorations="None" Foreground="Gray">
+                                                            <i:Interaction.Triggers>
+                                                                <i:EventTrigger EventName="Click">
+                                                                    <ei:LaunchUriOrFileAction Path="{Binding ActivityUrl}" />
+                                                                </i:EventTrigger>
+                                                                <i:EventTrigger EventName="MouseEnter">
+                                                                    <ei:ChangePropertyAction PropertyName="TextDecorations" Value="Underline" />
+                                                                </i:EventTrigger>
+                                                                <i:EventTrigger EventName="MouseLeave">
+                                                                    <ei:ChangePropertyAction PropertyName="TextDecorations" Value="None" />
+                                                                </i:EventTrigger>
+                                                            </i:Interaction.Triggers>
+                                                            <Run Text="{Binding PostDate}" />
+                                                        </Hyperlink>
+                                                        -
+                                                    </Span>
+                                                </TextBlock>
                                             </StackPanel>
                                             <TextBlock DockPanel.Dock="Top" Margin="0,3,0,3" local:InlineBehavior.Inline="{Binding PostContentInline}" TextWrapping="Wrap" />
                                             <ContentPresenter DockPanel.Dock="Top" Content="{Binding AttachedContent}" />
