@@ -205,7 +205,7 @@
                                         <DockPanel Margin="0" Focusable="False">
                                             <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0">
                                                 <ContentControl Focusable="False" Width="25" Height="25">
-                                                    <Image Source="{Binding OwnerIconUrl}" />
+                                                    <Image SnapsToDevicePixels="True" Source="{Binding OwnerIconUrl}" />
                                                     <ContentControl.Effect>
                                                         <DropShadowEffect Color="Black" Direction="315" Opacity="0.3" BlurRadius="5" ShadowDepth="0" />
                                                     </ContentControl.Effect>
@@ -224,7 +224,7 @@
                                         <DockPanel Margin="0" Focusable="False">
                                             <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0">
                                                 <ContentControl Focusable="False" Width="25" Height="25">
-                                                    <Image Source="{Binding PostUserIconUrl}" />
+                                                    <Image SnapsToDevicePixels="True" Source="{Binding PostUserIconUrl}" />
                                                     <ContentControl.Effect>
                                                         <DropShadowEffect Color="Black" Direction="315" Opacity="0.3" BlurRadius="5" ShadowDepth="0" />
                                                     </ContentControl.Effect>
