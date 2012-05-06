@@ -97,12 +97,21 @@
                 </DataTemplate>
                 <DataTemplate DataType="{x:Type localVm:AccountViewModel}">
                     <Grid>
-                        <Button Width="35" Height="35" Margin="10" HorizontalAlignment="Left" VerticalAlignment="Top" Template="{StaticResource accountIconButtonTemplate}" Content="{Binding AccountIconUrl}" Command="{Binding BackToAccountManagerCommand}">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="55" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="55" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Button Grid.Row="0" Grid.Column="0" Width="35" Height="35" Margin="10" Template="{StaticResource accountIconButtonTemplate}" Content="{Binding AccountIconUrl}" Command="{Binding BackToAccountManagerCommand}">
                             <Button.Effect>
                                 <DropShadowEffect Color="Black" Direction="315" Opacity="0.3" BlurRadius="5" ShadowDepth="0" />
                             </Button.Effect>
                         </Button>
-                        <localCtrl:ItemSelecter Margin="55,10,0,0" ItemsSource="{Binding Stream.DisplayStreams, Mode=OneWay}" SelectedIndex="{Binding Stream.SelectedCircleIndex}">
+                        <ComboBox Grid.Row="0" Grid.Column="1" MinWidth="150" VerticalAlignment="Center" HorizontalAlignment="Left" FontSize="16" SelectedIndex="{Binding Stream.SelectedCircleIndex}" DisplayMemberPath="CircleName" ItemsSource="{Binding Stream.DisplayStreams}" />
+                        <localCtrl:ItemSelecter Grid.Row="1" Grid.Column="1" ItemsSource="{Binding Stream.DisplayStreams, Mode=OneWay}" SelectedIndex="{Binding Stream.SelectedCircleIndex}">
                             <localCtrl:ItemSelecter.Resources>
                                 <ControlTemplate x:Key="treeViewRootTemplate" TargetType="{x:Type TreeView}">
                                     <Grid Background="Gray">
@@ -169,7 +178,7 @@
                                     </ControlTemplate.Triggers>
                                 </ControlTemplate>
                                 <DataTemplate DataType="{x:Type localVm:AttachedLinkViewModel}">
-                                    <Border BorderBrush="LightGray" BorderThickness="0,1,0,0" Margin="0,8,0,0">
+                                    <Border BorderBrush="LightGray" BorderThickness="0,1,0,0" Margin="0,8,0,8">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="auto" />
@@ -201,8 +210,10 @@
                                                         <DropShadowEffect Color="Black" Direction="315" Opacity="0.3" BlurRadius="5" ShadowDepth="0" />
                                                     </ContentControl.Effect>
                                                 </ContentControl>
-                                                <TextBlock Margin="5,0,0,0" VerticalAlignment="Center" Text="{Binding OwnerName}" />
-                                                <TextBlock Margin="5,0,0,0" VerticalAlignment="Center" Text="{Binding CommentDate, StringFormat='- {0} -'}" />
+                                                <TextBlock Margin="5,0,0,0" VerticalAlignment="Center">
+                                                    <Run Text="{Binding OwnerName}" />
+                                                    <Run Foreground="Gray" Text="{Binding CommentDate, StringFormat='- {0} -'}" />
+                                                </TextBlock>
                                             </StackPanel>
                                             <TextBlock Margin="0,3,0,3" local:InlineBehavior.Inline="{Binding PostContentInline}" TextWrapping="Wrap" />
                                         </DockPanel>
@@ -248,7 +259,6 @@
                                 </DataTemplate>
                                 <DataTemplate DataType="{x:Type localVm:CircleStreamViewModel}">
                                     <DockPanel>
-                                        <Label Content="{Binding CircleName}" FontSize="16" DockPanel.Dock="Top" />
                                         <TreeView Focusable="False" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                                   ScrollViewer.VerticalScrollBarVisibility="Visible"
                                                   BorderThickness="0"
@@ -265,35 +275,6 @@
                                 </DataTemplate>
                             </localCtrl:ItemSelecter.Resources>
                         </localCtrl:ItemSelecter>
-                        <StackPanel Orientation="Horizontal" Margin="0,65,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" DataContext="{Binding CircleSelecter}">
-                            <ListBox Name="circleSelecterList" Margin="0" SelectedIndex="{Binding SelectedCircleIndex}" ItemsSource="{Binding Items}">
-                                <ListBox.ItemContainerStyle>
-                                    <Style TargetType="ListBoxItem">
-                                        <Setter Property="Content" Value="{Binding CircleName}" />
-                                        <Setter Property="Padding" Value="8,5,40,5" />
-                                    </Style>
-                                </ListBox.ItemContainerStyle>
-                            </ListBox>
-                            <StackPanel Margin="0,15,0,0">
-                                <Button Width="35" Height="35" Margin="0,0,0,10" />
-                                <Button Width="35" Height="35" Margin="0,0,0,10" />
-                            </StackPanel>
-                            <StackPanel.RenderTransform>
-                                <TranslateTransform>
-                                    <TranslateTransform.X>
-                                        <MultiBinding Mode="OneWay">
-                                            <MultiBinding.Converter>
-                                                <localVm:circleSelecterBoolToLeftDouble />
-                                            </MultiBinding.Converter>
-                                            <MultiBinding.Bindings>
-                                                <Binding Path="DisplayCircleSelecter" />
-                                                <Binding ElementName="circleSelecterList" Path="ActualWidth" />
-                                            </MultiBinding.Bindings>
-                                        </MultiBinding>
-                                    </TranslateTransform.X>
-                                </TranslateTransform>
-                            </StackPanel.RenderTransform>
-                        </StackPanel>
                     </Grid>
                 </DataTemplate>
             </localCtrl:ItemSelecter.Resources>
