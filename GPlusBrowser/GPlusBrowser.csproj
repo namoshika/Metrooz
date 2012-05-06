@@ -100,6 +100,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Controls\ActivityTreeView.cs" />
     <Compile Include="Controls\ColumnPanel.cs" />
     <Compile Include="Controls\CommentListBox.xaml.cs">
       <DependentUpon>CommentListBox.xaml</DependentUpon>
