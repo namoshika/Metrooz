@@ -47,14 +47,12 @@ namespace GPlusBrowser.Controls
     {
         public ItemSelecter()
         {
-            ItemContainerGenerator.StatusChanged += ItemContainerGenerator_StatusChanged;
-            //new System.Windows.Threading.DispatcherTimer(
-            //    TimeSpan.FromMilliseconds(1000), System.Windows.Threading.DispatcherPriority.Normal,
-            //    (sender, e) => ArrangeOverride(DesiredSize), App.Current.Dispatcher).Start();
+            ItemsPanel = new ItemsPanelTemplate(new FrameworkElementFactory(typeof(Grid)));
         }
         static ItemSelecter()
         {
-            DefaultStyleKeyProperty.OverrideMetadata(typeof(ItemSelecter), new FrameworkPropertyMetadata(typeof(ItemSelecter)));
+            DefaultStyleKeyProperty.OverrideMetadata(
+                typeof(ItemSelecter), new FrameworkPropertyMetadata(typeof(ItemSelecter)));
         }
 
         public int SelectedIndex
@@ -63,17 +61,20 @@ namespace GPlusBrowser.Controls
             set { SetValue(SelectedIndexProperty, value); }
         }
 
-        void ItemContainerGenerator_StatusChanged(object sender, EventArgs e)
+        protected override void OnItemsChanged(System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
-            switch (ItemContainerGenerator.Status)
+            base.OnItemsChanged(e);
+            switch (e.Action)
             {
-                case System.Windows.Controls.Primitives.GeneratorStatus.ContainersGenerated:
+                case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:
+                case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
+                case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
                     for (var i = 0; ; i++)
                     {
                         var content = (ContentPresenter)ItemContainerGenerator.ContainerFromIndex(i);
                         if (content == null)
                             break;
-                        content.Visibility = i == SelectedIndex ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
+                        content.Visibility = i == SelectedIndex ? Visibility.Visible : Visibility.Hidden;
                     }
                     break;
             }
@@ -85,7 +86,7 @@ namespace GPlusBrowser.Controls
             {
                 var oldContent = (ContentPresenter)paperBoard.ItemContainerGenerator.ContainerFromIndex((int)e.OldValue);
                 if (oldContent != null)
-                    oldContent.Visibility = Visibility.Collapsed;
+                    oldContent.Visibility = Visibility.Hidden;
             }
             if ((int)e.NewValue >= 0)
             {
