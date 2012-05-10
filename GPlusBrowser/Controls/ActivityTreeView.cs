@@ -38,8 +38,9 @@ namespace GPlusBrowser.Controls
             if (e != null && !e.HeightChanged)
                 return;
             var element = (TreeViewItem)sender;
-            if (!_items.Contains(element))
-                return;
+            lock (_itemHeights)
+                if (!_items.Contains(element))
+                    return;
             var idx = ItemContainerGenerator.IndexFromContainer(element);
             var upActivityOffsetAndHeight = 0.0;
             var upActivityOffset = 0.0;
@@ -60,14 +61,17 @@ namespace GPlusBrowser.Controls
                 _scrollviewer.ScrollToVerticalOffset(_scrollviewer.VerticalOffset + diff);
             }
 
-            _itemHeights[idx] = element.ActualHeight;
+            _itemHeights[Math.Min(_itemHeights.Count - 1, idx)] = element.ActualHeight;
         }
         void element_Loaded(object sender, RoutedEventArgs e)
         {
             var element = (TreeViewItem)sender;
             var idx = ItemContainerGenerator.IndexFromContainer(element);
-            _itemHeights.Insert(idx, 0);
-            _items.Insert(Math.Min(_items.Count, idx), element);
+            lock (_itemHeights)
+            {
+                _itemHeights.Insert(Math.Min(_itemHeights.Count, idx), 0);
+                _items.Insert(Math.Min(_items.Count, idx), element);
+            }
             element_SizeChanged(element, null);
 
             element.BeginAnimation(
