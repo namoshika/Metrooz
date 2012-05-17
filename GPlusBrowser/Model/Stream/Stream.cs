@@ -21,6 +21,7 @@ namespace GPlusBrowser.Model
         IReadRange _reader;
         IDisposable _streamObj;
         StreamManager _manager;
+        IInfoList<ActivityInfo> _activityGetter;
         List<Activity> _activities;
         public ReadOnlyCollection<Activity> Activities
         { get { return _activities.AsReadOnly(); } }
@@ -50,6 +51,7 @@ namespace GPlusBrowser.Model
                 }
                 Readable = value != null;
                 Name = value.Name;
+                _activityGetter = value.GetActivities();
                 _reader = value;
                 _streamObj = _reader.GetStream().Subscribe(activity_OnNext);
             }
@@ -57,7 +59,7 @@ namespace GPlusBrowser.Model
         public void Refresh()
         {
             IsRefreshed = true;
-            _reader.GetActivitiesAsync(20, null)
+            _activityGetter.TakeAsync(20)
                 .ContinueWith(tsk =>
                     {
                         lock (_activities)
@@ -66,7 +68,7 @@ namespace GPlusBrowser.Model
                             _activities.Clear();
                             OnUpdatedActivities(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
 
-                            var activities = infos.Items.Where(info => info != null)
+                            var activities = infos.Where(info => info != null)
                                 .Select(info => new Activity(info)).Reverse().ToArray();
                             _activities.InsertRange(0, activities);
                             OnUpdatedActivities(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, activities, 0));
