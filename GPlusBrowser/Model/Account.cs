@@ -53,7 +53,10 @@ namespace GPlusBrowser.Model
                 IsInitialized = true;
             }
             catch (FailToUpdateException)
-            { IsLogined = false; }
+            {
+                IsLogined = false;
+                IsInitialized = false;
+            }
 
             OnInitialized(new EventArgs());
         }
@@ -68,7 +71,7 @@ namespace GPlusBrowser.Model
                 MyProfile = await GooglePlusClient.Relation.GetProfileOfMe(false).ConfigureAwait(false);
                 Setting.UserName = MyProfile.Name;
                 Setting.UserIconUrl = MyProfile.IconImageUrlText;
-                AccountIconUrl = MyProfile.IconImageUrlText;
+                AccountIconUrl = Setting.UserIconUrl;
             }
             OnChangedLoginStatus(new EventArgs());
             return IsLogined;

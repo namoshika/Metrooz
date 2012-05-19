@@ -65,7 +65,7 @@ namespace GPlusBrowser.ViewModel
 
         void _accountModel_Initialized(object sender, EventArgs e)
         {
-            AccountIconUrl = new Uri(_accountModel.MyProfile.IconImageUrlText.Replace("$SIZE_SEGMENT", "s35-c-k"));
+            AccountIconUrl = new Uri(_accountModel.AccountIconUrl.Replace("$SIZE_SEGMENT", "s35-c-k"));
         }
         void BackToAccountManagerCommand_Execute(object arg)
         {
