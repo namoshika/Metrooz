@@ -17,12 +17,12 @@ namespace GPlusBrowser.ViewModel
             _streamManagerModel = streamManager;
             _streamManagerModel.ChangedDisplayStreams += _stream_ChangedDisplayStreams;
             _streamManagerModel.ChangedSelectedCircleIndex += _streamManagerModel_ChangedSelectedCircleIndex;
-            _displayStreams = new DispatchObservableCollection<StreamViewModel>(uiThreadDispatcher);
+            _displayStreams = new ObservableCollection<StreamViewModel>();
             _selectedCircleIndex = -1;
         }
         int _selectedCircleIndex;
         StreamManager _streamManagerModel;
-        DispatchObservableCollection<StreamViewModel> _displayStreams;
+        ObservableCollection<StreamViewModel> _displayStreams;
 
         public int SelectedCircleIndex
         {
@@ -36,7 +36,7 @@ namespace GPlusBrowser.ViewModel
                 OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("SelectedCircleIndex"));
             }
         }
-        public DispatchObservableCollection<StreamViewModel> DisplayStreams
+        public ObservableCollection<StreamViewModel> DisplayStreams
         {
             get { return _displayStreams; }
             set
@@ -64,7 +64,7 @@ namespace GPlusBrowser.ViewModel
                         var circle = (Stream)e.NewItems[i];
                         var circleVm = new CircleStreamViewModel(circle, e.NewStartingIndex + i, UiThreadDispatcher);
                         circleVm.Order = e.NewStartingIndex + i + 1;
-                        DisplayStreams.Add(circleVm);
+                        DisplayStreams.Add(circleVm, UiThreadDispatcher);
                     }
                     break;
                 case System.Collections.Specialized.NotifyCollectionChangedAction.Move:
@@ -75,18 +75,21 @@ namespace GPlusBrowser.ViewModel
                     break;
                 case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
                     for (var i = 0; i < e.OldItems.Count; i++)
-                        DisplayStreams.RemoveAt(e.OldStartingIndex);
+                        DisplayStreams.RemoveAt(e.OldStartingIndex, UiThreadDispatcher);
                     foreach (var item in _displayStreams.Where(strmVm => strmVm.Order >= e.OldStartingIndex))
                         item.Order -= e.NewItems.Count;
                     break;
                 case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:
-                    DisplayStreams.Clear();
+                    DisplayStreams.Clear(UiThreadDispatcher);
                     break;
             }
         }
         void _streamManagerModel_ChangedSelectedCircleIndex(object sender, EventArgs e)
         {
-            SelectedCircleIndex = _streamManagerModel.SelectedCircleIndex;
+            UiThreadDispatcher.BeginInvoke(
+                (Action)delegate() { SelectedCircleIndex = _streamManagerModel.SelectedCircleIndex; },
+                _streamManagerModel.SelectedCircleIndex < DisplayStreams.Count
+                    ? DispatcherPriority.DataBind : DispatcherPriority.ContextIdle);
         }
     }
 }

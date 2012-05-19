@@ -21,13 +21,13 @@ namespace GPlusBrowser.ViewModel
             _manager.ChangedSelectedCircleIndex += _manager_ChangedSelectedCircleIndex;
             _selectedCircleIndex = -1;
             _displayCircleSelecter = false;
-            Items = new DispatchObservableCollection<CircleSelecterViewModel>(uiThreadDispatcher);
+            Items = new ObservableCollection<CircleSelecterViewModel>();
         }
 
         StreamManager _manager;
         bool _displayCircleSelecter;
         int _selectedCircleIndex;
-        public DispatchObservableCollection<CircleSelecterViewModel> Items { get; set; }
+        public ObservableCollection<CircleSelecterViewModel> Items { get; set; }
         public bool DisplayCircleSelecter
         {
             get { return _displayCircleSelecter; }
@@ -54,15 +54,18 @@ namespace GPlusBrowser.ViewModel
 
         void _manager_ChangedSelectedCircleIndex(object sender, EventArgs e)
         {
-            if (SelectedCircleIndex != _manager.SelectedCircleIndex)
-                SelectedCircleIndex = _manager.SelectedCircleIndex;
+            UiThreadDispatcher.BeginInvoke((Action)(() =>
+            {
+                if (SelectedCircleIndex != _manager.SelectedCircleIndex)
+                    SelectedCircleIndex = _manager.SelectedCircleIndex;
+            }), DispatcherPriority.ContextIdle);
         }
         void _manager_Initialized(object sender, EventArgs e)
         {
             SelectedCircleIndex = -1;
-            Items.Clear();
+            Items.Clear(UiThreadDispatcher);
             foreach (CircleInfo item in _manager.CircleStreams.Select(strm => (CircleInfo)strm.Reader))
-                Items.Add(new CircleSelecterViewModel(item, UiThreadDispatcher));
+                Items.Add(new CircleSelecterViewModel(item, UiThreadDispatcher), UiThreadDispatcher);
         }
     }
     public class circleSelecterBoolToLeftDouble : System.Windows.Data.IMultiValueConverter

@@ -19,14 +19,14 @@ namespace GPlusBrowser.ViewModel
             _accountManagerModel = accountManagerModel;
             _accountManagerModel.ChangedAccounts += _accountManagerModel_ChangedAccounts;
             Loginer = new LoginerViewModel(accountManagerModel, uiThreadDispatcher);
-            Accounts = new DispatchObservableCollection<AccountPanelViewModel>(uiThreadDispatcher);
+            Accounts = new ObservableCollection<AccountPanelViewModel>();
             OpenAddAccountPanelCommand = new RelayCommand(
                 OpenAddAccountPanelCommand_Executed, OpenAddAccountPanelCommand_CanExecuted);
         }
 
         AccountManager _accountManagerModel;
         public LoginerViewModel Loginer { get; set; }
-        public DispatchObservableCollection<AccountPanelViewModel> Accounts { get; set; }
+        public ObservableCollection<AccountPanelViewModel> Accounts { get; set; }
         public ICommand OpenAddAccountPanelCommand { get; set; }
 
         void OpenAddAccountPanelCommand_Executed(object arg)
@@ -43,19 +43,18 @@ namespace GPlusBrowser.ViewModel
                     {
                         var circle = (Account)e.NewItems[i];
                         var circleVm = new AccountPanelViewModel(circle, _accountManagerModel, UiThreadDispatcher);
-                        Accounts.Insert(
-                            e.NewStartingIndex + i, circleVm);
+                        Accounts.Insert(e.NewStartingIndex + i, circleVm, UiThreadDispatcher);
                     }
                     break;
                 case System.Collections.Specialized.NotifyCollectionChangedAction.Move:
-                    Accounts.Move(e.OldStartingIndex, e.NewStartingIndex);
+                    Accounts.Move(e.OldStartingIndex, e.NewStartingIndex, UiThreadDispatcher);
                     break;
                 case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
                     for (var i = 0; i < e.OldItems.Count; i++)
-                        Accounts.RemoveAt(e.OldStartingIndex);
+                        Accounts.RemoveAt(e.OldStartingIndex, UiThreadDispatcher);
                     break;
                 case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:
-                    Accounts.Clear();
+                    Accounts.Clear(UiThreadDispatcher);
                     break;
             }
         }

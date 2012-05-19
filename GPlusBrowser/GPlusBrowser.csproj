@@ -106,7 +106,7 @@
       <DependentUpon>CommentListBox.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\ItemSelecter.cs" />
-    <Compile Include="DispatchObservableCollection.cs" />
+    <Compile Include="ObservableCollectionEx.cs" />
     <Compile Include="Model\AccountManager.cs" />
     <Compile Include="Model\SettingModelManager.cs" />
     <Compile Include="Model\Stream\Activity.cs" />

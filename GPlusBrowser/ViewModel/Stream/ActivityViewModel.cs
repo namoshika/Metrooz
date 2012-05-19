@@ -18,7 +18,7 @@ namespace GPlusBrowser.ViewModel
             : base(uiThreadDispatcher)
         {
             _activity = activity;
-            _comments = new DispatchObservableCollection<CommentViewModel>(uiThreadDispatcher);
+            _comments = new ObservableCollection<CommentViewModel>();
             _activity_Refreshed(null, null);
             _comments.Clear();
             foreach (var item in _activity.Comments.ToArray().Select(
@@ -38,7 +38,7 @@ namespace GPlusBrowser.ViewModel
         string _postDate;
         string _postCommentText;
         object _attachedContent;
-        DispatchObservableCollection<CommentViewModel> _comments;
+        ObservableCollection<CommentViewModel> _comments;
         System.Windows.Documents.Inline _postContentInline;
         GPlusBrowser.Controls.CommentListBoxMode _mode;
 
@@ -114,7 +114,7 @@ namespace GPlusBrowser.ViewModel
                 OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("AttachedContent"));
             }
         }
-        public DispatchObservableCollection<CommentViewModel> Comments
+        public ObservableCollection<CommentViewModel> Comments
         {
             get { return _comments; }
             set
@@ -194,17 +194,17 @@ namespace GPlusBrowser.ViewModel
             {
                 case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
                     foreach (var item in e.NewItems)
-                        Comments.Add(new CommentViewModel((Comment)item, UiThreadDispatcher));
+                        Comments.Add(new CommentViewModel((Comment)item, UiThreadDispatcher), UiThreadDispatcher);
                     break;
                 case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
                     for (var i = 0; i < e.OldItems.Count; i++)
                     {
                         var tmp = Comments.First(vm => vm.Id == ((Comment)e.OldItems[i]).CommentInfo.Id);
-                        Comments.Remove(tmp);
+                        Comments.Remove(tmp, UiThreadDispatcher);
                     }
                     break;
                 case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:
-                    Comments.Clear();
+                    Comments.Clear(UiThreadDispatcher);
                     break;
             }
         }

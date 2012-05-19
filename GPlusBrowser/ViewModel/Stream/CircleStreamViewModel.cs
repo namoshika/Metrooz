@@ -15,14 +15,14 @@ namespace GPlusBrowser.ViewModel
         public CircleStreamViewModel(Stream circle, int order, Dispatcher uiThreadDispatcher)
             : base(uiThreadDispatcher)
         {
-            Activities = new DispatchObservableCollection<ActivityViewModel>(uiThreadDispatcher);
+            Activities = new ObservableCollection<ActivityViewModel>();
             Order = order;
             Circle = circle;
             MaxActivitiesCount = 40;
         }
         int _maxActivityCount;
         Stream _circle;
-        DispatchObservableCollection<ActivityViewModel> _activities;
+        ObservableCollection<ActivityViewModel> _activities;
 
         public int MaxActivitiesCount
         {
@@ -54,7 +54,7 @@ namespace GPlusBrowser.ViewModel
                         Activities.Add(new ActivityViewModel(item, UiThreadDispatcher));
             }
         }
-        public DispatchObservableCollection<ActivityViewModel> Activities
+        public ObservableCollection<ActivityViewModel> Activities
         {
             get { return _activities; }
             set
@@ -83,7 +83,7 @@ namespace GPlusBrowser.ViewModel
                             var viewModel = new ActivityViewModel((Activity)e.NewItems[i], UiThreadDispatcher);
                             var idx = _circle.Activities.Count - (e.NewStartingIndex + i) - 1;
                             if (idx >= 0 && idx < MaxActivitiesCount - 1)
-                                Activities.Insert(idx, viewModel);
+                                Activities.Insert(idx, viewModel, UiThreadDispatcher);
                         }
                         break;
                     case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
@@ -92,15 +92,16 @@ namespace GPlusBrowser.ViewModel
                             var idx = _circle.Activities.Count - (e.OldStartingIndex) - 1;
                             if (idx >= 0 && idx < MaxActivitiesCount - 1)
                             {
-                                Activities[idx].Dispose();
-                                Activities.RemoveAt(idx);
+                                var tmp = Activities[idx];
+                                Activities.RemoveAt(idx, UiThreadDispatcher);
+                                tmp.Dispose();
                             }
                         }
                         break;
                     case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:
                         for (var i = 0; i < Activities.Count; i++)
                             Activities[i].Dispose();
-                        Activities.Clear();
+                        Activities.Clear(UiThreadDispatcher);
                         break;
                 }
                 ActivitiesCompaction(MaxActivitiesCount);
@@ -113,13 +114,13 @@ namespace GPlusBrowser.ViewModel
                 for (var i = ActivitiesCapacity; i < Activities.Count; i++)
                 {
                     Activities[i].Dispose();
-                    Activities.RemoveAt(i);
+                    Activities.RemoveAt(i, UiThreadDispatcher);
                 }
             }
             else
             {
                 for (var i = _circle.Activities.Count - Activities.Count - 1; i >= 0 && i < _circle.Activities.Count; i++)
-                    Activities.Add(new ActivityViewModel(_circle.Activities[i], UiThreadDispatcher));
+                    Activities.Add(new ActivityViewModel(_circle.Activities[i], UiThreadDispatcher), UiThreadDispatcher);
             }
         }
     }
