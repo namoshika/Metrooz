@@ -44,16 +44,16 @@ namespace GPlusBrowser.ViewModel
             {
                 case NotifyCollectionChangedAction.Add:
                     for (var i = 0; i < e.NewItems.Count; i++)
-                        Pages.Insert(e.NewStartingIndex + i + 1, new AccountViewModel((Account)e.NewItems[i], _accountManagerModel, UiThreadDispatcher), UiThreadDispatcher);
+                        Pages.InsertAsync(e.NewStartingIndex + i + 1, new AccountViewModel((Account)e.NewItems[i], _accountManagerModel, UiThreadDispatcher), UiThreadDispatcher);
                     break;
                 case NotifyCollectionChangedAction.Remove:
                     for (var i = 0; i < e.OldItems.Count; i++)
-                        Pages.RemoveAt(e.OldStartingIndex + 1, UiThreadDispatcher);
+                        Pages.RemoveAtAsync(e.OldStartingIndex + 1, UiThreadDispatcher);
                     break;
                 case NotifyCollectionChangedAction.Reset:
                     var accountManager = Pages.First();
                     Pages.Clear();
-                    Pages.Add(accountManager, UiThreadDispatcher);
+                    Pages.AddAsync(accountManager, UiThreadDispatcher);
                     break;
             }
         }

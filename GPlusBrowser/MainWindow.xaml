@@ -257,7 +257,7 @@
                                         </DockPanel>
                                     </Border>
                                 </DataTemplate>
-                                <DataTemplate DataType="{x:Type localVm:CircleStreamViewModel}">
+                                <DataTemplate DataType="{x:Type localVm:StreamViewModel}">
                                     <localCtrl:ActivityTreeView Focusable="False"
                                               ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                               ScrollViewer.VerticalScrollBarVisibility="Visible"

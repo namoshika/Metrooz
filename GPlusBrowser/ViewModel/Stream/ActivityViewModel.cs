@@ -194,17 +194,17 @@ namespace GPlusBrowser.ViewModel
             {
                 case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
                     foreach (var item in e.NewItems)
-                        Comments.Add(new CommentViewModel((Comment)item, UiThreadDispatcher), UiThreadDispatcher);
+                        Comments.AddAsync(new CommentViewModel((Comment)item, UiThreadDispatcher), UiThreadDispatcher);
                     break;
                 case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
                     for (var i = 0; i < e.OldItems.Count; i++)
                     {
                         var tmp = Comments.First(vm => vm.Id == ((Comment)e.OldItems[i]).CommentInfo.Id);
-                        Comments.Remove(tmp, UiThreadDispatcher);
+                        Comments.RemoveAsync(tmp, UiThreadDispatcher);
                     }
                     break;
                 case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:
-                    Comments.Clear(UiThreadDispatcher);
+                    Comments.ClearAsync(UiThreadDispatcher);
                     break;
             }
         }

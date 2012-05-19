@@ -63,9 +63,9 @@ namespace GPlusBrowser.ViewModel
         void _manager_Initialized(object sender, EventArgs e)
         {
             SelectedCircleIndex = -1;
-            Items.Clear(UiThreadDispatcher);
+            Items.ClearAsync(UiThreadDispatcher);
             foreach (CircleInfo item in _manager.CircleStreams.Select(strm => (CircleInfo)strm.Reader))
-                Items.Add(new CircleSelecterViewModel(item, UiThreadDispatcher), UiThreadDispatcher);
+                Items.AddAsync(new CircleSelecterViewModel(item, UiThreadDispatcher), UiThreadDispatcher);
         }
     }
     public class circleSelecterBoolToLeftDouble : System.Windows.Data.IMultiValueConverter

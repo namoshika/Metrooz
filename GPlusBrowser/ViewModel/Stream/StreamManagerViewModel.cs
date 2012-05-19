@@ -62,9 +62,9 @@ namespace GPlusBrowser.ViewModel
                     for (var i = 0; i < e.NewItems.Count; i++)
                     {
                         var circle = (Stream)e.NewItems[i];
-                        var circleVm = new CircleStreamViewModel(circle, e.NewStartingIndex + i, UiThreadDispatcher);
+                        var circleVm = new StreamViewModel(circle, e.NewStartingIndex + i, UiThreadDispatcher);
                         circleVm.Order = e.NewStartingIndex + i + 1;
-                        DisplayStreams.Add(circleVm, UiThreadDispatcher);
+                        DisplayStreams.AddAsync(circleVm, UiThreadDispatcher);
                     }
                     break;
                 case System.Collections.Specialized.NotifyCollectionChangedAction.Move:
@@ -75,12 +75,12 @@ namespace GPlusBrowser.ViewModel
                     break;
                 case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
                     for (var i = 0; i < e.OldItems.Count; i++)
-                        DisplayStreams.RemoveAt(e.OldStartingIndex, UiThreadDispatcher);
+                        DisplayStreams.RemoveAtAsync(e.OldStartingIndex, UiThreadDispatcher);
                     foreach (var item in _displayStreams.Where(strmVm => strmVm.Order >= e.OldStartingIndex))
                         item.Order -= e.NewItems.Count;
                     break;
                 case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:
-                    DisplayStreams.Clear(UiThreadDispatcher);
+                    DisplayStreams.ClearAsync(UiThreadDispatcher);
                     break;
             }
         }

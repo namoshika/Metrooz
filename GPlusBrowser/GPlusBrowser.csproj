@@ -127,12 +127,10 @@
     <Compile Include="ViewModel\Stream\ActivityViewModel.cs" />
     <Compile Include="ViewModel\AccountViewModel.cs" />
     <Compile Include="ViewModel\RelayCommand.cs" />
-    <Compile Include="ViewModel\Stream\BaseStreamViewModel.cs" />
-    <Compile Include="ViewModel\Stream\CircleStreamViewModel.cs" />
+    <Compile Include="ViewModel\Stream\StreamViewModel.cs" />
     <Compile Include="ViewModel\Stream\CommentViewModel.cs" />
     <Compile Include="ViewModel\SettingViewModel.cs" />
     <Compile Include="ViewModel\Stream\StreamManagerViewModel.cs" />
-    <Compile Include="ViewModel\Stream\StreamViewModel.cs" />
     <Compile Include="ViewModel\ViewModelBase.cs" />
     <Page Include="Controls\CommentListBox.xaml">
       <Generator>MSBuild:Compile</Generator>
