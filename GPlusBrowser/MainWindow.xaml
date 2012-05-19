@@ -74,7 +74,7 @@
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate DataType="{x:Type localVm:AccountPanelViewModel}">
-                                        <StackPanel Margin="10,10,15,15">
+                                        <StackPanel Margin="20,10,15,15">
                                             <StackPanel Orientation="Horizontal">
                                                 <Border Width="35" Height="35" BorderBrush="White" Background="White" BorderThickness="0">
                                                     <Image Margin="0" HorizontalAlignment="Left" VerticalAlignment="Top" Source="{Binding UserIconUrl}" />
@@ -82,7 +82,7 @@
                                                         <DropShadowEffect Color="Black" Direction="315" Opacity="0.3" BlurRadius="5" ShadowDepth="0" />
                                                     </Border.Effect>
                                                 </Border>
-                                                <Label Padding="0" Margin="10,0,0,0" VerticalContentAlignment="Center" Content="{Binding UserName}" FontSize="18" FontWeight="SemiBold" />
+                                                <Label Padding="0" Margin="10,0,0,0" VerticalContentAlignment="Center" Content="{Binding UserName}" FontSize="18" />
                                             </StackPanel>
                                             <WrapPanel Margin="15,10,0,0">
                                                 <Button Padding="8,5,8,5" Command="{Binding OpenStreamPanelCommand}">ストリームを開く</Button>
