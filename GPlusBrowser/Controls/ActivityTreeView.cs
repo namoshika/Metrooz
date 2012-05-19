@@ -73,16 +73,22 @@ namespace GPlusBrowser.Controls
                 _items.Insert(Math.Min(_items.Count, idx), element);
             }
             element_SizeChanged(element, null);
+            element.Loaded -= element_Loaded;
 
-            element.BeginAnimation(
-                TreeViewItem.HeightProperty,
-                new System.Windows.Media.Animation.DoubleAnimation(
-                    0, element.ActualHeight, new Duration(TimeSpan.FromMilliseconds(300))));
-            var timeline = new ObjectAnimationUsingKeyFrames();
-            timeline.KeyFrames.Add(new DiscreteObjectKeyFrame(double.NaN));
-            element.BeginAnimation(
-                TreeViewItem.HeightProperty,
-                timeline, HandoffBehavior.Compose);
+            var elementOffset = _itemHeights.Take(idx).Sum();
+            if (_scrollviewer.VerticalOffset + _scrollviewer.ActualHeight > elementOffset
+                && _scrollviewer.VerticalOffset < elementOffset + element.ActualHeight)
+            {
+                element.BeginAnimation(
+                    TreeViewItem.HeightProperty,
+                    new System.Windows.Media.Animation.DoubleAnimation(
+                        0, element.ActualHeight, new Duration(TimeSpan.FromMilliseconds(300))));
+                var timeline = new ObjectAnimationUsingKeyFrames();
+                timeline.KeyFrames.Add(new DiscreteObjectKeyFrame(double.NaN));
+                element.BeginAnimation(
+                    TreeViewItem.HeightProperty,
+                    timeline, HandoffBehavior.Compose);
+            }
         }
         void element_Unloaded(object sender, RoutedEventArgs e)
         {
@@ -90,7 +96,6 @@ namespace GPlusBrowser.Controls
             var idx = _items.IndexOf(element);
             var height = _itemHeights[idx];
             element.SizeChanged -= element_SizeChanged;
-            element.Loaded -= element_Loaded;
 
             if (_scrollviewer.VerticalOffset > _itemHeights.Take(idx).Sum())
                 _scrollviewer.ScrollToVerticalOffset(_scrollviewer.VerticalOffset - height);

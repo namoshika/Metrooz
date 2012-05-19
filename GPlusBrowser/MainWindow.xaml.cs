@@ -26,11 +26,7 @@ namespace GPlusBrowser
 #if ENABLED_VMTEST_MODE
             DataContext = FindResource("testVm");
 #else
-            _settingManager = new Model.SettingModelManager();
-            _accountManager = new Model.AccountManager();
-            _accountSwitcherVM = new ViewModel.AccountSwitcherViewModel(_accountManager, Dispatcher);
-            DataContext = _accountSwitcherVM;
-            _accountManager.Initialize();
+            Loaded += MainWindow_Loaded;
 #endif
         }
         Model.SettingModelManager _settingManager;
@@ -43,6 +39,14 @@ namespace GPlusBrowser
             _accountManager.Dispose();
             base.OnClosed(e);
         }
+        void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            _settingManager = new Model.SettingModelManager();
+            _accountManager = new Model.AccountManager();
+            _accountSwitcherVM = new ViewModel.AccountSwitcherViewModel(_accountManager, Dispatcher);
+            DataContext = _accountSwitcherVM;
+            _accountManager.Initialize();
+        }
     }
     public static class InlineBehavior
     {
@@ -52,9 +56,9 @@ namespace GPlusBrowser
         { obj.SetValue(InlineProperty, value); }
 
         // Using a DependencyProperty as the backing store for Inline.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty InlineProperty =
-            DependencyProperty.RegisterAttached("Inline", typeof(System.Windows.Documents.Inline),
-            typeof(InlineBehavior), new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender,
+        public static readonly DependencyProperty InlineProperty = DependencyProperty.RegisterAttached(
+            "Inline", typeof(System.Windows.Documents.Inline), typeof(InlineBehavior),
+            new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender,
                 (sender, e) =>
                 {
                     var textBlock = sender as TextBlock;
