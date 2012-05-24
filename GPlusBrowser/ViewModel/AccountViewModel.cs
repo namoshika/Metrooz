@@ -19,26 +19,14 @@ namespace GPlusBrowser.ViewModel
             _accountModel = model;
             _accountModel.Initialized += _accountModel_Initialized;
             _accountManagerModel = manager;
-            CircleSelecter = new CircleSeleterManagerViewModel(model.Stream, uiThreadDispatcher);
             Stream = new StreamManagerViewModel(model.Stream, uiThreadDispatcher);
             BackToAccountManagerCommand = new RelayCommand(BackToAccountManagerCommand_Execute);
         }
-
         Account _accountModel;
         AccountManager _accountManagerModel;
-        CircleSeleterManagerViewModel _circleSelecter;
         StreamManagerViewModel _stream;
         Uri _accountIconUrl;
 
-        public CircleSeleterManagerViewModel CircleSelecter
-        {
-            get { return _circleSelecter; }
-            set
-            {
-                _circleSelecter = value;
-                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("CircleSelecter"));
-            }
-        }
         public StreamManagerViewModel Stream
         {
             get { return _stream; }

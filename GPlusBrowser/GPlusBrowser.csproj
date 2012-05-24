@@ -119,8 +119,6 @@
     <Compile Include="ViewModel\AccountSwitcherViewModel.cs" />
     <Compile Include="ViewModel\AccountManagerPanel\LoginerViewModel.cs" />
     <Compile Include="ViewModel\Stream\AttachedLinkViewModel.cs" />
-    <Compile Include="ViewModel\Stream\CircleSelecterViewModel.cs" />
-    <Compile Include="ViewModel\Stream\CircleSeleterManagerViewModel.cs" />
     <Compile Include="Model\Stream\Comment.cs" />
     <Compile Include="Model\Stream\Stream.cs" />
     <Compile Include="Model\Stream\StreamManager.cs" />
@@ -167,12 +165,6 @@
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
     <AppDesigner Include="Properties\" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Resources\delete.png" />
-    <Resource Include="Resources\gear.png" />
-    <Resource Include="Resources\downloads.png" />
-    <Resource Include="Resources\testThumb.png" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SnkLib_GooglePlus\SnkLib_GooglePlus.csproj">
