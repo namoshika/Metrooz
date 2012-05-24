@@ -21,9 +21,10 @@ namespace GPlusBrowser.ViewModel
             _comments = new ObservableCollection<CommentViewModel>();
             _activity_Refreshed(null, null);
             _comments.Clear();
-            foreach (var item in _activity.Comments.ToArray().Select(
-                comment => (CommentViewModel)new CommentViewModel(comment, uiThreadDispatcher)))
-                Comments.Add(item);
+            lock (_activity.Comments)
+                foreach (var item in _activity.Comments.Select(
+                    comment => (CommentViewModel)new CommentViewModel(comment, uiThreadDispatcher)))
+                    Comments.Add(item);
 
             _activity.Comments.CollectionChanged += Comments_CollectionChanged;
             _activity.Updated += _activity_Refreshed;

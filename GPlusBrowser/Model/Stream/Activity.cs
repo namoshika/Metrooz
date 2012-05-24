@@ -44,26 +44,27 @@ namespace GPlusBrowser.Model
         void _info_Refreshed(object sender, EventArgs e) { OnUpdated(new EventArgs()); }
         void _info_comment_OnNext(CommentInfo comment)
         {
-            switch (comment.Status)
-            {
-                case PostStatusType.Removed:
-                    var item = Comments.FirstOrDefault(cmme => cmme.CommentInfo.Id == comment.Id);
-                    if (item != null)
-                        Comments.Remove(item);
-                    break;
-                case PostStatusType.Edited:
-                    item = Comments.FirstOrDefault(comme => comme.CommentInfo.Id == comment.Id);
-                    if (item != null)
-                        item.Refresh(comment);
-                    else
-                        goto default;
-                    break;
-                default:
-                    var idx = Comments.Count - 1;
-                    for (; idx >= 0 && Comments[idx].CommentInfo.CommentDate > comment.CommentDate; idx--) ;
-                    Comments.Insert(idx + 1, new Comment(comment));
-                    break;
-            }
+            lock(Comments)
+                switch (comment.Status)
+                {
+                    case PostStatusType.Removed:
+                        var item = Comments.FirstOrDefault(cmme => cmme.CommentInfo.Id == comment.Id);
+                        if (item != null)
+                            Comments.Remove(item);
+                        break;
+                    case PostStatusType.Edited:
+                        item = Comments.FirstOrDefault(comme => comme.CommentInfo.Id == comment.Id);
+                        if (item != null)
+                            item.Refresh(comment);
+                        else
+                            goto default;
+                        break;
+                    default:
+                        var idx = Comments.Count - 1;
+                        for (; idx >= 0 && Comments[idx].CommentInfo.CommentDate > comment.CommentDate; idx--) ;
+                        Comments.Insert(idx + 1, new Comment(comment));
+                        break;
+                }
         }
 
         public event EventHandler Updated;
