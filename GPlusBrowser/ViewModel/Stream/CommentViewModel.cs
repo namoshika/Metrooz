@@ -9,7 +9,7 @@ namespace GPlusBrowser.ViewModel
 {
     using Model;
 
-    public class CommentViewModel : ViewModelBase
+    public class CommentViewModel : ViewModelBase, IDisposable
     {
         public CommentViewModel(Comment model, Dispatcher uiThreadDispatcher)
             : base(uiThreadDispatcher)
@@ -80,6 +80,16 @@ namespace GPlusBrowser.ViewModel
                 _postContentInline = value;
                 OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("PostContentInline"));
             }
+        }
+        public void Dispose()
+        {
+            if (_model != null)
+                _model.Refreshed -= model_Refreshed;
+            _id = null;
+            _ownerName = null;
+            _commentContent = null;
+            _commentDate = null;
+            _postContentInline = null;
         }
 
         void model_Refreshed(object sender, EventArgs e)

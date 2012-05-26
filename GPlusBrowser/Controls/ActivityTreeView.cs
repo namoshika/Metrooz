@@ -15,7 +15,6 @@ namespace GPlusBrowser.Controls
         {
             _itemHeights = new List<double>();
             _items = new List<TreeViewItem>();
-            Loaded += ActivityTreeView_Loaded;
         }
         ScrollViewer _scrollviewer;
         List<double> _itemHeights;
@@ -29,8 +28,10 @@ namespace GPlusBrowser.Controls
             element.Unloaded += element_Unloaded;
             return element;
         }
-        void ActivityTreeView_Loaded(object sender, RoutedEventArgs e)
+
+        public override void OnApplyTemplate()
         {
+            base.OnApplyTemplate();
             _scrollviewer = (ScrollViewer)((Border)VisualTreeHelper.GetChild(this, 0)).Child;
         }
         void element_SizeChanged(object sender, SizeChangedEventArgs e)
@@ -96,6 +97,7 @@ namespace GPlusBrowser.Controls
             var idx = _items.IndexOf(element);
             var height = _itemHeights[idx];
             element.SizeChanged -= element_SizeChanged;
+            element.Unloaded -= element_Unloaded;
 
             if (_scrollviewer.VerticalOffset > _itemHeights.Take(idx).Sum())
                 _scrollviewer.ScrollToVerticalOffset(_scrollviewer.VerticalOffset - height);

@@ -18,7 +18,7 @@ namespace GPlusBrowser.ViewModel
             Activities = new ObservableCollection<ActivityViewModel>();
             Order = order;
             Circle = circle;
-            MaxActivitiesCount = 40;
+            MaxActivitiesCount = 30;
             _activityCount = 0;
         }
         int _maxActivityCount;
@@ -89,7 +89,7 @@ namespace GPlusBrowser.ViewModel
             Circle = null;
             foreach (var item in _activities)
                 item.Dispose();
-            _activities.Clear();
+            _activities.ClearAsync(UiThreadDispatcher);
         }
         protected void OnActivitiesCollectionChanged(
             object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)

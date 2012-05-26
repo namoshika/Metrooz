@@ -99,6 +99,12 @@ namespace GPlusBrowser.Model
                             OnUpdatedActivities(new System.Collections.Specialized.NotifyCollectionChangedEventArgs(
                                 System.Collections.Specialized.NotifyCollectionChangedAction.Add,
                                 item, Activities.Count - 1));
+
+                            if (_activities.Count > 50)
+                            {
+                                _activities[0].Dispose();
+                                _activities.RemoveAt(0);
+                            }
                             break;
                         case PostStatusType.Edited:
                             item = Activities.FirstOrDefault(activity => activity.ActivityInfo.Id == info.Id);

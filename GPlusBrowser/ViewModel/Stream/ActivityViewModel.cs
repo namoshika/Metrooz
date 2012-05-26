@@ -145,7 +145,25 @@ namespace GPlusBrowser.ViewModel
         public ICommand PostCommentCommand { get; private set; }
         public void Dispose()
         {
-            _activity.Updated -= _activity_Refreshed;
+            if (_activity != null)
+            {
+                _activity.Updated -= _activity_Refreshed;
+                _activity.Comments.CollectionChanged -= Comments_CollectionChanged;
+            }
+            foreach (var item in _comments)
+                item.Dispose();
+            _comments.ClearAsync(UiThreadDispatcher);
+
+            _activity = null;
+            _iconUrl = null;
+            _activityUrl = null;
+            _postUserName = null;
+            _postContent = null;
+            _postDate = null;
+            _postCommentText = null;
+            _attachedContent = null;
+            _comments = null;
+            _postContentInline = null;
         }
 
         void _activity_Refreshed(object sender, EventArgs e)

@@ -48,7 +48,11 @@ namespace GPlusBrowser.ViewModel
         public ICommand BackToAccountManagerCommand { get; private set; }
         public void Dispose()
         {
-            Stream.Dispose();
+            _accountModel.Initialized -= _accountModel_Initialized;
+            _accountModel = null;
+            _accountManagerModel = null;
+            _stream.Dispose();
+            _stream = null;
         }
 
         void _accountModel_Initialized(object sender, EventArgs e)
