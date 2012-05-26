@@ -10,12 +10,14 @@ namespace GPlusBrowser.Model
 {
     public class StreamManager
     {
-        public StreamManager(Account mainWindow)
+        public StreamManager(Account account)
         {
-            _account = mainWindow;
+            _account = account;
             _circleStreams = new List<Stream>();
             _displayStreams = new List<Stream>();
             _selectedCircleIndex = -1;
+
+            _account.Circles.FullLoaded += Circles_FullLoaded;
         }
         Account _account;
         int _selectedCircleIndex;
@@ -31,13 +33,6 @@ namespace GPlusBrowser.Model
                 if (_selectedCircleIndex == value)
                     return;
                 _selectedCircleIndex = value;
-                if (_displayStreams.Count >= 0 && _selectedCircleIndex >= 0)
-                {
-                    var selectedStream = _displayStreams[_selectedCircleIndex];
-                    if (!selectedStream.IsRefreshed)
-                        selectedStream.Refresh();
-                }
-
                 OnChangedSelectedCircleIndex(new EventArgs());
             }
         }
@@ -66,8 +61,8 @@ namespace GPlusBrowser.Model
                     foreach (var item in _displayStreams)
                         item.Dispose();
                     _displayStreams.Clear();
-                    OnChangedDisplayStreams(new NotifyCollectionChangedEventArgs(
-                        NotifyCollectionChangedAction.Reset));
+                    OnChangedDisplayStreams(
+                        new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
                     foreach (var item in _circleStreams)
                         _displayStreams.Add(item);
                 }
@@ -119,6 +114,27 @@ namespace GPlusBrowser.Model
                 }
             }
         }
+        void Circles_FullLoaded(object sender, EventArgs e)
+        {
+            //TODO: 現状ではサークル数が増えていた場合に対処できてない
+            foreach(var item in _account.Circles.Items)
+            {
+                foreach (var itemA in CircleStreams)
+                {
+                    if (itemA.Poster.Id == item.Id)
+                        itemA.Poster = item;
+                    if (itemA.Reader.Id == item.Id)
+                        itemA.Reader = item;
+                }
+                foreach (var itemA in DisplayStreams)
+                {
+                    if (itemA.Poster.Id == item.Id)
+                        itemA.Poster = item;
+                    if (itemA.Reader.Id == item.Id)
+                        itemA.Reader = item;
+                }
+            }
+        }
 
         public event EventHandler Initialized;
         protected virtual void OnInitialized(EventArgs e)
@@ -127,8 +143,17 @@ namespace GPlusBrowser.Model
                 Initialized(this, e);
         }
         public event EventHandler ChangedSelectedCircleIndex;
-        protected virtual void OnChangedSelectedCircleIndex(EventArgs e)
+        protected async virtual void OnChangedSelectedCircleIndex(EventArgs e)
         {
+            if (_displayStreams.Count >= 0 && _selectedCircleIndex >= 0)
+            {
+                var selectedStream = _displayStreams[_selectedCircleIndex];
+                if (_account.Circles.IsFullLoaded == false && selectedStream.Reader.Id != "anyone")
+                    await _account.Circles.FullLoad();
+                if (!selectedStream.IsRefreshed)
+                    selectedStream.Refresh();
+            }
+
             if (ChangedSelectedCircleIndex != null)
                 ChangedSelectedCircleIndex(this, e);
         }

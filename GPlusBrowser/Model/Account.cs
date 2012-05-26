@@ -39,12 +39,13 @@ namespace GPlusBrowser.Model
             var client = new PlatformClient(Setting.Cookies);
             try
             {
-                await client.UpdateHomeInitDataAsync().ConfigureAwait(false);
-                IsLogined = true;
+                var initDtTask = client.UpdateHomeInitDataAsync().ContinueWith(tsk => true).ConfigureAwait(false);
+                var profileTask = client.Relation.GetProfileOfMe(false).ConfigureAwait(false);
 
                 GooglePlusClient = client;
                 Circles.Initialize();
-                MyProfile = await client.Relation.GetProfileOfMe(false).ConfigureAwait(false);
+                IsLogined = await initDtTask;
+                MyProfile = await profileTask;
                 AccountIconUrl = MyProfile.IconImageUrlText;
                 if (Setting.UserIconUrl != MyProfile.IconImageUrlText)
                     Setting.UserIconUrl = MyProfile.IconImageUrlText;

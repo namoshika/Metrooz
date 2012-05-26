@@ -44,16 +44,20 @@ namespace GPlusBrowser.Model
             get { return _reader; }
             set
             {
+                Readable = value != null;
+                Name = value.Name;
+                var activityGetter = value.GetActivities();
+                var reader = value;
+                var streamObj = reader.GetStream().Subscribe(activity_OnNext);
+
                 if (_reader != value && _reader != null || _reader != null)
                 {
                     _streamObj.Dispose();
                     _activities.Clear();
                 }
-                Readable = value != null;
-                Name = value.Name;
-                _activityGetter = value.GetActivities();
-                _reader = value;
-                _streamObj = _reader.GetStream().Subscribe(activity_OnNext);
+                _activityGetter = activityGetter;
+                _reader = reader;
+                _streamObj = streamObj;
             }
         }
         public void Refresh()
