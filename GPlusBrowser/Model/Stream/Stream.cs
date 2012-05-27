@@ -13,6 +13,7 @@ namespace GPlusBrowser.Model
         public Stream(StreamManager manager, CircleInfo circleInfo)
         {
             _manager = manager;
+            _isRefresh = 0;
             _activities = new List<Activity>();
             Poster = circleInfo;
             Reader = circleInfo;
@@ -23,11 +24,12 @@ namespace GPlusBrowser.Model
         StreamManager _manager;
         IInfoList<ActivityInfo> _activityGetter;
         List<Activity> _activities;
-        public ReadOnlyCollection<Activity> Activities
-        { get { return _activities.AsReadOnly(); } }
+        int _isRefresh;
+
+        public ReadOnlyCollection<Activity> Activities { get { return _activities.AsReadOnly(); } }
+        public bool IsRefreshed { get { return _isRefresh == 1; } }
         public bool Postable { get; private set; }
         public bool Readable { get; private set; }
-        public bool IsRefreshed { get; private set; }
         public string Name { get; private set; }
 
         public IPostRange Poster
@@ -62,7 +64,9 @@ namespace GPlusBrowser.Model
         }
         public void Refresh()
         {
-            IsRefreshed = true;
+            if (System.Threading.Interlocked.CompareExchange(ref _isRefresh, 1, 0) == 1)
+                return;
+
             _activityGetter.TakeAsync(20)
                 .ContinueWith(tsk =>
                     {

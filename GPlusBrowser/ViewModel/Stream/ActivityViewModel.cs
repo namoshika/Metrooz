@@ -33,6 +33,7 @@ namespace GPlusBrowser.ViewModel
         Activity _activity;
         Uri _iconUrl;
         Uri _activityUrl;
+        int _isDisposed;
         bool _isExpandComment;
         string _postUserName;
         string _postContent;
@@ -145,15 +146,14 @@ namespace GPlusBrowser.ViewModel
         public ICommand PostCommentCommand { get; private set; }
         public void Dispose()
         {
-            if (_activity != null)
-            {
-                _activity.Updated -= _activity_Refreshed;
-                _activity.Comments.CollectionChanged -= Comments_CollectionChanged;
-            }
+            if (System.Threading.Interlocked.CompareExchange(ref _isDisposed, 1, 0) == 1)
+                return;
+
+            _activity.Updated -= _activity_Refreshed;
+            _activity.Comments.CollectionChanged -= Comments_CollectionChanged;
             foreach (var item in _comments)
                 item.Dispose();
             _comments.ClearAsync(UiThreadDispatcher);
-
             _activity = null;
             _iconUrl = null;
             _activityUrl = null;

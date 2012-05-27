@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using SunokoLibrary.GooglePlus;
@@ -149,8 +150,8 @@ namespace GPlusBrowser.Model
             {
                 var selectedStream = _displayStreams[_selectedCircleIndex];
                 if (_account.Circles.IsFullLoaded == false && selectedStream.Reader.Id != "anyone")
-                    await _account.Circles.FullLoad();
-                if (!selectedStream.IsRefreshed)
+                    await _account.Circles.FullLoad().ConfigureAwait(false);
+                if (selectedStream.IsRefreshed == false)
                     selectedStream.Refresh();
             }
 

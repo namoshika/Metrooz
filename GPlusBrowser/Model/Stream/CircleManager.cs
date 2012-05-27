@@ -18,11 +18,11 @@ namespace GPlusBrowser.Model
         }
         Account _accountModel;
         List<CircleInfo> _items;
+        double _isFullLoaded;
 
         public bool IsInitialized { get; private set; }
-        public bool IsFullLoaded { get; private set; }
-        public ReadOnlyCollection<CircleInfo> Items
-        { get { return _items.AsReadOnly(); } }
+        public bool IsFullLoaded { get { return _isFullLoaded == 1; } }
+        public ReadOnlyCollection<CircleInfo> Items { get { return _items.AsReadOnly(); } }
 
         public async void Initialize()
         {
@@ -44,6 +44,9 @@ namespace GPlusBrowser.Model
         }
         public async Task FullLoad()
         {
+            if (System.Threading.Interlocked.CompareExchange(ref _isFullLoaded, 1, 0) == 1)
+                return;
+
             await _accountModel.GooglePlusClient.Relation
                 .UpdateCirclesAndBlockAsync(true, CircleUpdateLevel.LoadedWithMembers).ConfigureAwait(false);
             lock (_items)
@@ -51,7 +54,6 @@ namespace GPlusBrowser.Model
                 _items.Clear();
                 _items.AddRange(_accountModel.GooglePlusClient.Relation.Circles);
             }
-            IsFullLoaded = true;
             OnFullLoaded(new EventArgs());
         }
         public void ClipCircle(CircleInfo info) { }

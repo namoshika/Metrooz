@@ -47,15 +47,16 @@ namespace GPlusBrowser.ViewModel
         }
         public void Dispose()
         {
-            if (_streamManagerModel != null)
-            {
-                _streamManagerModel.ChangedDisplayStreams -= _stream_ChangedDisplayStreams;
-                _streamManagerModel.ChangedSelectedCircleIndex -= _streamManagerModel_ChangedSelectedCircleIndex;
-                _streamManagerModel = null;
-            }
+            if (_streamManagerModel == null)
+                return;
+
+            SelectedCircleIndex = -1;
+            _streamManagerModel.ChangedDisplayStreams -= _stream_ChangedDisplayStreams;
+            _streamManagerModel.ChangedSelectedCircleIndex -= _streamManagerModel_ChangedSelectedCircleIndex;
+            _streamManagerModel = null;
+
             foreach (var item in DisplayStreams)
                 item.Dispose();
-            SelectedCircleIndex = -1;
             DisplayStreams = null;
         }
 
