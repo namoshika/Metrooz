@@ -6,23 +6,38 @@
         xmlns:local="clr-namespace:GPlusBrowser"
         xmlns:localVm="clr-namespace:GPlusBrowser.ViewModel"
         xmlns:localCtrl="clr-namespace:GPlusBrowser.Controls"
-        Title="MainWindow" Height="650" Width="550">
-    <Grid>
+        Title="MainWindow" Height="650" Width="550" Name="mainWindow">
+    <Grid HorizontalAlignment="Stretch">
         <Grid.Resources>
             <BooleanToVisibilityConverter x:Key="booleanToVisibilityConverter" />
-            <Storyboard x:Key="expandOptionPanelStoryboard">
-                <DoubleAnimation Storyboard.TargetName="optionPanel" Storyboard.TargetProperty="Height" BeginTime="0:0:0" From="0" To="200" Duration="0:0:0.4" AccelerationRatio="0.01" DecelerationRatio="0.99" />
-            </Storyboard>
-            <Storyboard x:Key="dexpandOptionPanelStoryboard">
-                <DoubleAnimation Storyboard.TargetName="optionPanel" Storyboard.TargetProperty="Height" BeginTime="0:0:0" From="200" To="0" Duration="0:0:0.4" AccelerationRatio="0.01" DecelerationRatio="0.99" />
-            </Storyboard>
             <localVm:SettingStatusToBooleanConverter x:Key="statusToBooleanConverter" />
+            <Storyboard x:Key="openSidePanelStoryborard">
+                <BooleanAnimationUsingKeyFrames Storyboard.TargetName="mainWindow" Storyboard.TargetProperty="NowResizeAnimation" BeginTime="0:0:0">
+                    <DiscreteBooleanKeyFrame Value="True" KeyTime="0:0:0" />
+                    <DiscreteBooleanKeyFrame Value="False" KeyTime="0:0:0.5" />
+                </BooleanAnimationUsingKeyFrames>
+                <DoubleAnimation
+                    Storyboard.TargetName="mainWindow" Storyboard.TargetProperty="Width"
+                    BeginTime="0:0:0" From="{Binding ActualWidth,ElementName=mainWindow}"
+                    By="400" Duration="0:0:0.5" AccelerationRatio="0.01" DecelerationRatio="0.99" />
+            </Storyboard>
+            <Storyboard x:Key="closeSidePanelStoryborard">
+                <BooleanAnimationUsingKeyFrames Storyboard.TargetName="mainWindow" Storyboard.TargetProperty="NowResizeAnimation" BeginTime="0:0:0">
+                    <DiscreteBooleanKeyFrame Value="True" KeyTime="0:0:0" />
+                    <DiscreteBooleanKeyFrame Value="False" KeyTime="0:0:0.5" />
+                </BooleanAnimationUsingKeyFrames>
+                <DoubleAnimation
+                    Storyboard.TargetName="mainWindow" Storyboard.TargetProperty="Width"
+                    BeginTime="0:0:0" From="{Binding ActualWidth,ElementName=mainWindow}"
+                    To="550" Duration="0:0:1" AccelerationRatio="0.01" DecelerationRatio="0.99" />
+            </Storyboard>
         </Grid.Resources>
-        <localCtrl:ItemSelecter ItemsSource="{Binding Pages}" SelectedIndex="{Binding SelectedPageIndex}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto" />
+            <ColumnDefinition Width="auto" />
+        </Grid.ColumnDefinitions>
+        <localCtrl:ItemSelecter x:Name="mainPane" Grid.Column="0" ItemsSource="{Binding Pages}" SelectedIndex="{Binding SelectedPageIndex}">
             <localCtrl:ItemSelecter.Resources>
-                <ControlTemplate x:Key="accountIconButtonTemplate" TargetType="{x:Type Button}">
-                    <Image Source="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}, Path=Content}" />
-                </ControlTemplate>
                 <DataTemplate DataType="{x:Type localVm:LoginerViewModel}">
                     <DataTemplate.Resources>
                         <localVm:LoginSequenceStatusToButtonText x:Key="loginSequenceStatusToButtonText" />
@@ -64,8 +79,12 @@
                         <Grid.Resources>
                             <localVm:LoginSequenceStatusToVisibility x:Key="statusToVisibility" />
                         </Grid.Resources>
-                        <DockPanel>
-                            <Button DockPanel.Dock="Bottom" Content="AddAccount" Command="{Binding OpenAddAccountPanelCommand}" />
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="55" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <Label Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="5" FontSize="21">Account</Label>
+                        <StackPanel Grid.Row="1">
                             <ItemsControl ItemsSource="{Binding Accounts}">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
@@ -91,12 +110,29 @@
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
-                        </DockPanel>
-                        <ContentPresenter Content="{Binding Loginer}" Height="280" Visibility="{Binding Status, Converter={StaticResource statusToVisibility}}" />
+                            <Button Margin="0,0,50,0" Command="{Binding OpenAddAccountPanelCommand}">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="{x:Type Button}">
+                                        <StackPanel Margin="20,10,15,15" HorizontalAlignment="Left" Orientation="Horizontal">
+                                            <Image Height="35" Width="35" Source="/Resources/add.png" />
+                                            <TextBlock Name="PART_Label" Padding="0" Margin="10,0,0,0" VerticalAlignment="Center" FontSize="18">別のアカウントを登録する。</TextBlock>
+                                        </StackPanel>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Trigger.Setters>
+                                                    <Setter Property="TextDecorations" TargetName="PART_Label" Value="Underline" />
+                                                </Trigger.Setters>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+                        </StackPanel>
+                        <ContentPresenter Grid.RowSpan="2" Grid.ColumnSpan="2" Height="280" Visibility="{Binding Status, Converter={StaticResource statusToVisibility}}" Content="{Binding Loginer}" />
                     </Grid>
                 </DataTemplate>
                 <DataTemplate DataType="{x:Type localVm:AccountViewModel}">
-                    <Grid>
+                    <Grid Grid.Column="0">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="55" />
                             <RowDefinition Height="*" />
@@ -105,12 +141,35 @@
                             <ColumnDefinition Width="55" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <Button Grid.Row="0" Grid.Column="0" Width="35" Height="35" Margin="10" Template="{StaticResource accountIconButtonTemplate}" Content="{Binding AccountIconUrl}" Command="{Binding BackToAccountManagerCommand}">
-                            <Button.Effect>
-                                <DropShadowEffect Color="Black" Direction="315" Opacity="0.3" BlurRadius="5" ShadowDepth="0" />
-                            </Button.Effect>
+                        <Grid Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Grid.ColumnSpan="2" Width="200" Height="55" VerticalAlignment="Top" HorizontalAlignment="Left">
+                            <Grid.OpacityMask>
+                                <RadialGradientBrush Center="0,0" RadiusX="1" RadiusY="1" GradientOrigin="0,0">
+                                    <GradientStop Offset="0" Color="#a0000000" />
+                                    <GradientStop Offset="1" Color="#00000000" />
+                                </RadialGradientBrush>
+                            </Grid.OpacityMask>
+                            <Image Width="200" Height="55" VerticalAlignment="Top" HorizontalAlignment="Left" Stretch="UniformToFill" Source="{Binding AccountIconUrl}" />
+                        </Grid>
+                        <Button Grid.Row="0" Grid.Column="0" Width="30" Height="30" Margin="10" Command="{Binding BackToAccountManagerCommand}">
+                            <Button.Template>
+                                <ControlTemplate TargetType="{x:Type Button}">
+                                    <ContentPresenter />
+                                </ControlTemplate>
+                            </Button.Template>
+                            <Button.Content>
+                                <Image Source="/Resources/back.png" />
+                            </Button.Content>
                         </Button>
-                        <ComboBox Grid.Row="0" Grid.Column="1" MinWidth="150" VerticalAlignment="Center" HorizontalAlignment="Left" FontSize="16" SelectedIndex="{Binding Stream.SelectedCircleIndex}" DisplayMemberPath="CircleName" ItemsSource="{Binding Stream.DisplayStreams}" />
+                        <Grid Grid.Row="0" Grid.Column="1">
+                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Left" Orientation="Horizontal">
+                                <Label FontSize="21">Stream/</Label>
+                                <ComboBox MinWidth="150" VerticalAlignment="Center" HorizontalAlignment="Left" FontSize="16" SelectedIndex="{Binding Stream.SelectedCircleIndex}" DisplayMemberPath="CircleName" ItemsSource="{Binding Stream.DisplayStreams}" />
+                            </StackPanel>
+                            <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Margin="10,0,10,0">
+                                <Button Width="35" Height="35" Margin="3">Pst</Button>
+                                <ToggleButton Width="35" Height="35" HorizontalAlignment="Right" Margin="3" IsChecked="{Binding IsShowSnapviewPanel}">Ntfy</ToggleButton>
+                            </StackPanel>
+                        </Grid>
                         <localCtrl:ItemSelecter Grid.Row="1" Grid.Column="1" ItemsSource="{Binding Stream.DisplayStreams, Mode=OneWay}" SelectedIndex="{Binding Stream.SelectedCircleIndex}">
                             <localCtrl:ItemSelecter.Resources>
                                 <ControlTemplate x:Key="treeViewRootTemplate" TargetType="{x:Type TreeView}">
@@ -278,5 +337,18 @@
                 </DataTemplate>
             </localCtrl:ItemSelecter.Resources>
         </localCtrl:ItemSelecter>
+        <localCtrl:ItemSelecter x:Name="sidePane" Grid.Column="1" Width="400" ItemsSource="{Binding SubPages}">
+            <i:Interaction.Triggers>
+                <ei:DataTrigger Binding="{Binding IsShowSidePanel}" Value="True">
+                    <ei:ControlStoryboardAction Storyboard="{StaticResource closeSidePanelStoryborard}" ControlStoryboardOption="Stop" />
+                    <ei:ControlStoryboardAction Storyboard="{StaticResource openSidePanelStoryborard}" ControlStoryboardOption="Play" />
+                </ei:DataTrigger>
+                <ei:DataTrigger Binding="{Binding IsShowSidePanel}" Value="False">
+                    <ei:ControlStoryboardAction Storyboard="{StaticResource openSidePanelStoryborard}" ControlStoryboardOption="Stop" />
+                    <ei:ControlStoryboardAction Storyboard="{StaticResource closeSidePanelStoryborard}" ControlStoryboardOption="Play" />
+                </ei:DataTrigger>
+            </i:Interaction.Triggers>
+        </localCtrl:ItemSelecter>
+        <ToggleButton Grid.Column="0" Height="35" Width="35" VerticalAlignment="Bottom" HorizontalAlignment="Left" Margin="0,0,0,8" IsChecked="{Binding IsShowSidePanel}">FlMd</ToggleButton>
     </Grid>
 </Window>

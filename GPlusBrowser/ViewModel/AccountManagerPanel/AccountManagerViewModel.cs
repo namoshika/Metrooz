@@ -33,12 +33,11 @@ namespace GPlusBrowser.ViewModel
         { Loginer.OpenPanel(_accountManagerModel.Create(), false); }
         bool OpenAddAccountPanelCommand_CanExecuted(object arg)
         { return Loginer.Status == LoginSequenceStatus.Hidden; }
-        void _accountManagerModel_ChangedAccounts(
-            object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        void _accountManagerModel_ChangedAccounts(object sender, NotifyCollectionChangedEventArgs e)
         {
             switch (e.Action)
             {
-                case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
+                case NotifyCollectionChangedAction.Add:
                     for (var i = 0; i < e.NewItems.Count; i++)
                     {
                         var circle = (Account)e.NewItems[i];
@@ -46,14 +45,14 @@ namespace GPlusBrowser.ViewModel
                         Accounts.InsertAsync(e.NewStartingIndex + i, circleVm, UiThreadDispatcher);
                     }
                     break;
-                case System.Collections.Specialized.NotifyCollectionChangedAction.Move:
+                case NotifyCollectionChangedAction.Move:
                     Accounts.MoveAsync(e.OldStartingIndex, e.NewStartingIndex, UiThreadDispatcher);
                     break;
-                case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
+                case NotifyCollectionChangedAction.Remove:
                     for (var i = 0; i < e.OldItems.Count; i++)
                         Accounts.RemoveAtAsync(e.OldStartingIndex, UiThreadDispatcher);
                     break;
-                case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:
+                case NotifyCollectionChangedAction.Reset:
                     Accounts.ClearAsync(UiThreadDispatcher);
                     break;
             }

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Linq;
+using System.Reactive;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -22,16 +24,24 @@ namespace GPlusBrowser
         public MainWindow()
         {
             InitializeComponent();
-
-#if ENABLED_VMTEST_MODE
-            DataContext = FindResource("testVm");
-#else
+            _sizeChangedTrigger = new System.Reactive.Subjects.Subject<EventPattern<EventArgs>>();
+            
             Loaded += MainWindow_Loaded;
-#endif
+            Observable.FromEventPattern(this, "SizeChanged")
+                .Merge(_sizeChangedTrigger)
+                .Throttle(TimeSpan.FromMilliseconds(250))
+                .ObserveOn(Dispatcher)
+                .Subscribe(MainWindow_SizeChanged);
         }
+        System.Reactive.Subjects.Subject<EventPattern<EventArgs>> _sizeChangedTrigger;
         Model.SettingModelManager _settingManager;
         Model.AccountManager _accountManager;
         ViewModel.AccountSwitcherViewModel _accountSwitcherVM;
+        public bool NowResizeAnimation
+        {
+            get { return (bool)GetValue(NowResizeAnimationProperty); }
+            set { SetValue(NowResizeAnimationProperty, value); }
+        }
 
         protected override void OnClosed(EventArgs e)
         {
@@ -47,6 +57,26 @@ namespace GPlusBrowser
             DataContext = _accountSwitcherVM;
             _accountManager.Initialize();
         }
+        void MainWindow_SizeChanged(EventPattern<EventArgs> e)
+        {
+            //_accountManager.Accounts[0].Initialize();
+            //foreach (var item in _accountManager.Accounts[0].Stream.DisplayStreams)
+            //    item.Refresh();
+            var args = (SizeChangedEventArgs)e.EventArgs;
+            if (args == null || args.WidthChanged)
+            {
+                if (NowResizeAnimation)
+                    return;
+                mainPane.Width = ActualWidth
+                    - SystemParameters.ResizeFrameHorizontalBorderHeight * 2
+                    - (((ViewModel.AccountSwitcherViewModel)DataContext).IsShowSidePanel ? sidePane.ActualWidth : 0.0);
+            }
+        }
+
+        public static readonly DependencyProperty NowResizeAnimationProperty = DependencyProperty.Register(
+            "NowResizeAnimation", typeof(bool), typeof(MainWindow),
+            new UIPropertyMetadata(false, (sender, e) =>
+                ((MainWindow)sender)._sizeChangedTrigger.OnNext(new EventPattern<EventArgs>(sender, null))));
     }
     public static class InlineBehavior
     {

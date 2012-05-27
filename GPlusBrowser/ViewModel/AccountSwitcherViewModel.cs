@@ -20,10 +20,21 @@ namespace GPlusBrowser.ViewModel
             _accountManagerModel.ChangedSelectedAccountIndex += _accountManagerModel_ChangedSelectedAccountIndex;
             Pages = new ObservableCollection<object>();
             Pages.Add(new AccountManagerViewModel(accountManagerModel, uiThreadDispatcher));
+            SubPages = new ObservableCollection<object>();
         }
         AccountManager _accountManagerModel;
+        bool _isShowSidePanel;
         int _selectedAccountIndex;
 
+        public bool IsShowSidePanel
+        {
+            get { return _isShowSidePanel; }
+            set
+            {
+                _isShowSidePanel = value;
+                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("IsShowSidePanel"));
+            }
+        }
         public int SelectedPageIndex
         {
             get { return _selectedAccountIndex; }
@@ -37,6 +48,7 @@ namespace GPlusBrowser.ViewModel
             }
         }
         public ObservableCollection<object> Pages { get; set; }
+        public ObservableCollection<object> SubPages { get; set; }
 
         void _accountManagerModel_ChangedAccounts(object sender, NotifyCollectionChangedEventArgs e)
         {
