@@ -31,7 +31,7 @@ namespace GPlusBrowser.Model
         public SettingModel Setting { get; private set; }
         //public NotificationManager Notification{get;private set;}
         //public ShareBoxManager ShareBox{get;private set;}
-        public AccountProfileInfo MyProfile { get; private set; }
+        public ProfileInfo MyProfile { get; private set; }
         public string AccountIconUrl { get; private set; }
 
         public async Task Initialize()
@@ -61,7 +61,7 @@ namespace GPlusBrowser.Model
 
             OnInitialized(new EventArgs());
         }
-        public async System.Threading.Tasks.Task<bool> Login(string mail, string password)
+        public async Task<bool> Login(string mail, string password)
         {
             var cookie = new System.Net.CookieContainer();
             if (IsLogined = await PlatformClient.TryLogin(mail, password, cookie).ConfigureAwait(false))
