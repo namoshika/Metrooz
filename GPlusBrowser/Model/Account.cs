@@ -16,6 +16,7 @@ namespace GPlusBrowser.Model
             Circles = new CircleManager(this);
             Circles.Initialized += Circles_Initialized;
             Stream = new StreamManager(this);
+            Notification = new NotificationManager(this);
             AccountIconUrl = setting.UserIconUrl;
             IsInitialized = false;
         }
@@ -29,7 +30,7 @@ namespace GPlusBrowser.Model
         public CircleManager Circles { get; private set; }
         public StreamManager Stream { get; private set; }
         public SettingModel Setting { get; private set; }
-        //public NotificationManager Notification{get;private set;}
+        public NotificationManager Notification { get; private set; }
         //public ShareBoxManager ShareBox{get;private set;}
         public ProfileInfo MyProfile { get; private set; }
         public string AccountIconUrl { get; private set; }
@@ -43,8 +44,9 @@ namespace GPlusBrowser.Model
                 var profileTask = client.Relation.GetProfileOfMe(false).ConfigureAwait(false);
 
                 GooglePlusClient = client;
-                Circles.Initialize();
                 IsLogined = await initDtTask;
+                Circles.Initialize();
+                Notification.Initialize();
                 MyProfile = await profileTask;
                 AccountIconUrl = MyProfile.IconImageUrlText;
                 if (Setting.UserIconUrl != MyProfile.IconImageUrlText)
@@ -53,7 +55,7 @@ namespace GPlusBrowser.Model
                     Setting.UserName = MyProfile.Name;
                 IsInitialized = true;
             }
-            catch (FailToUpdateException)
+            catch (FailToOperationException)
             {
                 IsLogined = false;
                 IsInitialized = false;

@@ -39,6 +39,9 @@
                     </Trigger>
                 </ControlTemplate.Triggers>
             </ControlTemplate>
+            <ControlTemplate x:Key="iconButtonTemplate" TargetType="{x:Type Button}">
+                <ContentPresenter />
+            </ControlTemplate>
             <DataTemplate DataType="{x:Type localVm:AttachedLinkViewModel}">
                 <Border BorderBrush="LightGray" BorderThickness="0,1,0,0" Margin="0,8,0,8">
                     <Grid>
@@ -118,11 +121,24 @@
                         <localCtrl:CommentListBox
                             PostText="{Binding PostCommentTextA, UpdateSourceTrigger=PropertyChanged, Mode=OneWayToSource}" PostCommand="{Binding PostCommentCommand}"
                             ItemsSource="{Binding Comments}" Margin="15,0,0,0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
-                            IsEnableAnimation="{Binding (localCtrl:ActivityTreeView.IsEnableAnimation), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type TreeViewItem}}}"
+                            IsEnableAnimation="{Binding (localCtrl:ExTreeView.IsEnableAnimation), Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type TreeViewItem}}}"
                             IsWritable="{Binding IsWritableA, Mode=TwoWay}" IsWriteMode="{Binding IsWriteModeA, Mode=TwoWay}">
                         </localCtrl:CommentListBox>
                     </DockPanel>
                 </Border>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type localVm:StreamViewModel}">
+                <localCtrl:ExTreeView
+                        Focusable="False" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                        ScrollViewer.VerticalScrollBarVisibility="Visible"
+                        BorderThickness="0" ItemsSource="{Binding Activities}">
+                    <localCtrl:ExTreeView.ItemContainerStyle>
+                        <Style TargetType="TreeViewItem">
+                            <Setter Property="Template" Value="{StaticResource postItemTemplate}" />
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                        </Style>
+                    </localCtrl:ExTreeView.ItemContainerStyle>
+                </localCtrl:ExTreeView>
             </DataTemplate>
             <Storyboard x:Key="openSidePanelStoryborard">
                 <BooleanAnimationUsingKeyFrames Storyboard.TargetName="mainWindow" Storyboard.TargetProperty="NowResizeAnimation" BeginTime="0:0:0">
@@ -196,7 +212,7 @@
                             <RowDefinition Height="55" />
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
-                        <Label Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="5" FontSize="21">Account</Label>
+                        <TextBlock Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="5" FontSize="21">Account</TextBlock>
                         <StackPanel Grid.Row="1">
                             <ItemsControl ItemsSource="{Binding Accounts}">
                                 <ItemsControl.ItemsPanel>
@@ -214,7 +230,7 @@
                                                         <DropShadowEffect Color="Black" Direction="315" Opacity="0.3" BlurRadius="5" ShadowDepth="0" />
                                                     </Border.Effect>
                                                 </Border>
-                                                <Label Padding="0" Margin="10,0,0,0" VerticalContentAlignment="Center" Content="{Binding UserName}" FontSize="18" />
+                                                <TextBlock Padding="0" Margin="10,0,0,0" VerticalAlignment="Center" Text="{Binding UserName}" FontSize="18" />
                                             </StackPanel>
                                             <WrapPanel Margin="15,10,0,0">
                                                 <Button Padding="8,5,8,5" Command="{Binding OpenStreamPanelCommand}">ストリームを開く</Button>
@@ -263,79 +279,17 @@
                             </Grid.OpacityMask>
                             <Image Width="200" Height="55" VerticalAlignment="Top" HorizontalAlignment="Left" Stretch="UniformToFill" Source="{Binding AccountIconUrl}" />
                         </Grid>
-                        <Button Grid.Row="0" Grid.Column="0" Width="30" Height="30" Margin="10" Command="{Binding BackToAccountManagerCommand}">
-                            <Button.Template>
-                                <ControlTemplate TargetType="{x:Type Button}">
-                                    <ContentPresenter />
-                                </ControlTemplate>
-                            </Button.Template>
-                            <Button.Content>
-                                <Image Source="/Resources/back.png" />
-                            </Button.Content>
+                        <Button Grid.Row="0" Grid.Column="0" Width="30" Height="30" Margin="10" Template="{StaticResource iconButtonTemplate}" Command="{Binding BackToAccountManagerCommand}">
+                            <Image Source="/Resources/back.png" />
                         </Button>
                         <Grid Grid.Row="0" Grid.Column="1">
                             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Left" Orientation="Horizontal">
-                                <Label FontSize="21">Stream/</Label>
-                                <ComboBox MinWidth="150" VerticalAlignment="Center" HorizontalAlignment="Left" FontSize="16" SelectedIndex="{Binding Stream.SelectedCircleIndex}" DisplayMemberPath="CircleName" ItemsSource="{Binding Stream.DisplayStreams}" />
-                            </StackPanel>
-                            <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Margin="10,0,10,0">
-                                <Button Width="35" Height="35" Margin="3">Pst</Button>
-                                <ToggleButton Width="35" Height="35" HorizontalAlignment="Right" Margin="3" IsChecked="{Binding IsShowSnapviewPanel}">Ntfy</ToggleButton>
+                                <Image Width="35" Height="35" Margin="0,0,10,0" VerticalAlignment="Center" Source="{Binding AccountIconUrl}" />
+                                <TextBlock FontSize="21" Margin="0,0,10,0" VerticalAlignment="Center">Stream/</TextBlock>
+                                <ComboBox MinWidth="150" VerticalAlignment="Center" FontSize="16" SelectedIndex="{Binding Stream.SelectedCircleIndex}" DisplayMemberPath="CircleName" ItemsSource="{Binding Stream.DisplayStreams}" />
                             </StackPanel>
                         </Grid>
-                        <localCtrl:ItemSelecter Grid.Row="1" Grid.Column="1" ItemsSource="{Binding Stream.DisplayStreams, Mode=OneWay}" SelectedIndex="{Binding Stream.SelectedCircleIndex}">
-                            <localCtrl:ItemSelecter.Resources>
-                                <ControlTemplate x:Key="treeViewRootTemplate" TargetType="{x:Type TreeView}">
-                                    <Grid Background="Gray">
-                                        <Rectangle VerticalAlignment="Bottom" Height="20">
-                                            <Rectangle.Fill>
-                                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                                    <GradientStop Color="#00000000" Offset="0" />
-                                                    <GradientStop Color="#22000000" Offset="0.7" />
-                                                    <GradientStop Color="#66000000" Offset="1" />
-                                                </LinearGradientBrush>
-                                            </Rectangle.Fill>
-                                        </Rectangle>
-                                        <ScrollViewer Padding="0,8,0,0" Background="{TemplateBinding Background}">
-                                            <ItemsPresenter />
-                                        </ScrollViewer>
-                                        <!--メニューバーの影-->
-                                        <Rectangle Name="menuShaddow" VerticalAlignment="Top" Height="3">
-                                            <Rectangle.Fill>
-                                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                                    <GradientStop Color="#30000000" Offset="0" />
-                                                    <GradientStop Color="#10000000" Offset="0.5" />
-                                                    <GradientStop Color="#00000000" Offset="1" />
-                                                </LinearGradientBrush>
-                                            </Rectangle.Fill>
-                                        </Rectangle>
-                                    </Grid>
-                                    <ControlTemplate.Triggers>
-                                        <Trigger Property="HasItems" Value="true">
-                                            <!--<Setter TargetName="itemArrayShadow" Property="Visibility" Value="Visible" />-->
-                                            <Setter TargetName="menuShaddow" Property="Visibility" Value="Visible" />
-                                        </Trigger>
-                                        <Trigger Property="HasItems" Value="false">
-                                            <!--<Setter TargetName="itemArrayShadow" Property="Visibility" Value="Collapsed" />-->
-                                            <Setter TargetName="menuShaddow" Property="Visibility" Value="Collapsed" />
-                                        </Trigger>
-                                    </ControlTemplate.Triggers>
-                                </ControlTemplate>
-                                <DataTemplate DataType="{x:Type localVm:StreamViewModel}">
-                                    <localCtrl:ActivityTreeView
-                                            Focusable="False" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                            ScrollViewer.VerticalScrollBarVisibility="Visible"
-                                            BorderThickness="0" ItemsSource="{Binding Activities}">
-                                        <localCtrl:ActivityTreeView.ItemContainerStyle>
-                                            <Style TargetType="TreeViewItem">
-                                                <Setter Property="Template" Value="{StaticResource postItemTemplate}" />
-                                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                                            </Style>
-                                        </localCtrl:ActivityTreeView.ItemContainerStyle>
-                                    </localCtrl:ActivityTreeView>
-                                </DataTemplate>
-                            </localCtrl:ItemSelecter.Resources>
-                        </localCtrl:ItemSelecter>
+                        <localCtrl:ItemSelecter Grid.Row="1" Grid.Column="1" ItemsSource="{Binding Stream.DisplayStreams, Mode=OneWay}" SelectedIndex="{Binding Stream.SelectedCircleIndex}" />
                     </Grid>
                 </DataTemplate>
             </localCtrl:ItemSelecter.Resources>
@@ -343,20 +297,66 @@
         <localCtrl:ItemSelecter x:Name="sidePane" Grid.Column="1" Width="400" ItemsSource="{Binding SubPages}" SelectedIndex="{Binding SelectedSubPageIndex}">
             <localCtrl:ItemSelecter.Resources>
                 <DataTemplate DataType="{x:Type localVm:NotificationManagerViewModel}">
-                    <Grid>
+                    <Grid Margin="10,0,10,0">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="55" />
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
                         <StackPanel Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left" Orientation="Horizontal">
-                            <Label FontSize="21">Notification</Label>
+                            <Border Width="35" Height="35" Margin="0,0,10,0" Background="LightGray">
+                                <i:Interaction.Triggers>
+                                    <ei:DataTrigger Binding="{Binding ExistUnreadItem}" Value="True">
+                                        <ei:ChangePropertyAction PropertyName="Background" TargetObject="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Border}}}" Value="DarkRed" />
+                                    </ei:DataTrigger>
+                                    <ei:DataTrigger Binding="{Binding ExistUnreadItem}" Value="False">
+                                        <ei:ChangePropertyAction PropertyName="Background" TargetObject="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Border}}}" Value="LightGray" />
+                                    </ei:DataTrigger>
+                                </i:Interaction.Triggers>
+                                <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" FontSize="21" Text="{Binding UnreadItemCount}" />
+                            </Border>
+                            <TextBlock FontSize="21">Notification</TextBlock>
                         </StackPanel>
-                        <ListView Focusable="False" Grid.Row="1"
-                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                  ScrollViewer.VerticalScrollBarVisibility="Visible"
-                                  BorderThickness="0"
-                                  ItemsSource="{Binding Items}">
-                        </ListView>
+                        <StackPanel Grid.Row="0" VerticalAlignment="Top" HorizontalAlignment="Right" Orientation="Horizontal" Margin="10,0,10,0">
+                            <Button Width="35" Height="35">Pst</Button>
+                        </StackPanel>
+                        <localCtrl:ExTreeView
+                                Background="#fff0f0f0" Focusable="False" Grid.Row="1"
+                                ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                ScrollViewer.VerticalScrollBarVisibility="Visible"
+                                BorderThickness="0" Padding="5,0,0,0"
+                                ItemsSource="{Binding Items}">
+                            <localCtrl:ExTreeView.Resources>
+                                <DataTemplate DataType="{x:Type localVm:NotificationWithActivityViewModel}">
+                                    <StackPanel>
+                                        <local:DataPiping.DataPipes>
+                                            <local:DataPipeCollection>
+                                                <local:DataPipe
+                                                    Target="{Binding ElementHeight, Mode=OneWayToSource}"
+                                                    Source="{Binding ActualHeight, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type TreeViewItem}}}" />
+                                            </local:DataPipeCollection>
+                                        </local:DataPiping.DataPipes>
+                                        <TextBlock Text="{Binding NoticeText}" TextWrapping="Wrap" />
+                                        <ContentPresenter Content="{Binding Target}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </localCtrl:ExTreeView.Resources>
+                            <localCtrl:ExTreeView.ItemContainerStyle>
+                                <Style TargetType="TreeViewItem">
+                                    <Setter Property="Template" Value="{StaticResource postItemTemplate}" />
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                </Style>
+                            </localCtrl:ExTreeView.ItemContainerStyle>
+                            <local:DataPiping.DataPipes>
+                                <local:DataPipeCollection>
+                                    <local:DataPipe
+                                        Target="{Binding ViewportHeightA, Mode=OneWayToSource}"
+                                        Source="{Binding ViewportHeight, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type localCtrl:ExListBox}}}" />
+                                    <local:DataPipe
+                                        Target="{Binding ViewportOffsetA, Mode=OneWayToSource}"
+                                        Source="{Binding ScrollOffset, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type localCtrl:ExListBox}}}" />
+                                </local:DataPipeCollection>
+                            </local:DataPiping.DataPipes>
+                        </localCtrl:ExTreeView>
                     </Grid>
                 </DataTemplate>
             </localCtrl:ItemSelecter.Resources>

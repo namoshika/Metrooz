@@ -18,13 +18,14 @@ namespace GPlusBrowser.ViewModel
             _accountManagerModel = accountManagerModel;
             _accountManagerModel.ChangedAccounts += _accountManagerModel_ChangedAccounts;
             _accountManagerModel.ChangedSelectedAccountIndex += _accountManagerModel_ChangedSelectedAccountIndex;
-            Pages = new ObservableCollection<object>();
-            Pages.Add(new AccountManagerViewModel(accountManagerModel, uiThreadDispatcher));
+            _selectedSubPageIndex = -1;
+            MainPages = new ObservableCollection<object>();
+            MainPages.Add(new AccountManagerViewModel(accountManagerModel, uiThreadDispatcher));
             SubPages = new ObservableCollection<object>();
         }
         AccountManager _accountManagerModel;
         bool _isShowSidePanel;
-        int _selectedAccountIndex;
+        int _selectedMainPageIndex, _selectedSubPageIndex;
 
         public bool IsShowSidePanel
         {
@@ -35,19 +36,31 @@ namespace GPlusBrowser.ViewModel
                 OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("IsShowSidePanel"));
             }
         }
-        public int SelectedPageIndex
+        public int SelectedMainPageIndex
         {
-            get { return _selectedAccountIndex; }
+            get { return _selectedMainPageIndex; }
             set
             {
-                if (_selectedAccountIndex == value)
+                if (_selectedMainPageIndex == value)
                     return;
-                _selectedAccountIndex = value;
-                _accountManagerModel.SelectedAccountIndex = _selectedAccountIndex - 1;
-                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("SelectedPageIndex"));
+                _selectedMainPageIndex = value;
+                _accountManagerModel.SelectedAccountIndex = _selectedMainPageIndex - 1;
+                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("SelectedMainPageIndex"));
             }
         }
-        public ObservableCollection<object> Pages { get; set; }
+        public int SelectedSubPageIndex
+        {
+            get { return _selectedSubPageIndex; }
+            set
+            {
+                if (_selectedSubPageIndex == value)
+                    return;
+                _selectedSubPageIndex = value;
+                _accountManagerModel.SelectedAccountIndex = _selectedMainPageIndex - 1;
+                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("SelectedSubPageIndex"));
+            }
+        }
+        public ObservableCollection<object> MainPages { get; set; }
         public ObservableCollection<object> SubPages { get; set; }
 
         void _accountManagerModel_ChangedAccounts(object sender, NotifyCollectionChangedEventArgs e)
@@ -56,16 +69,23 @@ namespace GPlusBrowser.ViewModel
             {
                 case NotifyCollectionChangedAction.Add:
                     for (var i = 0; i < e.NewItems.Count; i++)
-                        Pages.InsertAsync(e.NewStartingIndex + i + 1, new AccountViewModel((Account)e.NewItems[i], _accountManagerModel, UiThreadDispatcher), UiThreadDispatcher);
+                    {
+                        MainPages.InsertAsync(e.NewStartingIndex + i + 1, new AccountViewModel((Account)e.NewItems[i], _accountManagerModel, UiThreadDispatcher), UiThreadDispatcher);
+                        SubPages.InsertAsync(e.NewStartingIndex + i, new NotificationManagerViewModel(((Account)e.NewItems[i]).Notification, UiThreadDispatcher), UiThreadDispatcher);
+                    }
                     break;
                 case NotifyCollectionChangedAction.Remove:
                     for (var i = 0; i < e.OldItems.Count; i++)
-                        Pages.RemoveAtAsync(e.OldStartingIndex + 1, UiThreadDispatcher);
+                    {
+                        MainPages.RemoveAtAsync(e.OldStartingIndex + 1, UiThreadDispatcher);
+                        SubPages.RemoveAtAsync(e.OldStartingIndex, UiThreadDispatcher);
+                    }
                     break;
                 case NotifyCollectionChangedAction.Reset:
-                    var accountManager = Pages.First();
-                    Pages.Clear();
-                    Pages.AddAsync(accountManager, UiThreadDispatcher);
+                    var accountManager = MainPages.First();
+                    MainPages.Clear();
+                    MainPages.AddAsync(accountManager, UiThreadDispatcher);
+                    SelectedSubPageIndex = -1;
                     break;
             }
         }
@@ -73,17 +93,18 @@ namespace GPlusBrowser.ViewModel
         {
             UiThreadDispatcher.BeginInvoke((Action)delegate()
             {
-                if (SelectedPageIndex == _accountManagerModel.SelectedAccountIndex + 1)
+                if (SelectedMainPageIndex == _accountManagerModel.SelectedAccountIndex + 1)
                     return;
-                SelectedPageIndex = _accountManagerModel.SelectedAccountIndex + 1;
+                SelectedMainPageIndex = _accountManagerModel.SelectedAccountIndex + 1;
+                SelectedSubPageIndex = _accountManagerModel.SelectedAccountIndex;
             },
-            _accountManagerModel.SelectedAccountIndex < Pages.Count - 1
+            _accountManagerModel.SelectedAccountIndex < MainPages.Count - 1
                 ? DispatcherPriority.DataBind : DispatcherPriority.ContextIdle);
         }
 
         public void Dispose()
         {
-            foreach (AccountViewModel item in Pages.Skip(1))
+            foreach (AccountViewModel item in MainPages.Skip(1))
                 item.Dispose();
         }
     }

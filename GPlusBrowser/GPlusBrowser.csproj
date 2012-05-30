@@ -101,10 +101,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="Controls\ActivityTreeView.cs" />
     <Compile Include="Controls\ColumnPanel.cs" />
     <Compile Include="Controls\CommentListBox.cs" />
+    <Compile Include="Controls\ExTreeView.cs" />
     <Compile Include="Controls\ItemSelecter.cs" />
+    <Compile Include="Model\NotificationManager.cs" />
     <Compile Include="ObservableCollectionEx.cs" />
     <Compile Include="Model\AccountManager.cs" />
     <Compile Include="Model\SettingModelManager.cs" />
@@ -117,6 +118,7 @@
     <Compile Include="ViewModel\AccountManagerPanel\StreamItemViewModel.cs" />
     <Compile Include="ViewModel\AccountSwitcherViewModel.cs" />
     <Compile Include="ViewModel\AccountManagerPanel\LoginerViewModel.cs" />
+    <Compile Include="ViewModel\Notification\NotificationManagerViewModel.cs" />
     <Compile Include="ViewModel\Stream\AttachedLinkViewModel.cs" />
     <Compile Include="Model\Stream\Comment.cs" />
     <Compile Include="Model\Stream\Stream.cs" />
