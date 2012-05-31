@@ -23,5 +23,21 @@ namespace GPlusBrowser
         { dispacher.BeginInvoke((Action<int, int>)collection.Move, DispatcherPriority.ContextIdle, indexA, indexB); }
         public static void RemoveAsync<T>(this ObservableCollection<T> collection, T item, Dispatcher dispacher)
         { dispacher.BeginInvoke((Func<T, bool>)collection.Remove, DispatcherPriority.ContextIdle, item); }
+        public static System.Threading.Tasks.Task<T> GetFromIndex<T>(this ObservableCollection<T> collection, int index, Dispatcher dispacher)
+        {
+            return System.Threading.Tasks.Task.Factory.StartNew(() =>
+                {
+                    var waiter = new System.Threading.AutoResetEvent(false);
+                    T result = default(T);
+                    var aaa = dispacher.BeginInvoke((Action)(() =>
+                    {
+                        if (index >= 0 && index < collection.Count)
+                            result = collection[index];
+                        waiter.Set();
+                    }), DispatcherPriority.ContextIdle);
+                    waiter.WaitOne();
+                    return result;
+                });
+        }
     }
 }

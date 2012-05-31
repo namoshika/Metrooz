@@ -104,18 +104,21 @@ namespace GPlusBrowser.ViewModel
                             var viewModel = new ActivityViewModel((Activity)e.NewItems[i], UiThreadDispatcher);
                             var idx = _circle.Activities.Count - (e.NewStartingIndex + i) - 1;
                             if (idx >= 0 && idx < MaxActivitiesCount - 1)
-                                Activities.InsertAsync(idx, viewModel, UiThreadDispatcher);
-                            _activityCount++;
-                        }
-                        if (_activityCount > _maxActivityCount)
-                        {
-                            for (var i = _activityCount - 1; i >= _maxActivityCount; i--)
                             {
-                                var tmp = _activities[_activities.Count - 1];
-                                _activities.RemoveAsync(tmp, UiThreadDispatcher);
-                                tmp.Dispose();
-                                _activityCount--;
+                                Activities.InsertAsync(idx, viewModel, UiThreadDispatcher);
+                                _activityCount++;
                             }
+                        }
+                        while (_activityCount > _maxActivityCount)
+                        {
+                            _activityCount--;
+                            _activities.GetFromIndex(_activityCount, UiThreadDispatcher)
+                                .ContinueWith(tsk =>
+                                    {
+                                        _activities.RemoveAsync(tsk.Result, UiThreadDispatcher);
+                                        tsk.Result.Dispose();
+                                    });
+                            
                         }
                         break;
                     case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:

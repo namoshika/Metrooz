@@ -13,26 +13,27 @@ namespace GPlusBrowser.Model
     {
         public CircleManager(Account mainWindow)
         {
-            _mainWindow = mainWindow;
+            _accountModel = mainWindow;
             _items = new List<CircleInfo>();
         }
-        Account _mainWindow;
+        Account _accountModel;
         List<CircleInfo> _items;
+        double _isFullLoaded;
 
         public bool IsInitialized { get; private set; }
-        public ReadOnlyCollection<CircleInfo> Items
-        { get { return _items.AsReadOnly(); } }
+        public bool IsFullLoaded { get { return _isFullLoaded == 1; } }
+        public ReadOnlyCollection<CircleInfo> Items { get { return _items.AsReadOnly(); } }
 
         public async void Initialize()
         {
             try
             {
-                await _mainWindow.GooglePlusClient.Relation
-                    .UpdateCirclesAndBlockAsync(false).ConfigureAwait(false);
+                await _accountModel.GooglePlusClient.Relation
+                    .UpdateCirclesAndBlockAsync(false, CircleUpdateLevel.Loaded).ConfigureAwait(false);
                 lock (_items)
                 {
                     _items.Clear();
-                    _items.AddRange(_mainWindow.GooglePlusClient.Relation.Circles);
+                    _items.AddRange(_accountModel.GooglePlusClient.Relation.Circles);
                 }
                 IsInitialized = true;
             }
@@ -40,6 +41,20 @@ namespace GPlusBrowser.Model
             { IsInitialized = false; }
 
             OnInitialized(new EventArgs());
+        }
+        public async Task FullLoad()
+        {
+            if (System.Threading.Interlocked.CompareExchange(ref _isFullLoaded, 1, 0) == 1)
+                return;
+
+            await _accountModel.GooglePlusClient.Relation
+                .UpdateCirclesAndBlockAsync(true, CircleUpdateLevel.LoadedWithMembers).ConfigureAwait(false);
+            lock (_items)
+            {
+                _items.Clear();
+                _items.AddRange(_accountModel.GooglePlusClient.Relation.Circles);
+            }
+            OnFullLoaded(new EventArgs());
         }
         public void ClipCircle(CircleInfo info) { }
         public Task<CircleInfo> CreateNew(string name) { return null; }
@@ -51,6 +66,12 @@ namespace GPlusBrowser.Model
         {
             if (Initialized != null)
                 Initialized(this, e);
+        }
+        public event EventHandler FullLoaded;
+        protected virtual void OnFullLoaded(EventArgs e)
+        {
+            if (FullLoaded != null)
+                FullLoaded(this, e);
         }
         public event NotifyCollectionChangedEventHandler ChangedItemsEvent;
         protected virtual void OnChangedItemsEvent(NotifyCollectionChangedEventArgs e)
