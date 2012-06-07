@@ -17,6 +17,7 @@ namespace GPlusBrowser.ViewModel
         public ActivityViewModel(Activity activity, Dispatcher uiThreadDispatcher)
             : base(uiThreadDispatcher)
         {
+            _isWritableA = true;
             _activity = activity;
             _comments = new ObservableCollection<CommentViewModel>();
             _activity_Refreshed(null, null);
@@ -34,7 +35,7 @@ namespace GPlusBrowser.ViewModel
         Uri _iconUrl;
         Uri _activityUrl;
         int _isDisposed;
-        bool _isExpandComment;
+        bool _isExpandComment, _isWritableA, _isWriteModeA;
         string _postUserName;
         string _postContent;
         string _postDate;
@@ -42,7 +43,6 @@ namespace GPlusBrowser.ViewModel
         object _attachedContent;
         ObservableCollection<CommentViewModel> _comments;
         System.Windows.Documents.Inline _postContentInline;
-        GPlusBrowser.Controls.CommentListBoxMode _mode;
 
         public Uri PostUserIconUrl
         {
@@ -69,6 +69,24 @@ namespace GPlusBrowser.ViewModel
             {
                 _isExpandComment = value;
                 OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("IsExpandComment"));
+            }
+        }
+        public bool IsWritableA
+        {
+            get { return _isWritableA; }
+            set
+            {
+                _isWritableA = value;
+                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("IsWritableA"));
+            }
+        }
+        public bool IsWriteModeA
+        {
+            get { return _isWriteModeA; }
+            set
+            {
+                _isWriteModeA = value;
+                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("IsWriteModeA"));
             }
         }
         public string PostUserName
@@ -134,15 +152,6 @@ namespace GPlusBrowser.ViewModel
                 OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("PostContentInline"));
             }
         }
-        public GPlusBrowser.Controls.CommentListBoxMode ModeA
-        {
-            get { return _mode; }
-            set
-            {
-                _mode = value;
-                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("ModeA"));
-            }
-        }
         public ICommand PostCommentCommand { get; private set; }
         public void Dispose()
         {
@@ -199,13 +208,17 @@ namespace GPlusBrowser.ViewModel
         }
         async void PostCommentCommand_Executed(object arg)
         {
-            if (string.IsNullOrEmpty(PostCommentTextA) || ModeA != Controls.CommentListBoxMode.Write)
+            if (string.IsNullOrEmpty(PostCommentTextA) || IsWritableA == false)
                 return;
-            var tsk = _activity.CommentPost(PostCommentTextA).ConfigureAwait(false);
-            ModeA = Controls.CommentListBoxMode.Sending;
-            await tsk;
-            PostCommentTextA = null;
-            ModeA = Controls.CommentListBoxMode.View;
+            IsWritableA = false;
+            try
+            { await _activity.CommentPost(PostCommentTextA).ConfigureAwait(false); }
+            finally
+            {
+                PostCommentTextA = null;
+                IsWritableA = true;
+                IsWriteModeA = false;
+            }
         }
         void Comments_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {

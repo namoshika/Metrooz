@@ -103,9 +103,7 @@
     </ApplicationDefinition>
     <Compile Include="Controls\ActivityTreeView.cs" />
     <Compile Include="Controls\ColumnPanel.cs" />
-    <Compile Include="Controls\CommentListBox.xaml.cs">
-      <DependentUpon>CommentListBox.xaml</DependentUpon>
-    </Compile>
+    <Compile Include="Controls\CommentListBox.cs" />
     <Compile Include="Controls\ItemSelecter.cs" />
     <Compile Include="ObservableCollectionEx.cs" />
     <Compile Include="Model\AccountManager.cs" />
@@ -131,10 +129,6 @@
     <Compile Include="ViewModel\SettingViewModel.cs" />
     <Compile Include="ViewModel\Stream\StreamManagerViewModel.cs" />
     <Compile Include="ViewModel\ViewModelBase.cs" />
-    <Page Include="Controls\CommentListBox.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

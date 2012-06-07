@@ -11,6 +11,119 @@
         <Grid.Resources>
             <BooleanToVisibilityConverter x:Key="booleanToVisibilityConverter" />
             <localVm:SettingStatusToBooleanConverter x:Key="statusToBooleanConverter" />
+            <ControlTemplate x:Key="postItemTemplate" TargetType="{x:Type TreeViewItem}" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+                <Grid Margin="0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+                    <ContentPresenter Content="{TemplateBinding HeaderedContentControl.Header}" ContentTemplate="{TemplateBinding HeaderedContentControl.HeaderTemplate}" ContentStringFormat="{TemplateBinding HeaderedItemsControl.HeaderStringFormat}" ContentSource="Header" Name="PART_Header" HorizontalAlignment="{TemplateBinding Control.HorizontalContentAlignment}" SnapsToDevicePixels="{TemplateBinding UIElement.SnapsToDevicePixels}" />
+                    <ItemsPresenter Name="ItemsHost" Margin="15,0,0,0" Grid.Row="1" />
+                </Grid>
+                <ControlTemplate.Triggers>
+                    <Trigger Property="TreeViewItem.IsExpanded">
+                        <Setter TargetName="ItemsHost" Property="UIElement.Visibility" Value="{x:Static Visibility.Collapsed}" />
+                        <Trigger.Value>
+                            <s:Boolean>False</s:Boolean>
+                        </Trigger.Value>
+                    </Trigger>
+                    <Trigger Property="UIElement.IsEnabled">
+                        <Setter Property="TextElement.Foreground">
+                            <Setter.Value>
+                                <DynamicResource ResourceKey="{x:Static SystemColors.GrayTextBrushKey}" />
+                            </Setter.Value>
+                        </Setter>
+                        <Trigger.Value>
+                            <s:Boolean>False</s:Boolean>
+                        </Trigger.Value>
+                    </Trigger>
+                </ControlTemplate.Triggers>
+            </ControlTemplate>
+            <DataTemplate DataType="{x:Type localVm:AttachedLinkViewModel}">
+                <Border BorderBrush="LightGray" BorderThickness="0,1,0,0" Margin="0,8,0,8">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Image Grid.Column="0" Source="{Binding ThumnailUrl}" MaxWidth="150" MaxHeight="150" Stretch="Uniform" VerticalAlignment="Top" Margin="0,8,8,0" Visibility="{Binding ExistThumnailUrl, Converter={StaticResource booleanToVisibilityConverter}}" />
+                        <TextBlock Grid.Column="1" Margin="0,8,0,0" TextWrapping="Wrap">
+                                            <Hyperlink>
+                                                <i:Interaction.Triggers>
+                                                    <i:EventTrigger EventName="Click">
+                                                        <ei:LaunchUriOrFileAction Path="{Binding AncourUrl}" />
+                                                    </i:EventTrigger>
+                                                </i:Interaction.Triggers>
+                                                <Run FontWeight="Bold" Text="{Binding AncourTitle}" />
+                                            </Hyperlink>
+                                            <LineBreak />
+                                            <Run Text="{Binding AncourIntroductionText}" />
+                        </TextBlock>
+                    </Grid>
+                </Border>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type localVm:CommentViewModel}">
+                <Border BorderBrush="LightGray" BorderThickness="0,1,0,0" Padding="5">
+                    <DockPanel Margin="0" Focusable="False">
+                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0">
+                            <ContentControl Focusable="False" Width="25" Height="25">
+                                <Image SnapsToDevicePixels="True" Source="{Binding OwnerIconUrl}" />
+                                <ContentControl.Effect>
+                                    <DropShadowEffect Color="Black" Direction="315" Opacity="0.3" BlurRadius="5" ShadowDepth="0" />
+                                </ContentControl.Effect>
+                            </ContentControl>
+                            <TextBlock Margin="5,0,0,0" VerticalAlignment="Center">
+                                                    <Run Text="{Binding OwnerName}" />
+                                                    <Run Foreground="Gray" Text="{Binding CommentDate, StringFormat='- {0} -'}" />
+                            </TextBlock>
+                        </StackPanel>
+                        <TextBlock Margin="0,3,0,3" local:InlineBehavior.Inline="{Binding PostContentInline}" TextWrapping="Wrap" />
+                    </DockPanel>
+                </Border>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type localVm:ActivityViewModel}">
+                <Border BorderBrush="LightGray" BorderThickness="0,1,0,0" Padding="5">
+                    <DockPanel Margin="0" Focusable="False">
+                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0">
+                            <ContentControl Focusable="False" Width="25" Height="25">
+                                <Image SnapsToDevicePixels="True" Source="{Binding PostUserIconUrl}" />
+                                <ContentControl.Effect>
+                                    <DropShadowEffect Color="Black" Direction="315" Opacity="0.3" BlurRadius="5" ShadowDepth="0" />
+                                </ContentControl.Effect>
+                            </ContentControl>
+                            <TextBlock Margin="5,0,0,0" VerticalAlignment="Center">
+                                                    <Run Text="{Binding PostUserName}" />
+                                                    <Span Foreground="Gray">
+                                                        -
+                                                        <Hyperlink TextDecorations="None" Foreground="Gray">
+                                                            <i:Interaction.Triggers>
+                                                                <i:EventTrigger EventName="Click">
+                                                                    <ei:LaunchUriOrFileAction Path="{Binding ActivityUrl}" />
+                                                                </i:EventTrigger>
+                                                                <i:EventTrigger EventName="MouseEnter">
+                                                                    <ei:ChangePropertyAction PropertyName="TextDecorations" Value="Underline" />
+                                                                </i:EventTrigger>
+                                                                <i:EventTrigger EventName="MouseLeave">
+                                                                    <ei:ChangePropertyAction PropertyName="TextDecorations" Value="None" />
+                                                                </i:EventTrigger>
+                                                            </i:Interaction.Triggers>
+                                                            <Run Text="{Binding PostDate}" />
+                                                        </Hyperlink>
+                                                        -
+                                                    </Span>
+                            </TextBlock>
+                        </StackPanel>
+                        <TextBlock DockPanel.Dock="Top" Margin="0,3,0,3" local:InlineBehavior.Inline="{Binding PostContentInline}" TextWrapping="Wrap" />
+                        <ContentPresenter DockPanel.Dock="Top" Content="{Binding AttachedContent}" />
+                        <localCtrl:CommentListBox
+                            PostText="{Binding PostCommentTextA, UpdateSourceTrigger=PropertyChanged, Mode=OneWayToSource}" PostCommand="{Binding PostCommentCommand}"
+                            ItemsSource="{Binding Comments}" Margin="15,0,0,0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                            IsEnableAnimation="{Binding (localCtrl:ActivityTreeView.IsEnableAnimation), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type TreeViewItem}}}"
+                            IsWritable="{Binding IsWritableA, Mode=TwoWay}" IsWriteMode="{Binding IsWriteModeA, Mode=TwoWay}">
+                        </localCtrl:CommentListBox>
+                    </DockPanel>
+                </Border>
+            </DataTemplate>
             <Storyboard x:Key="openSidePanelStoryborard">
                 <BooleanAnimationUsingKeyFrames Storyboard.TargetName="mainWindow" Storyboard.TargetProperty="NowResizeAnimation" BeginTime="0:0:0">
                     <DiscreteBooleanKeyFrame Value="True" KeyTime="0:0:0" />
@@ -36,7 +149,7 @@
             <ColumnDefinition Width="auto" />
             <ColumnDefinition Width="auto" />
         </Grid.ColumnDefinitions>
-        <localCtrl:ItemSelecter x:Name="mainPane" Grid.Column="0" ItemsSource="{Binding Pages}" SelectedIndex="{Binding SelectedPageIndex}">
+        <localCtrl:ItemSelecter x:Name="mainPane" Grid.Column="0" ItemsSource="{Binding MainPages}" SelectedIndex="{Binding SelectedMainPageIndex}">
             <localCtrl:ItemSelecter.Resources>
                 <DataTemplate DataType="{x:Type localVm:LoginerViewModel}">
                     <DataTemplate.Resources>
@@ -208,124 +321,14 @@
                                         </Trigger>
                                     </ControlTemplate.Triggers>
                                 </ControlTemplate>
-                                <ControlTemplate x:Key="postItemTemplate" TargetType="{x:Type TreeViewItem}" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-                                    <Grid Margin="0">
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto" />
-                                            <RowDefinition />
-                                        </Grid.RowDefinitions>
-                                        <ContentPresenter Content="{TemplateBinding HeaderedContentControl.Header}" ContentTemplate="{TemplateBinding HeaderedContentControl.HeaderTemplate}" ContentStringFormat="{TemplateBinding HeaderedItemsControl.HeaderStringFormat}" ContentSource="Header" Name="PART_Header" HorizontalAlignment="{TemplateBinding Control.HorizontalContentAlignment}" SnapsToDevicePixels="{TemplateBinding UIElement.SnapsToDevicePixels}" />
-                                        <ItemsPresenter Name="ItemsHost" Margin="15,0,0,0" Grid.Row="1" />
-                                    </Grid>
-                                    <ControlTemplate.Triggers>
-                                        <Trigger Property="TreeViewItem.IsExpanded">
-                                            <Setter TargetName="ItemsHost" Property="UIElement.Visibility" Value="{x:Static Visibility.Collapsed}" />
-                                            <Trigger.Value>
-                                                <s:Boolean>False</s:Boolean>
-                                            </Trigger.Value>
-                                        </Trigger>
-                                        <Trigger Property="UIElement.IsEnabled">
-                                            <Setter Property="TextElement.Foreground">
-                                                <Setter.Value>
-                                                    <DynamicResource ResourceKey="{x:Static SystemColors.GrayTextBrushKey}" />
-                                                </Setter.Value>
-                                            </Setter>
-                                            <Trigger.Value>
-                                                <s:Boolean>False</s:Boolean>
-                                            </Trigger.Value>
-                                        </Trigger>
-                                    </ControlTemplate.Triggers>
-                                </ControlTemplate>
-                                <DataTemplate DataType="{x:Type localVm:AttachedLinkViewModel}">
-                                    <Border BorderBrush="LightGray" BorderThickness="0,1,0,0" Margin="0,8,0,8">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="auto" />
-                                                <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
-                                            <Image Grid.Column="0" Source="{Binding ThumnailUrl}" MaxWidth="150" MaxHeight="150" Stretch="Uniform" VerticalAlignment="Top" Margin="0,8,8,0" Visibility="{Binding ExistThumnailUrl, Converter={StaticResource booleanToVisibilityConverter}}" />
-                                            <TextBlock Grid.Column="1" Margin="0,8,0,0" TextWrapping="Wrap">
-                                            <Hyperlink>
-                                                <i:Interaction.Triggers>
-                                                    <i:EventTrigger EventName="Click">
-                                                        <ei:LaunchUriOrFileAction Path="{Binding AncourUrl}" />
-                                                    </i:EventTrigger>
-                                                </i:Interaction.Triggers>
-                                                <Run FontWeight="Bold" Text="{Binding AncourTitle}" />
-                                            </Hyperlink>
-                                            <LineBreak />
-                                            <Run Text="{Binding AncourIntroductionText}" />
-                                            </TextBlock>
-                                        </Grid>
-                                    </Border>
-                                </DataTemplate>
-                                <DataTemplate DataType="{x:Type localVm:CommentViewModel}">
-                                    <Border BorderBrush="LightGray" BorderThickness="0,1,0,0" Padding="5">
-                                        <DockPanel Margin="0" Focusable="False">
-                                            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0">
-                                                <ContentControl Focusable="False" Width="25" Height="25">
-                                                    <Image SnapsToDevicePixels="True" Source="{Binding OwnerIconUrl}" />
-                                                    <ContentControl.Effect>
-                                                        <DropShadowEffect Color="Black" Direction="315" Opacity="0.3" BlurRadius="5" ShadowDepth="0" />
-                                                    </ContentControl.Effect>
-                                                </ContentControl>
-                                                <TextBlock Margin="5,0,0,0" VerticalAlignment="Center">
-                                                    <Run Text="{Binding OwnerName}" />
-                                                    <Run Foreground="Gray" Text="{Binding CommentDate, StringFormat='- {0} -'}" />
-                                                </TextBlock>
-                                            </StackPanel>
-                                            <TextBlock Margin="0,3,0,3" local:InlineBehavior.Inline="{Binding PostContentInline}" TextWrapping="Wrap" />
-                                        </DockPanel>
-                                    </Border>
-                                </DataTemplate>
-                                <DataTemplate DataType="{x:Type localVm:ActivityViewModel}">
-                                    <Border BorderBrush="LightGray" BorderThickness="0,1,0,0" Padding="5">
-                                        <DockPanel Margin="0" Focusable="False">
-                                            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0">
-                                                <ContentControl Focusable="False" Width="25" Height="25">
-                                                    <Image SnapsToDevicePixels="True" Source="{Binding PostUserIconUrl}" />
-                                                    <ContentControl.Effect>
-                                                        <DropShadowEffect Color="Black" Direction="315" Opacity="0.3" BlurRadius="5" ShadowDepth="0" />
-                                                    </ContentControl.Effect>
-                                                </ContentControl>
-                                                <TextBlock Margin="5,0,0,0" VerticalAlignment="Center">
-                                                    <Run Text="{Binding PostUserName}" />
-                                                    <Span Foreground="Gray">
-                                                        -
-                                                        <Hyperlink TextDecorations="None" Foreground="Gray">
-                                                            <i:Interaction.Triggers>
-                                                                <i:EventTrigger EventName="Click">
-                                                                    <ei:LaunchUriOrFileAction Path="{Binding ActivityUrl}" />
-                                                                </i:EventTrigger>
-                                                                <i:EventTrigger EventName="MouseEnter">
-                                                                    <ei:ChangePropertyAction PropertyName="TextDecorations" Value="Underline" />
-                                                                </i:EventTrigger>
-                                                                <i:EventTrigger EventName="MouseLeave">
-                                                                    <ei:ChangePropertyAction PropertyName="TextDecorations" Value="None" />
-                                                                </i:EventTrigger>
-                                                            </i:Interaction.Triggers>
-                                                            <Run Text="{Binding PostDate}" />
-                                                        </Hyperlink>
-                                                        -
-                                                    </Span>
-                                                </TextBlock>
-                                            </StackPanel>
-                                            <TextBlock DockPanel.Dock="Top" Margin="0,3,0,3" local:InlineBehavior.Inline="{Binding PostContentInline}" TextWrapping="Wrap" />
-                                            <ContentPresenter DockPanel.Dock="Top" Content="{Binding AttachedContent}" />
-                                            <localCtrl:CommentListBox Mode="{Binding ModeA, Mode=TwoWay}" PostCommentText="{Binding PostCommentTextA, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}" PostCommentCommand="{Binding PostCommentCommand}" Comments="{Binding Comments}" Margin="15,0,0,0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" />
-                                        </DockPanel>
-                                    </Border>
-                                </DataTemplate>
                                 <DataTemplate DataType="{x:Type localVm:StreamViewModel}">
-                                    <localCtrl:ActivityTreeView Focusable="False"
-                                              ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                              ScrollViewer.VerticalScrollBarVisibility="Visible"
-                                              BorderThickness="0"
-                                              ItemsSource="{Binding Activities}">
+                                    <localCtrl:ActivityTreeView
+                                            Focusable="False" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                            ScrollViewer.VerticalScrollBarVisibility="Visible"
+                                            BorderThickness="0" ItemsSource="{Binding Activities}">
                                         <localCtrl:ActivityTreeView.ItemContainerStyle>
                                             <Style TargetType="TreeViewItem">
                                                 <Setter Property="Template" Value="{StaticResource postItemTemplate}" />
-                                                <!--<Setter Property="HeaderTemplate" Value="{StaticResource activityTemplate}" />-->
                                                 <Setter Property="HorizontalContentAlignment" Value="Stretch" />
                                             </Style>
                                         </localCtrl:ActivityTreeView.ItemContainerStyle>
@@ -337,7 +340,26 @@
                 </DataTemplate>
             </localCtrl:ItemSelecter.Resources>
         </localCtrl:ItemSelecter>
-        <localCtrl:ItemSelecter x:Name="sidePane" Grid.Column="1" Width="400" ItemsSource="{Binding SubPages}">
+        <localCtrl:ItemSelecter x:Name="sidePane" Grid.Column="1" Width="400" ItemsSource="{Binding SubPages}" SelectedIndex="{Binding SelectedSubPageIndex}">
+            <localCtrl:ItemSelecter.Resources>
+                <DataTemplate DataType="{x:Type localVm:NotificationManagerViewModel}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="55" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <StackPanel Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left" Orientation="Horizontal">
+                            <Label FontSize="21">Notification</Label>
+                        </StackPanel>
+                        <ListView Focusable="False" Grid.Row="1"
+                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                  ScrollViewer.VerticalScrollBarVisibility="Visible"
+                                  BorderThickness="0"
+                                  ItemsSource="{Binding Items}">
+                        </ListView>
+                    </Grid>
+                </DataTemplate>
+            </localCtrl:ItemSelecter.Resources>
             <i:Interaction.Triggers>
                 <ei:DataTrigger Binding="{Binding IsShowSidePanel}" Value="True">
                     <ei:ControlStoryboardAction Storyboard="{StaticResource closeSidePanelStoryborard}" ControlStoryboardOption="Stop" />

@@ -23,106 +23,112 @@ namespace GPlusBrowser.Controls
         public CommentListBox()
         {
             ExpandAnimationDuration = new Duration(TimeSpan.FromMilliseconds(200));
-            InitializeComponent();
-            itemContainer.ItemContainerGenerator.ItemsChanged += ItemContainerGenerator_ItemsChanged;
-            itemContainer.ChangedStatus += itemContainer_ChangedStatus;
         }
+        static CommentListBox()
+        {
+            DefaultStyleKeyProperty.OverrideMetadata(
+                typeof(CommentListBox), new FrameworkPropertyMetadata(typeof(CommentListBox)));
+        }
+        ExListBox itemContainer;
 
         public bool IsExpand
         {
             get { return (bool)GetValue(IsExpandProperty); }
             set { SetValue(IsExpandProperty, value); }
         }
-        public CommentListBoxMode Mode
+        public bool IsWritable
         {
-            get { return (CommentListBoxMode)GetValue(ModeProperty); }
-            set { SetValue(ModeProperty, value); }
+            get { return (bool)GetValue(IsWritableProperty); }
+            set { SetValue(IsWritableProperty, value); }
+        }
+        public bool IsWriteMode
+        {
+            get { return (bool)GetValue(IsWriteModeProperty); }
+            set { SetValue(IsWriteModeProperty, value); }
+        }
+        public bool IsEnableAnimation
+        {
+            get { return (bool)GetValue(IsEnableAnimationProperty); }
+            set { SetValue(IsEnableAnimationProperty, value); }
         }
         public int CommentCount
         {
             get { return (int)GetValue(CommentCountProperty); }
             set { SetValue(CommentCountProperty, value); }
         }
-        public System.Collections.IEnumerable Comments
+        public System.Collections.IEnumerable ItemsSource
         {
-            get { return (System.Collections.IEnumerable)GetValue(CommentsProperty); }
-            set { SetValue(CommentsProperty, value); }
+            get { return (System.Collections.IEnumerable)GetValue(ItemsSourceProperty); }
+            set { SetValue(ItemsSourceProperty, value); }
         }
-        public string PostCommentText
+        public string PostText
         {
-            get { return (string)GetValue(PostCommentTextProperty); }
-            set { SetValue(PostCommentTextProperty, value); }
+            get { return (string)GetValue(PostTextProperty); }
+            set { SetValue(PostTextProperty, value); }
         }
-        public ICommand PostCommentCommand
+        public ICommand PostCommand
         {
-            get { return (ICommand)GetValue(PostCommentCommandProperty); }
-            set { SetValue(PostCommentCommandProperty, value); }
+            get { return (ICommand)GetValue(PostCommandProperty); }
+            set { SetValue(PostCommandProperty, value); }
         }
-
         public Duration ExpandAnimationDuration { get; set; }
 
-        void ExpandButton_Click(object sender, RoutedEventArgs e) { IsExpand = !IsExpand; }
+        public override void OnApplyTemplate()
+        {
+            base.OnApplyTemplate();
+            itemContainer = (ExListBox)Template.FindName("itemContainer", this);
+            itemContainer.ItemContainerGenerator.ItemsChanged += ItemContainerGenerator_ItemsChanged;
+            itemContainer.ChangedStatus += itemContainer_ChangedStatus;
+        }
         void itemContainer_ChangedStatus(object sender, EventArgs e) { itemContainer.StartExpandAnimation(IsExpand); }
         void ItemContainerGenerator_ItemsChanged(object sender, System.Windows.Controls.Primitives.ItemsChangedEventArgs e)
         {
             CommentCount = itemContainer.Items.Count;
         }
-        void TxtBxCommentArea_MouseDown(object sender, MouseButtonEventArgs e)
-        {
-            if (Mode == CommentListBoxMode.View)
-                Mode = CommentListBoxMode.Write;
-        }
-        void BtnCommentCancel_Click(object sender, RoutedEventArgs e)
-        {
-            switch (Mode)
-            {
-                case CommentListBoxMode.Write:
-                case CommentListBoxMode.Sending:
-                    Mode = CommentListBoxMode.View;
-                    break;
-            }
-        }
 
         public static readonly DependencyProperty IsExpandProperty = DependencyProperty.Register(
             "IsExpand", typeof(bool), typeof(CommentListBox), new UIPropertyMetadata(false, Changed_IsExpand));
-        public static readonly DependencyProperty ModeProperty = DependencyProperty.Register(
-            "Mode", typeof(CommentListBoxMode), typeof(CommentListBox), new UIPropertyMetadata(CommentListBoxMode.View, Changed_Mode));
-        public static readonly DependencyProperty CommentsProperty = DependencyProperty.Register(
-            "Comments", typeof(System.Collections.IEnumerable), typeof(CommentListBox), new UIPropertyMetadata(null, Changed_Comments));
+        public static readonly DependencyProperty IsWritableProperty = DependencyProperty.Register(
+            "IsWritable", typeof(bool), typeof(CommentListBox), new UIPropertyMetadata(false));
+        public static readonly DependencyProperty IsWriteModeProperty = DependencyProperty.Register(
+            "IsWriteMode", typeof(bool), typeof(CommentListBox), new UIPropertyMetadata(false, Changed_IsWriteMode));
+        public static readonly DependencyProperty IsEnableAnimationProperty = DependencyProperty.Register(
+            "IsEnableAnimation", typeof(bool), typeof(CommentListBox), new UIPropertyMetadata(false));
+        public static readonly DependencyProperty ItemsSourceProperty = DependencyProperty.Register(
+            "ItemsSource", typeof(System.Collections.IEnumerable), typeof(CommentListBox), new UIPropertyMetadata(null));
         public static readonly DependencyProperty CommentCountProperty = DependencyProperty.Register(
             "CommentCount", typeof(int), typeof(CommentListBox), new UIPropertyMetadata(0));
-        public static readonly DependencyProperty PostCommentTextProperty = DependencyProperty.Register(
-            "PostCommentText", typeof(string), typeof(CommentListBox), new UIPropertyMetadata(null));
-        public static readonly DependencyProperty PostCommentCommandProperty = DependencyProperty.Register(
-            "PostCommentCommand", typeof(ICommand), typeof(CommentListBox), new UIPropertyMetadata(null));
+        public static readonly DependencyProperty PostTextProperty = DependencyProperty.Register(
+            "PostText", typeof(string), typeof(CommentListBox), new UIPropertyMetadata(null));
+        public static readonly DependencyProperty PostCommandProperty = DependencyProperty.Register(
+            "PostCommand", typeof(ICommand), typeof(CommentListBox), new UIPropertyMetadata(null));
 
         static void Changed_IsExpand(object sender, DependencyPropertyChangedEventArgs e)
         {
             var element = (CommentListBox)sender;
             element.itemContainer.StartExpandAnimation((bool)e.NewValue);
         }
-        static void Changed_Comments(object sender, DependencyPropertyChangedEventArgs e)
+        static void Changed_IsWriteMode(object sender, DependencyPropertyChangedEventArgs e)
         {
             var element = (CommentListBox)sender;
-            element.itemContainer.ItemsSource = element.Comments;
-        }
-        static void Changed_Mode(object sender, DependencyPropertyChangedEventArgs e)
-        {
-            var element = (CommentListBox)sender;
-            switch (element.Mode)
-            {
-                case CommentListBoxMode.View:
-                    element.PostCommentText = null;
-                    break;
-            }
+            if ((bool)e.NewValue == false)
+                element.PostText = null;
         }
     }
-    public enum CommentListBoxMode { View, Write, Sending }
-
     public class ExListBox : ItemsControl
     {
-        public ExListBox() { ItemContainerGenerator.ItemsChanged += ItemContainerGenerator_ItemsChanged; }
+        public ExListBox()
+        {
+            ItemContainerGenerator.ItemsChanged += ItemContainerGenerator_ItemsChanged;
+            _translateTransformer = new TranslateTransform();
+        }
         bool _measureExtendHeightFlg = true;
+        TranslateTransform _translateTransformer;
+        public bool IsEnableAnimation
+        {
+            get { return (bool)GetValue(IsEnableAnimationProperty); }
+            set { SetValue(IsEnableAnimationProperty, value); }
+        }
         public bool Expandable
         {
             get { return (bool)GetValue(ExpandableProperty); }
@@ -143,23 +149,30 @@ namespace GPlusBrowser.Controls
         {
             if (isExpand)
             {
-                BeginAnimation(
-                    CommentListBox.HeightProperty,
-                    new DoubleAnimation(ActualHeight, ExtendHeight, new Duration(TimeSpan.FromMilliseconds(250)))
-                    {
-                        AccelerationRatio = 0.1,
-                        DecelerationRatio = 0.9,
-                    }, HandoffBehavior.SnapshotAndReplace);
+                if (IsEnableAnimation)
+                    BeginAnimation(
+                        ExListBox.HeightProperty,
+                        new DoubleAnimation(ActualHeight, ExtendHeight, new Duration(TimeSpan.FromMilliseconds(250)))
+                        {
+                            AccelerationRatio = 0.0,
+                            DecelerationRatio = 1.0,
+                        }, HandoffBehavior.SnapshotAndReplace);
+                else
+                    Height = ExtendHeight;
+
             }
             else
             {
-                BeginAnimation(
-                    CommentListBox.HeightProperty,
-                    new DoubleAnimation(ActualHeight, ViewportHeight, new Duration(TimeSpan.FromMilliseconds(250)))
-                    {
-                        AccelerationRatio = 0.1,
-                        DecelerationRatio = 0.9,
-                    }, HandoffBehavior.SnapshotAndReplace);
+                if (IsEnableAnimation)
+                    BeginAnimation(
+                        CommentListBox.HeightProperty,
+                        new DoubleAnimation(ActualHeight, ViewportHeight, new Duration(TimeSpan.FromMilliseconds(250)))
+                        {
+                            AccelerationRatio = 0.1,
+                            DecelerationRatio = 0.9,
+                        }, HandoffBehavior.SnapshotAndReplace);
+                else
+                    Height = ViewportHeight;
             }
         }
         protected override Size ArrangeOverride(Size arrangeBounds)
@@ -197,7 +210,7 @@ namespace GPlusBrowser.Controls
         protected override DependencyObject GetContainerForItemOverride()
         {
             var element = new ContentPresenter();
-            element.RenderTransform = new TranslateTransform();
+            element.RenderTransform = _translateTransformer;
             element.SizeChanged += element_SizeChanged;
             element.Loaded += element_Loaded;
             return element;
@@ -218,21 +231,16 @@ namespace GPlusBrowser.Controls
             var duration = new Duration(TimeSpan.FromMilliseconds(250));
             var storyboard = new Storyboard();
 
-            FrameworkElement child;
-                for (var i = 0; i < Items.Count; i++)
-                {
-                    child = (ContentPresenter)ItemContainerGenerator.ContainerFromIndex(i);
-                    if (child == null)
-                        break;
-                    var childAnime = new DoubleAnimation(element.ActualHeight, 0, duration);
-                    childAnime.BeginTime = new TimeSpan();
-                    childAnime.AccelerationRatio = 0.1;
-                    childAnime.DecelerationRatio = 0.9;
-                    Storyboard.SetTarget(childAnime, child);
-                    Storyboard.SetTargetProperty(childAnime, new PropertyPath("RenderTransform.Y"));
-                    storyboard.Children.Add(childAnime);
-                }
-            BeginStoryboard(storyboard, HandoffBehavior.SnapshotAndReplace, true);
+            if (IsEnableAnimation)
+            {
+                _translateTransformer.BeginAnimation(
+                    TranslateTransform.YProperty,
+                    new DoubleAnimation(element.ActualHeight, 0, duration)
+                    {
+                        AccelerationRatio = 0.0,
+                        DecelerationRatio = 1.0
+                    }, HandoffBehavior.SnapshotAndReplace);
+            }
         }
 
         public event EventHandler ChangedStatus;
@@ -242,6 +250,8 @@ namespace GPlusBrowser.Controls
                 ChangedStatus(this, e);
         }
 
+        public static readonly DependencyProperty IsEnableAnimationProperty = DependencyProperty.Register(
+            "IsEnableAnimation", typeof(bool), typeof(ExListBox), new UIPropertyMetadata(false));
         public static readonly DependencyProperty ExpandableProperty = DependencyProperty.Register(
             "Expandable", typeof(bool), typeof(ExListBox), new UIPropertyMetadata(false));
         public static readonly DependencyProperty ExtendHeightProperty = DependencyProperty.Register(
@@ -249,6 +259,7 @@ namespace GPlusBrowser.Controls
         public static readonly DependencyProperty ViewportHeightProperty = DependencyProperty.Register(
             "ViewportHeight", typeof(double), typeof(ExListBox), new UIPropertyMetadata(0.0));
     }
+
     public class IsExpandExpandableToVisibility : IMultiValueConverter
     {
         public object Convert(object[] values, Type targetType, object parameter, System.Globalization.CultureInfo culture)
@@ -275,7 +286,6 @@ namespace GPlusBrowser.Controls
             throw new NotImplementedException();
         }
     }
-
     public static class PlaceHolderBehavior
     {
         // プレースホルダーとして表示するテキスト
