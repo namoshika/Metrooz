@@ -15,6 +15,7 @@ namespace GPlusBrowser.Model
             _accounts = new List<Account>();
             SettingManager = new SettingModelManager();
             SelectedAccountIndex = -1;
+            System.Net.ServicePointManager.DefaultConnectionLimit = 16;
         }
         List<Account> _accounts;
         int _selectedAccountIndex;
