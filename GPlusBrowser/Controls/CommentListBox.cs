@@ -213,8 +213,10 @@ namespace GPlusBrowser.Controls
             element.RenderTransform = _translateTransformer;
             element.SizeChanged += element_SizeChanged;
             element.Loaded += element_Loaded;
+            element.Unloaded += element_Unloaded;
             return element;
         }
+
         void ItemContainerGenerator_ItemsChanged(object sender, System.Windows.Controls.Primitives.ItemsChangedEventArgs e)
         {
             _measureExtendHeightFlg = true;
@@ -230,6 +232,7 @@ namespace GPlusBrowser.Controls
             var element = (ContentPresenter)sender;
             var duration = new Duration(TimeSpan.FromMilliseconds(250));
             var storyboard = new Storyboard();
+            element.Loaded += element_Loaded;
 
             if (IsEnableAnimation)
             {
@@ -241,6 +244,12 @@ namespace GPlusBrowser.Controls
                         DecelerationRatio = 1.0
                     }, HandoffBehavior.SnapshotAndReplace);
             }
+        }
+        void element_Unloaded(object sender, RoutedEventArgs e)
+        {
+            var element = (ContentPresenter)sender;
+            element.SizeChanged += element_SizeChanged;
+            element.Unloaded += element_Unloaded;
         }
 
         public event EventHandler ChangedStatus;

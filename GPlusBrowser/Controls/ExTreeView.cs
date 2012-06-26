@@ -18,12 +18,18 @@ namespace GPlusBrowser.Controls
             _itemHeights = new List<double>();
             _itemPairDict = new Dictionary<object, TreeViewItem>();
             _translateTransformer = new TranslateTransform();
+            _updateIsEnableAnimationObservable = new System.Reactive.Subjects.Subject<int>();
+            _updateIsEnableAnimationObservable
+                .Throttle(TimeSpan.FromMilliseconds(100))
+                .ObserveOn(Dispatcher)
+                .Subscribe(ExTreeView_updateIsEnableAnimationObservable_Called);
             SizeChanged += ExTreeView_SizeChanged;
             Loaded += ExTreeView_Loaded;
         }
         TranslateTransform _translateTransformer;
         ScrollViewer _scrollviewer;
         List<double> _itemHeights;
+        System.Reactive.Subjects.Subject<int> _updateIsEnableAnimationObservable;
         Dictionary<object, TreeViewItem> _itemPairDict;
 
         public double ViewportHeight
@@ -90,9 +96,22 @@ namespace GPlusBrowser.Controls
         }
 
         void ExTreeView_Loaded(object sender, RoutedEventArgs e)
-        { ViewportHeight = _scrollviewer.ViewportHeight; }
+        { _updateIsEnableAnimationObservable.OnNext(0); }
         void ExTreeView_SizeChanged(object sender, SizeChangedEventArgs e)
-        { ViewportHeight = _scrollviewer.ViewportHeight; }
+        { _updateIsEnableAnimationObservable.OnNext(0); }
+        void ExTreeView_updateIsEnableAnimationObservable_Called(int value)
+        {
+            var offset = 0.0;
+            var top = _scrollviewer.VerticalOffset;
+            var bottom = _scrollviewer.VerticalOffset + _scrollviewer.ViewportHeight;
+            ViewportHeight = _scrollviewer.ViewportHeight;
+            TreeViewItem item;
+            for (var i = 0; (item = (TreeViewItem)ItemContainerGenerator.ContainerFromIndex(i)) != null; i++)
+            {
+                SetIsEnableAnimation(item, offset < bottom && offset + item.ActualHeight > top);
+                offset += item.ActualHeight;
+            }
+        }
         void element_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             if (e != null && !e.HeightChanged)
@@ -128,6 +147,8 @@ namespace GPlusBrowser.Controls
             }
             if (_itemHeights.Count == Items.Count)
                 _itemHeights[idx] = element.ActualHeight;
+
+            _updateIsEnableAnimationObservable.OnNext(0);
         }
         void element_Loaded(object sender, RoutedEventArgs e)
         {
@@ -151,6 +172,8 @@ namespace GPlusBrowser.Controls
                     },
                     HandoffBehavior.SnapshotAndReplace);
             }
+
+            _updateIsEnableAnimationObservable.OnNext(0);
         }
         void _scrollviewer_ScrollChanged(EventPattern<EventArgs> e)
         {
