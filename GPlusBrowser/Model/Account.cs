@@ -26,6 +26,7 @@ namespace GPlusBrowser.Model
         //AccountManager AccountManagerModel{get;private set;}
         public bool IsLogined { get; private set; }
         public bool IsInitialized { get; private set; }
+        public bool IsConnected { get; private set; }
         public PlatformClient GooglePlusClient { get; private set; }
         public CircleManager Circles { get; private set; }
         public StreamManager Stream { get; private set; }
@@ -47,6 +48,8 @@ namespace GPlusBrowser.Model
                 IsLogined = await initDtTask;
                 Circles.Initialize();
                 Notification.Initialize();
+                Disconnect();
+                Connect();
                 MyProfile = await profileTask;
                 AccountIconUrl = MyProfile.IconImageUrlText;
                 if (Setting.UserIconUrl != MyProfile.IconImageUrlText)
@@ -59,6 +62,7 @@ namespace GPlusBrowser.Model
             {
                 IsLogined = false;
                 IsInitialized = false;
+                IsConnected = false;
             }
 
             OnInitialized(new EventArgs());
@@ -78,6 +82,12 @@ namespace GPlusBrowser.Model
             }
             OnChangedLoginStatus(new EventArgs());
             return IsLogined;
+        }
+        public void Connect()
+        {
+        }
+        public void Disconnect()
+        {
         }
         public void Dispose()
         {
@@ -107,6 +117,12 @@ namespace GPlusBrowser.Model
         {
             if (ChangedLoginStatus != null)
                 ChangedLoginStatus(this, e);
+        }
+        public event EventHandler ChangedConnectStatus;
+        protected virtual void OnChangedConnectStatus(EventArgs e)
+        {
+            if (ChangedConnectStatus != null)
+                ChangedConnectStatus(this, e);
         }
     }
 }

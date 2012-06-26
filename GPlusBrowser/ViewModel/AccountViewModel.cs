@@ -18,15 +18,37 @@ namespace GPlusBrowser.ViewModel
         {
             _accountModel = model;
             _accountModel.Initialized += _accountModel_Initialized;
+            _accountModel.ChangedConnectStatus += _accountModel_ChangedConnectStatus;
             _accountManagerModel = manager;
             Stream = new StreamManagerViewModel(model.Stream, uiThreadDispatcher);
             BackToAccountManagerCommand = new RelayCommand(BackToAccountManagerCommand_Execute);
+            ConnectStreamCommand = new RelayCommand(ConnectStreamCommand_Execute);
         }
         Account _accountModel;
         AccountManager _accountManagerModel;
         StreamManagerViewModel _stream;
         Uri _accountIconUrl;
+        bool _isShowStatusText;
+        string _statusText;
 
+        public bool IsShowStatusText
+        {
+            get { return _isShowStatusText; }
+            set
+            {
+                _isShowStatusText = value;
+                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("IsShowStatusText"));
+            }
+        }
+        public string StatusText
+        {
+            get { return _statusText; }
+            set
+            {
+                _statusText = value;
+                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("StatusText"));
+            }
+        }
         public StreamManagerViewModel Stream
         {
             get { return _stream; }
@@ -46,6 +68,7 @@ namespace GPlusBrowser.ViewModel
             }
         }
         public ICommand BackToAccountManagerCommand { get; private set; }
+        public ICommand ConnectStreamCommand { get; private set; }
         public void Dispose()
         {
             _accountModel.Initialized -= _accountModel_Initialized;
@@ -59,9 +82,25 @@ namespace GPlusBrowser.ViewModel
         {
             AccountIconUrl = new Uri(_accountModel.AccountIconUrl.Replace("$SIZE_SEGMENT", "s35-c-k"));
         }
+        void _accountModel_ChangedConnectStatus(object sender, EventArgs e)
+        {
+            if (_accountModel.IsConnected)
+                IsShowStatusText = false;
+            else
+            {
+                IsShowStatusText = true;
+                StatusText = "ストリームへの接続が切断されました。";
+            }
+        }
         void BackToAccountManagerCommand_Execute(object arg)
         {
             _accountManagerModel.SelectedAccountIndex = -1;
+        }
+        void ConnectStreamCommand_Execute(object arg)
+        {
+            var account = _accountManagerModel.Accounts[_accountManagerModel.SelectedAccountIndex];
+            account.Disconnect();
+            account.Connect();
         }
     }
 }

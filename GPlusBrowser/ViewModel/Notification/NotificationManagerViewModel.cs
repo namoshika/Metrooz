@@ -113,7 +113,7 @@ namespace GPlusBrowser.ViewModel
                             case NotificationsFilter.Mension:
                             case NotificationsFilter.OtherPost:
                             case NotificationsFilter.PostIntoYou:
-                                obj = new NotificationWithActivityViewModel((NotificationInfoWithActivity)item, UiThreadDispatcher);
+                                obj = new NotificationWithActivityViewModel((NotificationInfoWithActivity)item, _managerModel, UiThreadDispatcher);
                                 _notifications.Insert(0, obj);
                                 Items.InsertAsync(0, obj, UiThreadDispatcher);
                                 break;
@@ -170,7 +170,7 @@ namespace GPlusBrowser.ViewModel
     }
     public class NotificationWithActivityViewModel : NotificationViewModel
     {
-        public NotificationWithActivityViewModel(NotificationInfoWithActivity model, Dispatcher uiThreadDispatcher)
+        public NotificationWithActivityViewModel(NotificationInfoWithActivity model, NotificationManager managerModel, Dispatcher uiThreadDispatcher)
             : base(uiThreadDispatcher)
         {
             if (model.ActivityInfo.PostStatus != PostStatusType.Removed)

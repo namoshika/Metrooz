@@ -25,6 +25,27 @@ namespace GPlusBrowser.ViewModel
         }
 
         AccountManager _accountManagerModel;
+        bool _isShowStatusText;
+        string _statusText;
+
+        public bool IsShowStatusText
+        {
+            get { return _isShowStatusText; }
+            set
+            {
+                _isShowStatusText = value;
+                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("IsShowStatusText"));
+            }
+        }
+        public string StatusText
+        {
+            get { return _statusText; }
+            set
+            {
+                _statusText = value;
+                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("StatusText"));
+            }
+        }
         public LoginerViewModel Loginer { get; set; }
         public ObservableCollection<AccountPanelViewModel> Accounts { get; set; }
         public ICommand OpenAddAccountPanelCommand { get; set; }

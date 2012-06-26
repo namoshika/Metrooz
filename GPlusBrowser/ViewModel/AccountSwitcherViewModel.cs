@@ -25,7 +25,7 @@ namespace GPlusBrowser.ViewModel
         }
         AccountManager _accountManagerModel;
         bool _isShowSidePanel;
-        int _selectedMainPageIndex, _selectedSubPageIndex;
+        int _selectedMainPageIndex, _selectedSubPageIndex, _errorMessageTextBoxGridColumnSpan;
 
         public bool IsShowSidePanel
         {
@@ -33,7 +33,19 @@ namespace GPlusBrowser.ViewModel
             set
             {
                 _isShowSidePanel = value;
+                ErrorMessageTextBoxGridColumnSpan = value ? 2 : 1;
                 OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("IsShowSidePanel"));
+            }
+        }
+        public int ErrorMessageTextBoxGridColumnSpan
+        {
+            get { return _errorMessageTextBoxGridColumnSpan; }
+            set
+            {
+                if (_errorMessageTextBoxGridColumnSpan == value)
+                    return;
+                _errorMessageTextBoxGridColumnSpan = value;
+                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("ErrorMessageTextBoxGridColumnSpan"));
             }
         }
         public int SelectedMainPageIndex

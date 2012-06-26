@@ -409,5 +409,22 @@
             </i:Interaction.Triggers>
         </localCtrl:ItemSelecter>
         <ToggleButton Grid.Column="0" Height="35" Width="35" VerticalAlignment="Bottom" HorizontalAlignment="Left" Margin="0,0,0,8" IsChecked="{Binding IsShowSidePanel}">FlMd</ToggleButton>
+        <TextBlock Grid.ColumnSpan="{Binding ErrorMessageTextBoxGridColumnSpan}" VerticalAlignment="Bottom" HorizontalAlignment="Center" Background="Red" Foreground="White" TextAlignment="Center" Padding="20,5,20,5" Margin="0,0,0,20" FontSize="13"
+                   Visibility="Collapsed">
+            <i:Interaction.Triggers>
+                <ei:DataTrigger Binding="{Binding SelectedItem.IsShowStatusText, ElementName=mainPane}" Value="True">
+                    <ei:ChangePropertyAction PropertyName="Visibility" Value="Visible" />
+                </ei:DataTrigger>
+                <ei:DataTrigger Binding="{Binding SelectedItem.IsShowStatusText, ElementName=mainPane}" Value="False">
+                    <ei:ChangePropertyAction PropertyName="Visibility" Value="Collapsed" />
+                </ei:DataTrigger>
+            </i:Interaction.Triggers>
+            <Run Text="{Binding SelectedItem.StatusText, ElementName=mainPane}" />
+            <Run Text="(" />
+            <Hyperlink Command="{Binding SelectedItem.ConnectStreamCommand, ElementName=mainPane}" Foreground="Blue">
+                <Run Text="再接続する" />
+            </Hyperlink>
+            <Run Text=")" />
+        </TextBlock>
     </Grid>
 </Window>

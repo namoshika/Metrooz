@@ -24,11 +24,12 @@ namespace GPlusBrowser.Model
         IDisposable _notificationTrigger;
         NotificationInfoContainer _notificationModel;
 
+        public bool IsError { get; private set; }
         public int MaxItemCount { get; set; }
         public int UnreadItemCount { get; private set; }
         public ReadOnlyCollection<NotificationInfo> Items { get; private set; }
 
-        public async void Initialize()
+        public void Initialize()
         {
             lock (_syncerInit)
             {
@@ -44,9 +45,21 @@ namespace GPlusBrowser.Model
                 _notificationTrigger = _account.GooglePlusClient.Activity.GetStream()
                     .OfType<NotificationSignal>()
                     .Throttle(TimeSpan.FromMilliseconds(3000))
-                    .Subscribe(signal => _notificationModel.UpdateAsync(false));
+                    .Subscribe(signal => Update());
             }
-            await _notificationModel.UpdateAsync(false);
+            Update();
+        }
+        public async void Update()
+        {
+            IsError = false;
+            OnChangedIsError(new EventArgs());
+            try
+            { await _notificationModel.UpdateAsync(false); }
+            catch (FailToOperationException)
+            {
+                IsError = true;
+                OnChangedIsError(new EventArgs());
+            }
         }
         public void MarkAllAsRead()
         {
@@ -72,6 +85,12 @@ namespace GPlusBrowser.Model
             OnUpdated(e);
         }
 
+        public event EventHandler ChangedIsError;
+        protected virtual void OnChangedIsError(EventArgs e)
+        {
+            if (ChangedIsError != null)
+                ChangedIsError(this, e);
+        }
         public event NotificationContainerEventHandler Updated;
         protected virtual void OnUpdated(NotificationContainerUpdatedEventArgs e)
         {
