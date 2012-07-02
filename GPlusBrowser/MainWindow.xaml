@@ -65,6 +65,9 @@
                     </Grid>
                 </Border>
             </DataTemplate>
+            <DataTemplate DataType="{x:Type localVm:AttachedAlbumViewModel}">
+                <localCtrl:ImageBox MaxHeight="300" ItemsSource="{Binding SmallImageUrlList}" Content="{Binding SelectedImageUrl}" />
+            </DataTemplate>
             <DataTemplate DataType="{x:Type localVm:CommentViewModel}">
                 <Border BorderBrush="LightGray" BorderThickness="0,1,0,0" Padding="5">
                     <DockPanel Margin="0" Focusable="False">

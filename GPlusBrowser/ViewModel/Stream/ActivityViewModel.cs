@@ -201,6 +201,10 @@ namespace GPlusBrowser.ViewModel
                                 attachedLink.AncourFavicon, attachedLink.AncourUrl, attachedLink.Thumbnail,
                                 UiThreadDispatcher);
                             break;
+                        case ContentType.Image:
+                            var attachedAlbum = (AttachedAlbum)_activity.ActivityInfo.AttachedContent;
+                            AttachedContent = new AttachedAlbumViewModel(attachedAlbum, UiThreadDispatcher);
+                            break;
                     }
                 }
                 UiThreadDispatcher.InvokeAsync(() => PostContentInline = PrivateConvertInlines(content));
