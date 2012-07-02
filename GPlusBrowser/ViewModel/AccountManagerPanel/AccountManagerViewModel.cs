@@ -51,7 +51,7 @@ namespace GPlusBrowser.ViewModel
         public ICommand OpenAddAccountPanelCommand { get; set; }
 
         void OpenAddAccountPanelCommand_Executed(object arg)
-        { Loginer.OpenPanel(_accountManagerModel.Create(), false); }
+        { Loginer.OpenLoginForm(); }
         bool OpenAddAccountPanelCommand_CanExecuted(object arg)
         { return Loginer.Status == LoginSequenceStatus.Hidden; }
         void _accountManagerModel_ChangedAccounts(object sender, NotifyCollectionChangedEventArgs e)

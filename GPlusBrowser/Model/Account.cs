@@ -18,14 +18,14 @@ namespace GPlusBrowser.Model
             Stream = new StreamManager(this);
             Notification = new NotificationManager(this);
             AccountIconUrl = setting.UserIconUrl;
-            IsInitialized = false;
+            InitializeSequenceStatus = setting.Cookies == null
+                ? AccountInitSeqStatus.UnLogined : AccountInitSeqStatus.Logined;
         }
         ~Account() { Dispose(); }
 
         //Application OwnerApplicationModel{get;private set;}
         //AccountManager AccountManagerModel{get;private set;}
-        public bool IsLogined { get; private set; }
-        public bool IsInitialized { get; private set; }
+        public AccountInitSeqStatus InitializeSequenceStatus { get; private set; }
         public bool IsConnected { get; private set; }
         public PlatformClient GooglePlusClient { get; private set; }
         public CircleManager Circles { get; private set; }
@@ -38,50 +38,58 @@ namespace GPlusBrowser.Model
 
         public async Task Initialize()
         {
+            if (InitializeSequenceStatus < AccountInitSeqStatus.Logined)
+                throw new InvalidOperationException("InitializeSequenceStatusがLoginedを満たさない状態でのInitialize()呼び出しは無効です。");
+
             var client = new PlatformClient(Setting.Cookies);
             try
             {
+                InitializeSequenceStatus = AccountInitSeqStatus.Logined;
                 var initDtTask = client.UpdateHomeInitDataAsync().ContinueWith(tsk => true).ConfigureAwait(false);
                 var profileTask = client.Relation.GetProfileOfMe(false).ConfigureAwait(false);
 
                 GooglePlusClient = client;
-                IsLogined = await initDtTask;
+                MyProfile = await profileTask;
+                InitializeSequenceStatus = AccountInitSeqStatus.LoadedProfile;
+                if (await initDtTask)
+                    InitializeSequenceStatus = AccountInitSeqStatus.LoadedHomeInit;
                 Circles.Initialize();
                 Notification.Initialize();
-                Disconnect();
                 Connect();
-                MyProfile = await profileTask;
                 AccountIconUrl = MyProfile.IconImageUrlText;
                 if (Setting.UserIconUrl != MyProfile.IconImageUrlText)
                     Setting.UserIconUrl = MyProfile.IconImageUrlText;
                 if (Setting.UserName != MyProfile.Name)
                     Setting.UserName = MyProfile.Name;
-                IsInitialized = true;
             }
             catch (FailToOperationException)
             {
-                IsLogined = false;
-                IsInitialized = false;
                 IsConnected = false;
+                InitializeSequenceStatus = AccountInitSeqStatus.DisableSession;
             }
 
             OnInitialized(new EventArgs());
         }
-        public async Task<bool> Login(string mail, string password)
+        public async Task Login(string mail, string password)
         {
             var cookie = new System.Net.CookieContainer();
-            if (IsLogined = await PlatformClient.TryLogin(mail, password, cookie).ConfigureAwait(false))
-            {
-                Setting.MailAddress = mail;
-                Setting.Cookies = cookie;
-                GooglePlusClient = new PlatformClient(Setting.Cookies);
-                MyProfile = await GooglePlusClient.Relation.GetProfileOfMe(false).ConfigureAwait(false);
-                Setting.UserName = MyProfile.Name;
-                Setting.UserIconUrl = MyProfile.IconImageUrlText;
-                AccountIconUrl = Setting.UserIconUrl;
-            }
+            InitializeSequenceStatus = await PlatformClient.TryLogin(mail, password, cookie)
+                .ConfigureAwait(false) ? AccountInitSeqStatus.Logined : AccountInitSeqStatus.UnLogined;
+            if (InitializeSequenceStatus == AccountInitSeqStatus.Logined)
+                try
+                {
+                    Setting.MailAddress = mail;
+                    Setting.Cookies = cookie;
+                    GooglePlusClient = new PlatformClient(Setting.Cookies);
+                    MyProfile = await GooglePlusClient.Relation.GetProfileOfMe(false).ConfigureAwait(false);
+                    Setting.UserName = MyProfile.Name;
+                    Setting.UserIconUrl = MyProfile.IconImageUrlText;
+                    AccountIconUrl = Setting.UserIconUrl;
+                    InitializeSequenceStatus = AccountInitSeqStatus.LoadedProfile;
+                }
+                catch (FailToOperationException)
+                { }
             OnChangedLoginStatus(new EventArgs());
-            return IsLogined;
         }
         public void Connect()
         {
@@ -97,6 +105,7 @@ namespace GPlusBrowser.Model
 
         void Circles_Initialized(object sender, EventArgs e)
         {
+            InitializeSequenceStatus = AccountInitSeqStatus.LoadedFullDatas;
             Stream.Initialize();
         }
 
@@ -124,5 +133,10 @@ namespace GPlusBrowser.Model
             if (ChangedConnectStatus != null)
                 ChangedConnectStatus(this, e);
         }
+    }
+    public enum AccountInitSeqStatus
+    {
+        UnLogined = 0, Logined = 1, LoadedProfile = 2, LoadedHomeInit = 3,
+        LoadedFullDatas = 4, DisableSession = 5,
     }
 }

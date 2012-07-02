@@ -21,7 +21,7 @@ namespace GPlusBrowser.ViewModel
             CancelCommand = new RelayCommand(CancelCommand_Executed, LoginAndCancelCommand_CanExecuted);
         }
         AccountManager _accountManagerModel;
-        bool _isCanceled;
+        bool _loginButtonIsEnabled;
         bool _isRelogin;
         string _emailAddress;
         string _password;
@@ -33,13 +33,13 @@ namespace GPlusBrowser.ViewModel
         public ICommand LoginCommand { get; private set; }
         public ICommand CancelCommand { get; private set; }
         public Account TargetAccount { get; private set; }
-        public bool IsCanceled
+        public bool LoginButtonIsEnabled
         {
-            get { return _isCanceled; }
+            get { return _loginButtonIsEnabled; }
             set
             {
-                _isCanceled = value;
-                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("IsCanceled"));
+                _loginButtonIsEnabled = value;
+                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("LoginButtonIsEnabled"));
             }
         }
         public bool IsRelogin
@@ -107,12 +107,14 @@ namespace GPlusBrowser.ViewModel
             }
         }
 
-        public void OpenPanel(Account item, bool isRelogin)
+        public void OpenLoginForm()
+        {
+            OpenReloginForm(_accountManagerModel.Create());
+        }
+        public void OpenReloginForm(Account item)
         {
             TargetAccount = item;
-            IsRelogin = isRelogin;
             Status = LoginSequenceStatus.Input;
-            NotificationText = string.Empty;
         }
 
         async void LoginCommand_Executed(object arg)
@@ -121,23 +123,25 @@ namespace GPlusBrowser.ViewModel
             {
                 case LoginSequenceStatus.Input:
                 case LoginSequenceStatus.Fail:
-                    Status = LoginSequenceStatus.Authing;
                     if (string.IsNullOrEmpty(EmailAddress) || string.IsNullOrEmpty(Password))
                     {
                         Status = LoginSequenceStatus.Fail;
+                        LoginButtonIsEnabled = true;
                         NotificationText = "メールアドレスやパスワードに未入力な項目があります。";
                     }
                     else
                     {
+                        Status = LoginSequenceStatus.Authing;
+                        LoginButtonIsEnabled = false;
                         await TargetAccount.Login(EmailAddress, Password).ConfigureAwait(false);
-                        Status = TargetAccount.IsLogined ? LoginSequenceStatus.Success : LoginSequenceStatus.Fail;
-                        if (TargetAccount.IsLogined)
-                        {
-                            IconImageUrl = new Uri(TargetAccount.AccountIconUrl.Replace("$SIZE_SEGMENT", "s120-c-k"));
-                        }
+                        var isLogin = TargetAccount.InitializeSequenceStatus > AccountInitSeqStatus.UnLogined;
+                        Status = isLogin ? LoginSequenceStatus.Success : LoginSequenceStatus.Fail;
+                        LoginButtonIsEnabled = true;
+                        if (isLogin)
+                        { IconImageUrl = new Uri(TargetAccount.AccountIconUrl.Replace("$SIZE_SEGMENT", "s120-c-k")); }
                         else
                         {
-                            NotificationText = TargetAccount.IsLogined
+                            NotificationText = isLogin
                                 ? string.Empty : "ログインに失敗しました。メールアドレスやパスワードに間違いがある可能性があります。";
                         }
                     }
@@ -159,6 +163,7 @@ namespace GPlusBrowser.ViewModel
             EmailAddress = null;
             Password = null;
             UserName = null;
+            NotificationText = string.Empty;
         }
         bool LoginAndCancelCommand_CanExecuted(object arg)
         { return Status != LoginSequenceStatus.Authing; }

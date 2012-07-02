@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:GPlusBrowser"
         xmlns:localVm="clr-namespace:GPlusBrowser.ViewModel"
         xmlns:localCtrl="clr-namespace:GPlusBrowser.Controls"
-        Title="MainWindow" Height="650" Width="550" Name="mainWindow">
+        Title="GPlusBrowser" Height="650" Width="550" Name="mainWindow">
     <Grid HorizontalAlignment="Stretch">
         <Grid.Resources>
             <BooleanToVisibilityConverter x:Key="booleanToVisibilityConverter" />

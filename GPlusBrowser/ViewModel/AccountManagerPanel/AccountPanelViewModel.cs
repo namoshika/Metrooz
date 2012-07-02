@@ -69,7 +69,8 @@ namespace GPlusBrowser.ViewModel
         void OpenStreamPanelCommand_Execute(object arg)
         {
             var targetIdx = _accountManagerModel.Accounts.IndexOf(_accountModel);
-            if (!_accountManagerModel.Accounts[targetIdx].IsInitialized)
+            var seqStatus = _accountManagerModel.Accounts[targetIdx].InitializeSequenceStatus;
+            if (seqStatus != AccountInitSeqStatus.UnLogined && seqStatus  < AccountInitSeqStatus.LoadedHomeInit)
                 _accountManagerModel.Accounts[targetIdx].Initialize();
             _accountManagerModel.SelectedAccountIndex = targetIdx;
         }
