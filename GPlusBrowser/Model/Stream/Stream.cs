@@ -46,20 +46,14 @@ namespace GPlusBrowser.Model
             get { return _reader; }
             set
             {
+                if (_reader != value && _reader != null)
+                    _activities.Clear();
+
+                _activityGetter = value.GetActivities();
+                _reader = value;
                 Readable = value != null;
                 Name = value.Name;
-                var activityGetter = value.GetActivities();
-                var reader = value;
-                var streamObj = reader.GetStream().Subscribe(activity_OnNext);
-
-                if (_reader != value && _reader != null || _reader != null)
-                {
-                    _streamObj.Dispose();
-                    _activities.Clear();
-                }
-                _activityGetter = activityGetter;
-                _reader = reader;
-                _streamObj = streamObj;
+                Connect();
             }
         }
         public void Refresh()
@@ -87,6 +81,12 @@ namespace GPlusBrowser.Model
         {
             if (Postable)
                 Poster.Post(content);
+        }
+        public void Connect()
+        {
+            if (_streamObj != null)
+                _streamObj.Dispose();
+            _streamObj = _reader.GetStream().Subscribe(activity_OnNext);
         }
         public void Dispose()
         {

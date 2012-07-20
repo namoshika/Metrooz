@@ -84,7 +84,7 @@ namespace GPlusBrowser.ViewModel
         }
         void _accountModel_ChangedConnectStatus(object sender, EventArgs e)
         {
-            if (_accountModel.IsConnected)
+            if (_accountModel.IsConnected != TalkGadgetBindStatus.DisableConnect)
                 IsShowStatusText = false;
             else
             {
@@ -99,8 +99,7 @@ namespace GPlusBrowser.ViewModel
         void ConnectStreamCommand_Execute(object arg)
         {
             var account = _accountManagerModel.Accounts[_accountManagerModel.SelectedAccountIndex];
-            account.Disconnect();
-            account.Connect();
+            account.Reconnect();
         }
     }
 }

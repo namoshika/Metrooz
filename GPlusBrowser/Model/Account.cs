@@ -25,8 +25,8 @@ namespace GPlusBrowser.Model
 
         //Application OwnerApplicationModel{get;private set;}
         //AccountManager AccountManagerModel{get;private set;}
+        public TalkGadgetBindStatus IsConnected { get; private set; }
         public AccountInitSeqStatus InitializeSequenceStatus { get; private set; }
-        public bool IsConnected { get; private set; }
         public PlatformClient GooglePlusClient { get; private set; }
         public CircleManager Circles { get; private set; }
         public StreamManager Stream { get; private set; }
@@ -49,13 +49,13 @@ namespace GPlusBrowser.Model
                 var profileTask = client.Relation.GetProfileOfMe(false).ConfigureAwait(false);
 
                 GooglePlusClient = client;
+                GooglePlusClient.Activity.ChangedIsConnected += Activity_ChangedIsConnected;
                 MyProfile = await profileTask;
                 InitializeSequenceStatus = AccountInitSeqStatus.LoadedProfile;
                 if (await initDtTask)
                     InitializeSequenceStatus = AccountInitSeqStatus.LoadedHomeInit;
                 Circles.Initialize();
                 Notification.Initialize();
-                Connect();
                 AccountIconUrl = MyProfile.IconImageUrlText;
                 if (Setting.UserIconUrl != MyProfile.IconImageUrlText)
                     Setting.UserIconUrl = MyProfile.IconImageUrlText;
@@ -63,10 +63,7 @@ namespace GPlusBrowser.Model
                     Setting.UserName = MyProfile.Name;
             }
             catch (FailToOperationException)
-            {
-                IsConnected = false;
-                InitializeSequenceStatus = AccountInitSeqStatus.DisableSession;
-            }
+            { InitializeSequenceStatus = AccountInitSeqStatus.DisableSession; }
 
             OnInitialized(new EventArgs());
         }
@@ -91,11 +88,12 @@ namespace GPlusBrowser.Model
                 { }
             OnChangedLoginStatus(new EventArgs());
         }
-        public void Connect()
+        public void Reconnect()
         {
-        }
-        public void Disconnect()
-        {
+            IsConnected = TalkGadgetBindStatus.Disconnected;
+            Notification.Connect();
+            foreach (var item in Stream.DisplayStreams)
+                item.Connect();
         }
         public void Dispose()
         {
@@ -107,6 +105,12 @@ namespace GPlusBrowser.Model
         {
             InitializeSequenceStatus = AccountInitSeqStatus.LoadedFullDatas;
             Stream.Initialize();
+        }
+        void Activity_ChangedIsConnected(object sender, EventArgs e)
+        {
+            IsConnected = GooglePlusClient.Activity.IsConnected
+              ? TalkGadgetBindStatus.Connected : TalkGadgetBindStatus.DisableConnect;
+            OnChangedConnectStatus(new EventArgs());
         }
 
         public event EventHandler Initialized;
@@ -139,4 +143,6 @@ namespace GPlusBrowser.Model
         UnLogined = 0, Logined = 1, LoadedProfile = 2, LoadedHomeInit = 3,
         LoadedFullDatas = 4, DisableSession = 5,
     }
+    public enum TalkGadgetBindStatus
+    { Disconnected, Connected, DisableConnect }
 }

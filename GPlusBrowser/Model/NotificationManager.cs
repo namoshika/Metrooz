@@ -33,19 +33,13 @@ namespace GPlusBrowser.Model
         {
             lock (_syncerInit)
             {
+                if (_notificationModel != null)
+                    _notificationModel.Updated -= _notificationModel_Updated;
+
                 _notificationModel = _account.GooglePlusClient.Notification
                     .GetNotificationContainer(NotificationsFilter.All);
                 _notificationModel.Updated += _notificationModel_Updated;
-
-                if (_notificationTrigger != null)
-                {
-                    _notificationModel.Updated -= _notificationModel_Updated;
-                    _notificationTrigger.Dispose();
-                }
-                _notificationTrigger = _account.GooglePlusClient.Activity.GetStream()
-                    .OfType<NotificationSignal>()
-                    .Throttle(TimeSpan.FromMilliseconds(3000))
-                    .Subscribe(signal => Update());
+                Connect();
             }
             Update();
         }
@@ -70,6 +64,16 @@ namespace GPlusBrowser.Model
                 _account.GooglePlusClient.Notification
                     .UpdateLastReadTimeAsync(Items.First().LatestNoticeDate);
             }
+        }
+        public void Connect()
+        {
+            if (_notificationTrigger != null)
+                _notificationTrigger.Dispose();
+
+            _notificationTrigger = _account.GooglePlusClient.Activity.GetStream()
+                .OfType<NotificationSignal>()
+                .Throttle(TimeSpan.FromMilliseconds(3000))
+                .Subscribe(signal => Update());
         }
         public void Dispose()
         {
