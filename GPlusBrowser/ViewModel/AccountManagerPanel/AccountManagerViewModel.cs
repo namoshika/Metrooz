@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Windows.Threading;
 
@@ -13,18 +14,18 @@ namespace GPlusBrowser.ViewModel
 
     public class AccountManagerViewModel : ViewModelBase
     {
-        public AccountManagerViewModel(AccountManager accountManagerModel, Dispatcher uiThreadDispatcher)
+        public AccountManagerViewModel(AccountManager accountManagerModel, LoginerViewModel loginer, Dispatcher uiThreadDispatcher)
             : base(uiThreadDispatcher)
         {
             _accountManagerModel = accountManagerModel;
             _accountManagerModel.ChangedAccounts += _accountManagerModel_ChangedAccounts;
-            Loginer = new LoginerViewModel(accountManagerModel, uiThreadDispatcher);
+            _loginer = loginer;
             Accounts = new ObservableCollection<AccountPanelViewModel>();
-            OpenAddAccountPanelCommand = new RelayCommand(
-                OpenAddAccountPanelCommand_Executed, OpenAddAccountPanelCommand_CanExecuted);
+            OpenAddAccountPanelCommand = new RelayCommand(OpenAddAccountPanelCommand_Executed);
         }
 
         AccountManager _accountManagerModel;
+        LoginerViewModel _loginer;
         bool _isShowStatusText;
         string _statusText;
 
@@ -46,14 +47,17 @@ namespace GPlusBrowser.ViewModel
                 OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("StatusText"));
             }
         }
-        public LoginerViewModel Loginer { get; set; }
         public ObservableCollection<AccountPanelViewModel> Accounts { get; set; }
         public ICommand OpenAddAccountPanelCommand { get; set; }
 
-        void OpenAddAccountPanelCommand_Executed(object arg)
-        { Loginer.OpenLoginForm(); }
-        bool OpenAddAccountPanelCommand_CanExecuted(object arg)
-        { return Loginer.Status == LoginSequenceStatus.Hidden; }
+        async void OpenAddAccountPanelCommand_Executed(object arg)
+        {
+            var account = await _loginer
+                .OpenLoginForm(_accountManagerModel.Create()).ConfigureAwait(false);
+            if (account == null)
+                return;
+            _accountManagerModel.Add(account);
+        }
         void _accountManagerModel_ChangedAccounts(object sender, NotifyCollectionChangedEventArgs e)
         {
             switch (e.Action)

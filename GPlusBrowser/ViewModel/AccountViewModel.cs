@@ -13,13 +13,14 @@ namespace GPlusBrowser.ViewModel
 
     public class AccountViewModel : ViewModelBase, IDisposable
     {
-        public AccountViewModel(Account model, AccountManager manager, Dispatcher uiThreadDispatcher)
+        public AccountViewModel(Account model, AccountManager manager, LoginerViewModel loginer, Dispatcher uiThreadDispatcher)
             : base(uiThreadDispatcher)
         {
             _accountModel = model;
             _accountModel.Initialized += _accountModel_Initialized;
             _accountModel.ChangedConnectStatus += _accountModel_ChangedConnectStatus;
             _accountManagerModel = manager;
+            _loginer = loginer;
             Stream = new StreamManagerViewModel(model.Stream, uiThreadDispatcher);
             BackToAccountManagerCommand = new RelayCommand(BackToAccountManagerCommand_Execute);
             ConnectStreamCommand = new RelayCommand(ConnectStreamCommand_Execute);
@@ -27,6 +28,7 @@ namespace GPlusBrowser.ViewModel
         Account _accountModel;
         AccountManager _accountManagerModel;
         StreamManagerViewModel _stream;
+        LoginerViewModel _loginer;
         Uri _accountIconUrl;
         bool _isShowStatusText;
         string _statusText;
@@ -78,9 +80,18 @@ namespace GPlusBrowser.ViewModel
             _stream = null;
         }
 
-        void _accountModel_Initialized(object sender, EventArgs e)
+        async void _accountModel_Initialized(object sender, EventArgs e)
         {
-            AccountIconUrl = new Uri(_accountModel.AccountIconUrl.Replace("$SIZE_SEGMENT", "s35-c-k"));
+            if (_accountModel.InitializeSequenceStatus == AccountInitSeqStatus.DisableSession)
+            {
+                var account = await _loginer.OpenLoginForm(_accountModel);
+                if (account == null)
+                    _accountManagerModel.SelectedAccountIndex = -1;
+                else
+                    account.Initialize();
+            }
+            else
+                AccountIconUrl = new Uri(_accountModel.AccountIconUrl.Replace("$SIZE_SEGMENT", "s35-c-k"));
         }
         void _accountModel_ChangedConnectStatus(object sender, EventArgs e)
         {

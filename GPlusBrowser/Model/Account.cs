@@ -63,7 +63,9 @@ namespace GPlusBrowser.Model
                     Setting.UserName = MyProfile.Name;
             }
             catch (FailToOperationException)
-            { InitializeSequenceStatus = AccountInitSeqStatus.DisableSession; }
+            {
+                InitializeSequenceStatus = AccountInitSeqStatus.DisableSession;
+            }
 
             OnInitialized(new EventArgs());
         }
@@ -86,7 +88,6 @@ namespace GPlusBrowser.Model
                 }
                 catch (FailToOperationException)
                 { }
-            OnChangedLoginStatus(new EventArgs());
         }
         public void Reconnect()
         {
@@ -124,12 +125,6 @@ namespace GPlusBrowser.Model
         {
             if (Disposed != null)
                 Disposed(this, e);
-        }
-        public event EventHandler ChangedLoginStatus;
-        protected virtual void OnChangedLoginStatus(EventArgs e)
-        {
-            if (ChangedLoginStatus != null)
-                ChangedLoginStatus(this, e);
         }
         public event EventHandler ChangedConnectStatus;
         protected virtual void OnChangedConnectStatus(EventArgs e)

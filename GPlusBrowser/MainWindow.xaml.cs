@@ -36,7 +36,7 @@ namespace GPlusBrowser
         System.Reactive.Subjects.Subject<EventPattern<EventArgs>> _sizeChangedTrigger;
         Model.SettingModelManager _settingManager;
         Model.AccountManager _accountManager;
-        ViewModel.AccountSwitcherViewModel _accountSwitcherVM;
+        ViewModel.PageSwitcherViewModel _accountSwitcherVM;
         public bool NowResizeAnimation
         {
             get { return (bool)GetValue(NowResizeAnimationProperty); }
@@ -53,7 +53,7 @@ namespace GPlusBrowser
         {
             _settingManager = new Model.SettingModelManager();
             _accountManager = new Model.AccountManager();
-            _accountSwitcherVM = new ViewModel.AccountSwitcherViewModel(_accountManager, Dispatcher);
+            _accountSwitcherVM = new ViewModel.PageSwitcherViewModel(_accountManager, Dispatcher);
             DataContext = _accountSwitcherVM;
             _accountManager.Initialize();
         }
@@ -69,7 +69,7 @@ namespace GPlusBrowser
                     return;
                 mainPane.Width = ActualWidth
                     - SystemParameters.ResizeFrameHorizontalBorderHeight * 2
-                    - (((ViewModel.AccountSwitcherViewModel)DataContext).IsShowSidePanel ? sidePane.ActualWidth : 0.0);
+                    - (((ViewModel.PageSwitcherViewModel)DataContext).IsShowSidePanel ? sidePane.ActualWidth : 0.0);
             }
         }
 

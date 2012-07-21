@@ -10,17 +10,18 @@ namespace GPlusBrowser.ViewModel
 {
     using Model;
 
-    public class AccountSwitcherViewModel : ViewModelBase, IDisposable
+    public class PageSwitcherViewModel : ViewModelBase, IDisposable
     {
-        public AccountSwitcherViewModel(AccountManager accountManagerModel, Dispatcher uiThreadDispatcher)
+        public PageSwitcherViewModel(AccountManager accountManagerModel, Dispatcher uiThreadDispatcher)
             : base(uiThreadDispatcher)
         {
             _accountManagerModel = accountManagerModel;
             _accountManagerModel.ChangedAccounts += _accountManagerModel_ChangedAccounts;
             _accountManagerModel.ChangedSelectedAccountIndex += _accountManagerModel_ChangedSelectedAccountIndex;
             _selectedSubPageIndex = -1;
+            Loginer = new LoginerViewModel(uiThreadDispatcher);
             MainPages = new ObservableCollection<object>();
-            MainPages.Add(new AccountManagerViewModel(accountManagerModel, uiThreadDispatcher));
+            MainPages.Add(new AccountManagerViewModel(accountManagerModel, Loginer, uiThreadDispatcher));
             SubPages = new ObservableCollection<object>();
         }
         AccountManager _accountManagerModel;
@@ -72,6 +73,7 @@ namespace GPlusBrowser.ViewModel
                 OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("SelectedSubPageIndex"));
             }
         }
+        public LoginerViewModel Loginer { get; set; }
         public ObservableCollection<object> MainPages { get; set; }
         public ObservableCollection<object> SubPages { get; set; }
 
@@ -82,7 +84,7 @@ namespace GPlusBrowser.ViewModel
                 case NotifyCollectionChangedAction.Add:
                     for (var i = 0; i < e.NewItems.Count; i++)
                     {
-                        MainPages.InsertAsync(e.NewStartingIndex + i + 1, new AccountViewModel((Account)e.NewItems[i], _accountManagerModel, UiThreadDispatcher), UiThreadDispatcher);
+                        MainPages.InsertAsync(e.NewStartingIndex + i + 1, new AccountViewModel((Account)e.NewItems[i], _accountManagerModel, Loginer, UiThreadDispatcher), UiThreadDispatcher);
                         SubPages.InsertAsync(e.NewStartingIndex + i, new NotificationManagerViewModel(((Account)e.NewItems[i]).Notification, UiThreadDispatcher), UiThreadDispatcher);
                     }
                     break;

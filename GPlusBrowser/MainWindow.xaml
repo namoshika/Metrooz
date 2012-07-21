@@ -42,6 +42,42 @@
             <ControlTemplate x:Key="iconButtonTemplate" TargetType="{x:Type Button}">
                 <ContentPresenter />
             </ControlTemplate>
+            <DataTemplate DataType="{x:Type localVm:LoginerViewModel}">
+                <DataTemplate.Resources>
+                    <localVm:LoginSequenceStatusToButtonText x:Key="loginSequenceStatusToButtonText" />
+                </DataTemplate.Resources>
+                <Grid Background="Black">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="auto" />
+                        <RowDefinition Height="auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="auto" />
+                        <ColumnDefinition Width="250" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Border Width="120" Height="120" Grid.Row="1" Grid.Column="1" Margin="0,0,20,0">
+                        <Image Source="{Binding IconImageUrl}" />
+                    </Border>
+                    <Grid Grid.Row="1" Grid.Column="2" VerticalAlignment="Top">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="30" />
+                            <RowDefinition Height="30" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <TextBox Grid.Row="0" VerticalAlignment="Top" Height="21" Text="{Binding EmailAddress}" local:PlaceHolderBehavior.PlaceHolderText="メールアドレス" />
+                        <PasswordBox Grid.Row="1" VerticalAlignment="Top" local:PasswordHelper.Attach="True" local:PasswordHelper.Password="{Binding Password, Mode=TwoWay}" />
+                        <TextBlock Grid.Row="2" Text="{Binding NotificationText}" Foreground="Red" TextWrapping="Wrap" />
+                    </Grid>
+                    <StackPanel Grid.Row="2" Grid.Column="2" VerticalAlignment="Top" HorizontalAlignment="Right" Orientation="Horizontal">
+                        <Button Height="25" Margin="0,5,5,0" Padding="10,2,10,2" Command="{Binding LoginCommand}" CommandParameter="{Binding ElementName=pwdTxtBx}" Content="{Binding Status, Converter={StaticResource loginSequenceStatusToButtonText}}" />
+                        <Button Height="25" Margin="0,5,0,0" Padding="10,2,10,2" Command="{Binding CancelCommand}">キャンセル</Button>
+                    </StackPanel>
+                </Grid>
+            </DataTemplate>
             <DataTemplate DataType="{x:Type localVm:AttachedLinkViewModel}">
                 <Border BorderBrush="LightGray" BorderThickness="0,1,0,0" Margin="0,8,0,8">
                     <Grid>
@@ -170,52 +206,13 @@
         </Grid.ColumnDefinitions>
         <localCtrl:ItemSelecter x:Name="mainPane" Grid.Column="0" ItemsSource="{Binding MainPages}" SelectedIndex="{Binding SelectedMainPageIndex}">
             <localCtrl:ItemSelecter.Resources>
-                <DataTemplate DataType="{x:Type localVm:LoginerViewModel}">
-                    <DataTemplate.Resources>
-                        <localVm:LoginSequenceStatusToButtonText x:Key="loginSequenceStatusToButtonText" />
-                    </DataTemplate.Resources>
-                    <Grid Background="Black">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="*" />
-                            <RowDefinition Height="auto" />
-                            <RowDefinition Height="auto" />
-                            <RowDefinition Height="*" />
-                        </Grid.RowDefinitions>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="auto" />
-                            <ColumnDefinition Width="250" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <Border Width="120" Height="120" Grid.Row="1" Grid.Column="1" Margin="0,0,20,0">
-                            <Image Source="{Binding IconImageUrl}" />
-                        </Border>
-                        <Grid Grid.Row="1" Grid.Column="2" VerticalAlignment="Top">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="30" />
-                                <RowDefinition Height="30" />
-                                <RowDefinition Height="*" />
-                            </Grid.RowDefinitions>
-                            <TextBox Grid.Row="0" VerticalAlignment="Top" Height="21" Text="{Binding EmailAddress}" local:PlaceHolderBehavior.PlaceHolderText="メールアドレス" />
-                            <PasswordBox Grid.Row="1" VerticalAlignment="Top" local:PasswordHelper.Attach="True" local:PasswordHelper.Password="{Binding Password, Mode=TwoWay}" />
-                            <TextBlock Grid.Row="2" Text="{Binding NotificationText}" Foreground="Red" TextWrapping="Wrap" />
-                        </Grid>
-                        <StackPanel Grid.Row="2" Grid.Column="2" VerticalAlignment="Top" HorizontalAlignment="Right" Orientation="Horizontal">
-                            <Button Height="25" Margin="0,5,5,0" Padding="10,2,10,2" Command="{Binding LoginCommand}" CommandParameter="{Binding ElementName=pwdTxtBx}" Content="{Binding Status,Converter={StaticResource loginSequenceStatusToButtonText}}" />
-                            <Button Height="25" Margin="0,5,0,0" Padding="10,2,10,2" Command="{Binding CancelCommand}">キャンセル</Button>
-                        </StackPanel>
-                    </Grid>
-                </DataTemplate>
                 <DataTemplate DataType="{x:Type localVm:AccountManagerViewModel}">
                     <Grid>
-                        <Grid.Resources>
-                            <localVm:LoginSequenceStatusToVisibility x:Key="statusToVisibility" />
-                        </Grid.Resources>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="55" />
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
-                        <TextBlock Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="5" FontSize="21">Account</TextBlock>
+                        <TextBlock Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="20,5,5,0" FontSize="21">Account</TextBlock>
                         <StackPanel Grid.Row="1">
                             <ItemsControl ItemsSource="{Binding Accounts}">
                                 <ItemsControl.ItemsPanel>
@@ -225,7 +222,7 @@
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate DataType="{x:Type localVm:AccountPanelViewModel}">
-                                        <StackPanel Margin="20,10,15,15">
+                                        <StackPanel Margin="20,0,15,15">
                                             <StackPanel Orientation="Horizontal">
                                                 <Border Width="35" Height="35" BorderBrush="White" Background="White" BorderThickness="0">
                                                     <Image Margin="0" HorizontalAlignment="Left" VerticalAlignment="Top" Source="{Binding UserIconUrl}" />
@@ -260,7 +257,6 @@
                                 </Button.Template>
                             </Button>
                         </StackPanel>
-                        <ContentPresenter Grid.RowSpan="2" Grid.ColumnSpan="2" Height="280" Visibility="{Binding Status, Converter={StaticResource statusToVisibility}}" Content="{Binding Loginer}" />
                     </Grid>
                 </DataTemplate>
                 <DataTemplate DataType="{x:Type localVm:AccountViewModel}">
@@ -429,5 +425,9 @@
             </Hyperlink>
             <Run Text=")" />
         </TextBlock>
+        <Grid Grid.ColumnSpan="{Binding ErrorMessageTextBoxGridColumnSpan}" Visibility="{Binding Loginer.IsShowLoginPanel, Converter={StaticResource booleanToVisibilityConverter}}">
+            <Rectangle Fill="White" Opacity="0.5" />
+            <ContentPresenter Height="280" Content="{Binding Loginer}" />
+        </Grid>
     </Grid>
 </Window>

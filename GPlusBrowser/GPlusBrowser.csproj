@@ -117,7 +117,7 @@
     <Compile Include="ViewModel\AccountManagerPanel\AccountManagerViewModel.cs" />
     <Compile Include="ViewModel\AccountManagerPanel\AccountPanelViewModel.cs" />
     <Compile Include="ViewModel\AccountManagerPanel\StreamItemViewModel.cs" />
-    <Compile Include="ViewModel\AccountSwitcherViewModel.cs" />
+    <Compile Include="ViewModel\PageSwitcherViewModel.cs" />
     <Compile Include="ViewModel\AccountManagerPanel\LoginerViewModel.cs" />
     <Compile Include="ViewModel\Stream\AttachedAlbumViewModel.cs" />
     <Compile Include="ViewModel\Notification\NotificationManagerViewModel.cs" />

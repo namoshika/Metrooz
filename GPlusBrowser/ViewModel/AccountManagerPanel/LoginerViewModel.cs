@@ -12,23 +12,21 @@ namespace GPlusBrowser.ViewModel
 
     public class LoginerViewModel : ViewModelBase
     {
-        public LoginerViewModel(AccountManager accountManagerModel, Dispatcher uiThreadDispatcher)
+        public LoginerViewModel(Dispatcher uiThreadDispatcher)
             : base(uiThreadDispatcher)
         {
-            _accountManagerModel = accountManagerModel;
-            _status = LoginSequenceStatus.Hidden;
-            LoginCommand = new RelayCommand(LoginCommand_Executed, LoginAndCancelCommand_CanExecuted);
-            CancelCommand = new RelayCommand(CancelCommand_Executed, LoginAndCancelCommand_CanExecuted);
+            _syncer = new System.Threading.AutoResetEvent(false);
+            LoginCommand = new RelayCommand(LoginCommand_Executed);
+            CancelCommand = new RelayCommand(CancelCommand_Executed);
         }
-        AccountManager _accountManagerModel;
-        bool _loginButtonIsEnabled;
-        bool _isRelogin;
+        bool _loginButtonIsEnabled, _isShowLoginPanel, _isRelogin;
         string _emailAddress;
         string _password;
         string _userName;
         string _notificationText;
         Uri _iconImageUrl;
         LoginSequenceStatus _status;
+        System.Threading.AutoResetEvent _syncer;
 
         public ICommand LoginCommand { get; private set; }
         public ICommand CancelCommand { get; private set; }
@@ -40,6 +38,15 @@ namespace GPlusBrowser.ViewModel
             {
                 _loginButtonIsEnabled = value;
                 OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("LoginButtonIsEnabled"));
+            }
+        }
+        public bool IsShowLoginPanel
+        {
+            get { return _isShowLoginPanel; }
+            set
+            {
+                _isShowLoginPanel = value;
+                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("IsShowLoginPanel"));
             }
         }
         public bool IsRelogin
@@ -107,14 +114,21 @@ namespace GPlusBrowser.ViewModel
             }
         }
 
-        public void OpenLoginForm()
+        public Task<Account> OpenLoginForm(Account item)
         {
-            OpenReloginForm(_accountManagerModel.Create());
-        }
-        public void OpenReloginForm(Account item)
-        {
-            TargetAccount = item;
-            Status = LoginSequenceStatus.Input;
+            return Task.Factory.StartNew(() =>
+                {
+                    IconImageUrl = null;
+                    EmailAddress = null;
+                    Password = null;
+                    UserName = null;
+                    TargetAccount = item;
+                    IsShowLoginPanel = true;
+                    Status = LoginSequenceStatus.Input;
+
+                    _syncer.WaitOne();
+                    return Status == LoginSequenceStatus.Registed ? item : null;
+                });
         }
 
         async void LoginCommand_Executed(object arg)
@@ -133,62 +147,43 @@ namespace GPlusBrowser.ViewModel
                     {
                         Status = LoginSequenceStatus.Authing;
                         LoginButtonIsEnabled = false;
+
                         await TargetAccount.Login(EmailAddress, Password).ConfigureAwait(false);
                         var isLogin = TargetAccount.InitializeSequenceStatus > AccountInitSeqStatus.UnLogined;
                         Status = isLogin ? LoginSequenceStatus.Success : LoginSequenceStatus.Fail;
                         LoginButtonIsEnabled = true;
+
                         if (isLogin)
                         { IconImageUrl = new Uri(TargetAccount.AccountIconUrl.Replace("$SIZE_SEGMENT", "s120-c-k")); }
                         else
                         {
                             NotificationText = isLogin
-                                ? string.Empty : "ログインに失敗しました。メールアドレスやパスワードに間違いがある可能性があります。";
+                                ? null : "ログインに失敗しました。メールアドレスやパスワードに間違いがある可能性があります。";
                         }
                     }
                     break;
                 case LoginSequenceStatus.Success:
-                    _accountManagerModel.Add(TargetAccount);
-                    Status = LoginSequenceStatus.Hidden;
-                    IconImageUrl = null;
-                    EmailAddress = null;
-                    Password = null;
-                    UserName = null;
+                    Status = LoginSequenceStatus.Registed;
+                    IsShowLoginPanel = false;
+                    _syncer.Set();
                     break;
             }
         }
         void CancelCommand_Executed(object arg)
         {
-            Status = LoginSequenceStatus.Hidden;
-            IconImageUrl = null;
-            EmailAddress = null;
-            Password = null;
-            UserName = null;
-            NotificationText = string.Empty;
+            IsShowLoginPanel = false;
+            _syncer.Set();
         }
-        bool LoginAndCancelCommand_CanExecuted(object arg)
-        { return Status != LoginSequenceStatus.Authing; }
     }
     public enum DisplayMode { Login, Relogin, }
-    public enum LoginSequenceStatus { Hidden, Input, Authing, Fail, Success, }
+    public enum LoginSequenceStatus { Input, Authing, Fail, Success, Registed }
 
-    public class LoginSequenceStatusToVisibility : System.Windows.Data.IValueConverter
-    {
-        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
-        {
-            return ((LoginSequenceStatus)value) == LoginSequenceStatus.Hidden
-                ? System.Windows.Visibility.Hidden : System.Windows.Visibility.Visible;
-        }
-        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
-        { throw new NotImplementedException(); }
-    }
     public class LoginSequenceStatusToButtonText : System.Windows.Data.IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
             switch ((LoginSequenceStatus)value)
             {
-                case LoginSequenceStatus.Hidden:
-                    return "None";
                 case LoginSequenceStatus.Input:
                     return "ログイン";
                 case LoginSequenceStatus.Authing:
@@ -197,9 +192,9 @@ namespace GPlusBrowser.ViewModel
                     return "ログイン";
                 case LoginSequenceStatus.Success:
                     return "このアカウントを登録する";
+                default:
+                    return null;
             }
-            return ((LoginSequenceStatus)value) == LoginSequenceStatus.Hidden
-                ? System.Windows.Visibility.Hidden : System.Windows.Visibility.Visible;
         }
         public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         { throw new NotImplementedException(); }
