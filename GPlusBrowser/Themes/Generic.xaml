@@ -163,10 +163,7 @@
                             <Button Grid.Row="0" HorizontalAlignment="Left" Margin="20,8,0,5" Template="{StaticResource buttonTemplate}" Command="{TemplateBinding ClickHeaderCommand}">
                                 <TextBlock Foreground="White" FontSize="13" Text="{TemplateBinding Header}" />
                             </Button>
-                            <ScrollViewer Grid.Row="1" Margin="20,0,20,0" VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Auto"
-                                          Visibility="{Binding HasManyImages, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource boolToVisibilityConverter}}">
-                                <ItemsPresenter />
-                            </ScrollViewer>
+                            <ItemsPresenter Grid.Row="1" Margin="20,0,20,0" Visibility="{Binding HasManyImages, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource boolToVisibilityConverter}}" />
                         </Grid>
                     </Grid>
                 </ControlTemplate>
@@ -196,7 +193,6 @@
                 </Style>
             </Setter.Value>
         </Setter>
-        <!--<Setter Property="Content" Value="https://lh5.googleusercontent.com/-5UmNojXakHQ/T9wFIMRWIWI/AAAAAAAA7Sk/uKkElne0D_Y/s600/22581681_m.jpg" />-->
         <Setter Property="ContentTemplate">
             <Setter.Value>
                 <DataTemplate>
