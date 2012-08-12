@@ -26,8 +26,7 @@ namespace GPlusBrowser.Model
 
         public int MaxItemCount { get; set; }
         public int UnreadItemCount { get; private set; }
-        public ReadOnlyCollection<NotificationInfo> Items
-        { get { return _notificationModel.Notifications; } }
+        public ReadOnlyCollection<NotificationInfo> Items { get; private set; }
 
         public async void Initialize()
         {

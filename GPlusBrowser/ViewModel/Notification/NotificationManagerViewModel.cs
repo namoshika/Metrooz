@@ -17,10 +17,17 @@ namespace GPlusBrowser.ViewModel
         public NotificationManagerViewModel(NotificationManager model, Dispatcher uiThreadDispatcher)
             : base(uiThreadDispatcher)
         {
+#if ENABLED_VMTEST_MODE
+            Items = new ObservableCollection<NotificationViewModel>();
+            Items.Add(new NotificationWithProfileViewModel(uiThreadDispatcher));
+            Items.Add(new NotificationWithProfileViewModel(uiThreadDispatcher));
+            Items.Add(new NotificationWithProfileViewModel(uiThreadDispatcher));
+#else
             _managerModel = model;
             _managerModel.Updated += model_Updated;
             _notifications = new List<NotificationViewModel>();
             Items = new ObservableCollection<NotificationViewModel>();
+#endif
         }
         int _unreadItemCount;
         bool _existUnreadItem;
@@ -227,8 +234,10 @@ namespace GPlusBrowser.ViewModel
             : base(uiThreadDispatcher)
         {
             _notificationModel = model;
-            //model.Updated += model_Updated;
+            model_Updated(this, null);
+            model.Updated += model_Updated;
         }
+
         int _memberCount;
         NotificationInfo _notificationModel;
         ProfileRegisterViewModel[] _members;
@@ -257,9 +266,24 @@ namespace GPlusBrowser.ViewModel
         {
             _memberCount = _notificationModel.FollowingNotifications.Length;
             _members = _notificationModel.FollowingNotifications
-                .Select(obj => new ProfileRegisterViewModel(0, obj.Actor.Name, obj.Actor.IconImageUrl, UiThreadDispatcher))
+                .Select(obj => new ProfileRegisterViewModel(
+                    0, obj.Actor.Name, new Uri(obj.Actor.IconImageUrlText.Replace("$SIZE_SEGMENT", "s50-c-k")), UiThreadDispatcher))
                 .ToArray();
         }
+
+#if ENABLED_VMTEST_MODE
+        public NotificationWithProfileViewModel(Dispatcher uiThreadDispatcher)
+            : base(uiThreadDispatcher)
+        {
+            _memberCount = 3;
+            _members = new ProfileRegisterViewModel[]
+            {
+                new ProfileRegisterViewModel(3, "TestNameA", new Uri("https://lh3.googleusercontent.com/-D4uozvCEfCU/AAAAAAAAAAI/AAAAAAAAABk/hbWru0Ic_9c/s250-c-k/photo.jpg"), uiThreadDispatcher),
+                new ProfileRegisterViewModel(4, "TestNameB", new Uri("https://lh4.googleusercontent.com/-VWujZsal7hI/AAAAAAAAAAI/AAAAAAAAAAc/zADzIc0bpxo/s250-c-k/photo.jpg"), uiThreadDispatcher),
+                new ProfileRegisterViewModel(5, "TestNameC", new Uri("https://lh6.googleusercontent.com/-xQAd1_KgBGM/AAAAAAAAAAI/AAAAAAAAAAc/MDJltt8KLOI/s250-c-k/photo.jpg"), uiThreadDispatcher),
+            };
+        }
+#endif
     }
     public class ProfileRegisterViewModel : ViewModelBase
     {
@@ -274,9 +298,33 @@ namespace GPlusBrowser.ViewModel
         string _name;
         Uri _profileIconUrl;
 
-        public int CommonFriendLength { get; private set; }
-        public string Name { get; private set; }
-        public Uri ProfileIconUrl { get; private set; }
+        public int CommonFriendLength
+        {
+            get { return _commonFriendLength; }
+            set
+            {
+                _commonFriendLength = value;
+                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("CommonFriendLength"));
+            }
+        }
+        public string Name
+        {
+            get { return _name; }
+            set
+            {
+                _name = value;
+                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("Name"));
+            }
+        }
+        public Uri ProfileIconUrl
+        {
+            get { return _profileIconUrl; }
+            set
+            {
+                _profileIconUrl = value;
+                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("ProfileIconUrl"));
+            }
+        }
         public ICommand IgnoreCommand { get; private set; }
     }
 }
