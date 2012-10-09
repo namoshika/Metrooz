@@ -23,8 +23,9 @@ namespace GPlusBrowser.ViewModel
                 {
                     NotificationText = string.Empty;
                     Status = SettingStatusType.Checking;
-                    if (EmailAddress != null && Password != null && !await mainWinModel.Login(EmailAddress, Password).ConfigureAwait(false))
+                    if (EmailAddress != null && Password != null)
                     {
+                        await mainWinModel.Login(EmailAddress, Password).ConfigureAwait(false);
                         Status = SettingStatusType.FailLogin;
                         NotificationText = "ログインに失敗しました。";
                     }

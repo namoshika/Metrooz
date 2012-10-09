@@ -13,20 +13,44 @@ namespace GPlusBrowser.ViewModel
 
     public class AccountViewModel : ViewModelBase, IDisposable
     {
-        public AccountViewModel(Account model, AccountManager manager, Dispatcher uiThreadDispatcher)
+        public AccountViewModel(Account model, AccountManager manager, LoginerViewModel loginer, Dispatcher uiThreadDispatcher)
             : base(uiThreadDispatcher)
         {
             _accountModel = model;
             _accountModel.Initialized += _accountModel_Initialized;
+            _accountModel.ChangedConnectStatus += _accountModel_ChangedConnectStatus;
             _accountManagerModel = manager;
+            _loginer = loginer;
             Stream = new StreamManagerViewModel(model.Stream, uiThreadDispatcher);
             BackToAccountManagerCommand = new RelayCommand(BackToAccountManagerCommand_Execute);
+            ConnectStreamCommand = new RelayCommand(ConnectStreamCommand_Execute);
         }
         Account _accountModel;
         AccountManager _accountManagerModel;
         StreamManagerViewModel _stream;
+        LoginerViewModel _loginer;
         Uri _accountIconUrl;
+        bool _isShowStatusText;
+        string _statusText;
 
+        public bool IsShowStatusText
+        {
+            get { return _isShowStatusText; }
+            set
+            {
+                _isShowStatusText = value;
+                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("IsShowStatusText"));
+            }
+        }
+        public string StatusText
+        {
+            get { return _statusText; }
+            set
+            {
+                _statusText = value;
+                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("StatusText"));
+            }
+        }
         public StreamManagerViewModel Stream
         {
             get { return _stream; }
@@ -46,6 +70,7 @@ namespace GPlusBrowser.ViewModel
             }
         }
         public ICommand BackToAccountManagerCommand { get; private set; }
+        public ICommand ConnectStreamCommand { get; private set; }
         public void Dispose()
         {
             _accountModel.Initialized -= _accountModel_Initialized;
@@ -55,13 +80,37 @@ namespace GPlusBrowser.ViewModel
             _stream = null;
         }
 
-        void _accountModel_Initialized(object sender, EventArgs e)
+        async void _accountModel_Initialized(object sender, EventArgs e)
         {
-            AccountIconUrl = new Uri(_accountModel.AccountIconUrl.Replace("$SIZE_SEGMENT", "s35-c-k"));
+            if (_accountModel.InitializeSequenceStatus == AccountInitSeqStatus.DisableSession)
+            {
+                var account = await _loginer.OpenLoginForm(_accountModel);
+                if (account == null)
+                    _accountManagerModel.SelectedAccountIndex = -1;
+                else
+                    await account.Initialize();
+            }
+            else
+                AccountIconUrl = new Uri(_accountModel.AccountIconUrl.Replace("$SIZE_SEGMENT", "s35-c-k"));
+        }
+        void _accountModel_ChangedConnectStatus(object sender, EventArgs e)
+        {
+            if (_accountModel.IsConnected != TalkGadgetBindStatus.DisableConnect)
+                IsShowStatusText = false;
+            else
+            {
+                IsShowStatusText = true;
+                StatusText = "ストリームへの接続が切断されました。";
+            }
         }
         void BackToAccountManagerCommand_Execute(object arg)
         {
             _accountManagerModel.SelectedAccountIndex = -1;
+        }
+        void ConnectStreamCommand_Execute(object arg)
+        {
+            var account = _accountManagerModel.Accounts[_accountManagerModel.SelectedAccountIndex];
+            account.Reconnect();
         }
     }
 }

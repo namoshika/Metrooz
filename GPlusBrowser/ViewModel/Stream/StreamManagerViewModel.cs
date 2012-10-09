@@ -20,10 +20,22 @@ namespace GPlusBrowser.ViewModel
             _displayStreams = new ObservableCollection<StreamViewModel>();
             _selectedCircleIndex = -1;
         }
+        bool _isError;
         int _selectedCircleIndex;
         StreamManager _streamManagerModel;
         ObservableCollection<StreamViewModel> _displayStreams;
 
+        public bool IsError
+        {
+            get { return _isError; }
+            set
+            {
+                if (_isError == value)
+                    return;
+                _isError = value;
+                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("IsError"));
+            }
+        }
         public int SelectedCircleIndex
         {
             get { return _selectedCircleIndex; }

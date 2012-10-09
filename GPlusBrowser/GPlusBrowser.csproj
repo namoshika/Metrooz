@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>GPlusBrowser</RootNamespace>
     <AssemblyName>GPlusBrowser</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
@@ -26,6 +26,7 @@
     <DefineConstants>TRACE;DEBUG</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -35,17 +36,20 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <PlatformTarget>x64</PlatformTarget>
     <OutputPath>bin\x64\Debug\</OutputPath>
     <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
     <PlatformTarget>x64</PlatformTarget>
     <OutputPath>bin\x64\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <Optimize>true</Optimize>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'TestMode|x86'">
     <DebugSymbols>true</DebugSymbols>
@@ -55,6 +59,7 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisIgnoreBuiltInRuleSets>false</CodeAnalysisIgnoreBuiltInRuleSets>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'TestMode|x64'">
     <DebugSymbols>true</DebugSymbols>
@@ -62,12 +67,9 @@
     <DefineConstants>TRACE;DEBUG;ENABLED_VMTEST_MODE</DefineConstants>
     <PlatformTarget>x64</PlatformTarget>
     <CodeAnalysisIgnoreBuiltInRuleSets>false</CodeAnalysisIgnoreBuiltInRuleSets>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AsyncCtpLibrary, Version=1.0.4107.18181, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Assemblies\AsyncCtpLibrary.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.Expression.Interactions, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Assemblies\Microsoft.Expression.Interactions.dll</HintPath>
@@ -79,6 +81,7 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Assemblies\System.Reactive.dll</HintPath>
     </Reference>
+    <Reference Include="System.Reactive.Windows.Threading, Version=1.0.10621.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
     <Reference Include="System.Windows.Interactivity, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Assemblies\System.Windows.Interactivity.dll</HintPath>
@@ -100,12 +103,12 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="Controls\ActivityTreeView.cs" />
     <Compile Include="Controls\ColumnPanel.cs" />
-    <Compile Include="Controls\CommentListBox.xaml.cs">
-      <DependentUpon>CommentListBox.xaml</DependentUpon>
-    </Compile>
+    <Compile Include="Controls\CommentListBox.cs" />
+    <Compile Include="Controls\ExTreeView.cs" />
+    <Compile Include="Controls\ImageBox.cs" />
     <Compile Include="Controls\ItemSelecter.cs" />
+    <Compile Include="Model\NotificationManager.cs" />
     <Compile Include="ObservableCollectionEx.cs" />
     <Compile Include="Model\AccountManager.cs" />
     <Compile Include="Model\SettingModelManager.cs" />
@@ -113,11 +116,14 @@
     <Compile Include="Model\Account.cs" />
     <Compile Include="Model\SettingModel.cs" />
     <Compile Include="Model\Stream\CircleManager.cs" />
+    <Compile Include="Settings.cs" />
     <Compile Include="ViewModel\AccountManagerPanel\AccountManagerViewModel.cs" />
     <Compile Include="ViewModel\AccountManagerPanel\AccountPanelViewModel.cs" />
     <Compile Include="ViewModel\AccountManagerPanel\StreamItemViewModel.cs" />
-    <Compile Include="ViewModel\AccountSwitcherViewModel.cs" />
+    <Compile Include="ViewModel\PageSwitcherViewModel.cs" />
     <Compile Include="ViewModel\AccountManagerPanel\LoginerViewModel.cs" />
+    <Compile Include="ViewModel\Stream\AttachedAlbumViewModel.cs" />
+    <Compile Include="ViewModel\Notification\NotificationManagerViewModel.cs" />
     <Compile Include="ViewModel\Stream\AttachedLinkViewModel.cs" />
     <Compile Include="Model\Stream\Comment.cs" />
     <Compile Include="Model\Stream\Stream.cs" />
@@ -130,10 +136,6 @@
     <Compile Include="ViewModel\SettingViewModel.cs" />
     <Compile Include="ViewModel\Stream\StreamManagerViewModel.cs" />
     <Compile Include="ViewModel\ViewModelBase.cs" />
-    <Page Include="Controls\CommentListBox.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -160,6 +162,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <None Include="app.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -171,6 +174,15 @@
       <Project>{A19C98E5-7048-43E2-98F0-689A3FFE2A82}</Project>
       <Name>SnkLib_GooglePlus</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\back.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\copyrightMemo.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\add.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Windows.Threading;
 
@@ -13,32 +14,55 @@ namespace GPlusBrowser.ViewModel
 
     public class AccountManagerViewModel : ViewModelBase
     {
-        public AccountManagerViewModel(AccountManager accountManagerModel, Dispatcher uiThreadDispatcher)
+        public AccountManagerViewModel(AccountManager accountManagerModel, LoginerViewModel loginer, Dispatcher uiThreadDispatcher)
             : base(uiThreadDispatcher)
         {
             _accountManagerModel = accountManagerModel;
             _accountManagerModel.ChangedAccounts += _accountManagerModel_ChangedAccounts;
-            Loginer = new LoginerViewModel(accountManagerModel, uiThreadDispatcher);
+            _loginer = loginer;
             Accounts = new ObservableCollection<AccountPanelViewModel>();
-            OpenAddAccountPanelCommand = new RelayCommand(
-                OpenAddAccountPanelCommand_Executed, OpenAddAccountPanelCommand_CanExecuted);
+            OpenAddAccountPanelCommand = new RelayCommand(OpenAddAccountPanelCommand_Executed);
         }
 
         AccountManager _accountManagerModel;
-        public LoginerViewModel Loginer { get; set; }
+        LoginerViewModel _loginer;
+        bool _isShowStatusText;
+        string _statusText;
+
+        public bool IsShowStatusText
+        {
+            get { return _isShowStatusText; }
+            set
+            {
+                _isShowStatusText = value;
+                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("IsShowStatusText"));
+            }
+        }
+        public string StatusText
+        {
+            get { return _statusText; }
+            set
+            {
+                _statusText = value;
+                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("StatusText"));
+            }
+        }
         public ObservableCollection<AccountPanelViewModel> Accounts { get; set; }
         public ICommand OpenAddAccountPanelCommand { get; set; }
 
-        void OpenAddAccountPanelCommand_Executed(object arg)
-        { Loginer.OpenPanel(_accountManagerModel.Create(), false); }
-        bool OpenAddAccountPanelCommand_CanExecuted(object arg)
-        { return Loginer.Status == LoginSequenceStatus.Hidden; }
-        void _accountManagerModel_ChangedAccounts(
-            object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        async void OpenAddAccountPanelCommand_Executed(object arg)
+        {
+            var account = await _loginer
+                .OpenLoginForm(_accountManagerModel.Create()).ConfigureAwait(false);
+            if (account == null)
+                return;
+            _accountManagerModel.Add(account);
+        }
+        void _accountManagerModel_ChangedAccounts(object sender, NotifyCollectionChangedEventArgs e)
         {
             switch (e.Action)
             {
-                case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
+                case NotifyCollectionChangedAction.Add:
                     for (var i = 0; i < e.NewItems.Count; i++)
                     {
                         var circle = (Account)e.NewItems[i];
@@ -46,14 +70,14 @@ namespace GPlusBrowser.ViewModel
                         Accounts.InsertAsync(e.NewStartingIndex + i, circleVm, UiThreadDispatcher);
                     }
                     break;
-                case System.Collections.Specialized.NotifyCollectionChangedAction.Move:
+                case NotifyCollectionChangedAction.Move:
                     Accounts.MoveAsync(e.OldStartingIndex, e.NewStartingIndex, UiThreadDispatcher);
                     break;
-                case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
+                case NotifyCollectionChangedAction.Remove:
                     for (var i = 0; i < e.OldItems.Count; i++)
                         Accounts.RemoveAtAsync(e.OldStartingIndex, UiThreadDispatcher);
                     break;
-                case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:
+                case NotifyCollectionChangedAction.Reset:
                     Accounts.ClearAsync(UiThreadDispatcher);
                     break;
             }

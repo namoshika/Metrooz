@@ -60,6 +60,11 @@ namespace GPlusBrowser.Controls
             get { return (int)GetValue(SelectedIndexProperty); }
             set { SetValue(SelectedIndexProperty, value); }
         }
+        public object SelectedItem
+        {
+            get { return (object)GetValue(SelectedItemProperty); }
+            set { SetValue(SelectedItemProperty, value); }
+        }
 
         protected override void OnItemsChanged(System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
@@ -93,11 +98,14 @@ namespace GPlusBrowser.Controls
                 var newContent = (ContentPresenter)paperBoard.ItemContainerGenerator.ContainerFromIndex((int)e.NewValue);
                 if (newContent != null)
                     newContent.Visibility = Visibility.Visible;
+                paperBoard.SelectedItem = paperBoard.Items[(int)e.NewValue];
             }
         }
 
         public static readonly DependencyProperty SelectedIndexProperty =
             DependencyProperty.Register("SelectedIndex", typeof(int), typeof(ItemSelecter),
             new UIPropertyMetadata(-1, SelectedIndexProperty_Changed));
+        public static readonly DependencyProperty SelectedItemProperty = DependencyProperty.Register(
+            "SelectedItem", typeof(object), typeof(ItemSelecter), new UIPropertyMetadata(null));
     }
 }

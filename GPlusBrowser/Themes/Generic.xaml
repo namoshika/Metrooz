@@ -1,8 +1,15 @@
-<ResourceDictionary
+﻿<ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="clr-namespace:GPlusBrowser.Controls">
+    xmlns:local="clr-namespace:GPlusBrowser.Controls"
+    xmlns:localCtrl="clr-namespace:GPlusBrowser.Controls"
+    xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+    xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions">
 
+    <BooleanToVisibilityConverter x:Key="boolToVisibilityConverter" />
+    <localCtrl:IsExpandExpandableToVisibility x:Key="isExpandExpandableToVisibility" />
+    <localCtrl:IsExpandCommentCountToStringConverter x:Key="isExpandCommentCountToStringConverter" />
+    
     <Style TargetType="{x:Type local:ItemSelecter}">
         <Setter Property="Template">
             <Setter.Value>
@@ -22,5 +29,179 @@
                 </ItemsPanelTemplate>
             </Setter.Value>
         </Setter>
+    </Style>
+    <Style TargetType="{x:Type local:CommentListBox}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type local:CommentListBox}">
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="30" />
+                                <RowDefinition Height="auto" />
+                                <RowDefinition Height="auto" />
+                                <RowDefinition Height="auto" />
+                            </Grid.RowDefinitions>
+                            <ToggleButton Grid.Row="0" Height="30" FontWeight="Bold" FontSize="13"
+                                          Visibility="{Binding Expandable, ElementName=itemContainer, Converter={StaticResource boolToVisibilityConverter}}"
+                                          IsChecked="{Binding IsExpand, RelativeSource={RelativeSource TemplatedParent}}">
+                                <ToggleButton.Content>
+                                    <MultiBinding Converter="{StaticResource isExpandCommentCountToStringConverter}">
+                                        <Binding Path="IsExpand" RelativeSource="{RelativeSource Mode=TemplatedParent}" />
+                                        <Binding Path="CommentCount" RelativeSource="{RelativeSource Mode=TemplatedParent}" />
+                                    </MultiBinding>
+                                </ToggleButton.Content>
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="{x:Type ToggleButton}">
+                                        <Border BorderBrush="LightGray" BorderThickness="0,1,0,0">
+                                            <UniformGrid Background="#f0f0f0">
+                                                <ContentPresenter Margin="10,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center" />
+                                            </UniformGrid>
+                                        </Border>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                            </ToggleButton>
+                            <localCtrl:ExListBox x:Name="itemContainer" Grid.Row="1" Margin="0"
+                                                 IsEnableAnimation="{TemplateBinding IsEnableAnimation}"
+                                                 ItemsSource="{TemplateBinding ItemsSource}">
+                                <localCtrl:ExListBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel VerticalAlignment="Bottom" HorizontalAlignment="Stretch" IsItemsHost="True" />
+                                    </ItemsPanelTemplate>
+                                </localCtrl:ExListBox.ItemsPanel>
+                            </localCtrl:ExListBox>
+                            <Grid Grid.Row="2" Margin="0,10,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0" BorderBrush="LightGray" BorderThickness="1" IsEnabled="{TemplateBinding IsWritable}"
+                                         Margin="0" AcceptsReturn="True" TextWrapping="Wrap"
+                                         Text="{Binding PostText, RelativeSource={RelativeSource TemplatedParent}, UpdateSourceTrigger=PropertyChanged}"
+                                         localCtrl:PlaceHolderBehavior.Text="コメントを追加..." localCtrl:PlaceHolderBehavior.VerticalAlignment="Top">
+                                    <i:Interaction.Triggers>
+                                        <ei:DataTrigger Binding="{Binding IsWriteMode, RelativeSource={RelativeSource TemplatedParent}}" Value="False">
+                                            <ei:ChangePropertyAction PropertyName="Padding" TargetObject="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type TextBox}}}" Value="0" />
+                                        </ei:DataTrigger>
+                                        <ei:DataTrigger Binding="{Binding IsWriteMode, RelativeSource={RelativeSource TemplatedParent}}" Value="True">
+                                            <ei:ChangePropertyAction PropertyName="Padding" TargetObject="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type TextBox}}}" Value="0,0,0,25" />
+                                        </ei:DataTrigger>
+                                        <i:EventTrigger EventName="PreviewMouseDown">
+                                            <ei:ChangePropertyAction PropertyName="IsWriteMode" TargetObject="{Binding RelativeSource={RelativeSource TemplatedParent}}" Value="True" />
+                                        </i:EventTrigger>
+                                    </i:Interaction.Triggers>
+                                    <TextBox.InputBindings>
+                                        <KeyBinding Key="Enter" Modifiers="Shift" Command="{Binding PostCommand, RelativeSource={RelativeSource TemplatedParent}}" />
+                                    </TextBox.InputBindings>
+                                </TextBox>
+                                <ToggleButton Grid.Column="1" Margin="5,0,0,0" Padding="8,0,8,0" Content="閉"
+                                              IsChecked="{Binding IsExpand, RelativeSource={RelativeSource TemplatedParent}}">
+                                    <ToggleButton.Visibility>
+                                        <MultiBinding Converter="{StaticResource isExpandExpandableToVisibility}">
+                                            <Binding Path="IsExpand" RelativeSource="{RelativeSource TemplatedParent}" />
+                                            <Binding ElementName="itemContainer" Path="Expandable" />
+                                        </MultiBinding>
+                                    </ToggleButton.Visibility>
+                                </ToggleButton>
+                            </Grid>
+                            <StackPanel Grid.Row="3" Margin="0,0,0,5" Orientation="Horizontal"
+                                        Visibility="{Binding IsWriteMode, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type localCtrl:CommentListBox}}, Converter={StaticResource boolToVisibilityConverter}}">
+                                <Button Padding="10,3,10,3" Margin="0,0,8,0" IsEnabled="{Binding IsWritable}"
+                                        Content="コメントを投稿" Command="{TemplateBinding PostCommand}" />
+                                <Button Padding="10,3,10,3" Margin="0,0,8,0" Content="キャンセル">
+                                    <i:Interaction.Triggers>
+                                        <i:EventTrigger EventName="Click">
+                                            <ei:ChangePropertyAction PropertyName="IsWriteMode" TargetObject="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}}" Value="False" />
+                                            <ei:ChangePropertyAction PropertyName="IsWritable" TargetObject="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}}" Value="True" />
+                                        </i:EventTrigger>
+                                    </i:Interaction.Triggers>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style TargetType="{x:Type local:ImageBox}">
+        <Style.Resources>
+            <ControlTemplate x:Key="buttonTemplate" TargetType="{x:Type Button}">
+                <ContentPresenter ContentTemplate="{TemplateBinding ContentTemplate}" />
+            </ControlTemplate>
+        </Style.Resources>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type local:ImageBox}">
+                    <Grid Background="{TemplateBinding Background}">
+                        <ContentPresenter ContentSource="Content" ContentTemplate="{TemplateBinding ContentTemplate}" />
+                        <Grid Name="subImageBox" VerticalAlignment="Bottom" Margin="15,0" Height="30">
+                            <Grid.Resources>
+                                <Storyboard x:Key="expandsubImageBoxStoryboard">
+                                    <DoubleAnimation Storyboard.TargetProperty="Height" Storyboard.TargetName="subImageBox" To="{Binding ActualHeight, ElementName=subImageBox}" Duration="0:0:0.25" AccelerationRatio="0.0" DecelerationRatio="1.0" />
+                                </Storyboard>
+                                <Storyboard x:Key="dexpandsubImageBoxStoryboard">
+                                    <DoubleAnimation Storyboard.TargetProperty="Height" Storyboard.TargetName="subImageBox" To="{Binding DexpandHeight, RelativeSource={RelativeSource TemplatedParent}}" Duration="0:0:0.25" AccelerationRatio="0.0" DecelerationRatio="1.0" />
+                                </Storyboard>
+                            </Grid.Resources>
+                            <i:Interaction.Triggers>
+                                <ei:DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Grid}}}" Value="True">
+                                    <ei:ControlStoryboardAction Storyboard="{StaticResource dexpandsubImageBoxStoryboard}" ControlStoryboardOption="Stop" />
+                                    <ei:ControlStoryboardAction Storyboard="{StaticResource expandsubImageBoxStoryboard}" ControlStoryboardOption="Play"/>
+                                </ei:DataTrigger>
+                                <ei:DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Grid}}}" Value="False">
+                                    <ei:ControlStoryboardAction Storyboard="{StaticResource expandsubImageBoxStoryboard}" ControlStoryboardOption="Stop"/>
+                                    <ei:ControlStoryboardAction Storyboard="{StaticResource dexpandsubImageBoxStoryboard}" ControlStoryboardOption="Play" />
+                                </ei:DataTrigger>
+                            </i:Interaction.Triggers>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="auto" />
+                                <RowDefinition Height="auto" />
+                            </Grid.RowDefinitions>
+                            <Rectangle Grid.RowSpan="2" Fill="Black" Opacity="0.5" />
+                            <Button Grid.Row="0" HorizontalAlignment="Left" Margin="20,8,0,5" Template="{StaticResource buttonTemplate}" Command="{TemplateBinding ClickHeaderCommand}">
+                                <TextBlock Foreground="White" FontSize="13" Text="{TemplateBinding Header}" />
+                            </Button>
+                            <ItemsPresenter Grid.Row="1" Margin="20,0,20,0" Visibility="{Binding HasManyImages, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource boolToVisibilityConverter}}" />
+                        </Grid>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ItemsPanel">
+            <Setter.Value>
+                <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal" />
+                </ItemsPanelTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ItemTemplate">
+            <Setter.Value>
+                <DataTemplate>
+                    <Image Stretch="UniformToFill" Source="{Binding }" />
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ItemContainerStyle">
+            <Setter.Value>
+                <Style TargetType="{x:Type ListBoxItem}">
+                    <Setter Property="Width" Value="70" />
+                    <Setter Property="Height" Value="70" />
+                    <Setter Property="Margin" Value="0,0,8,8" />
+                    <Setter Property="Padding" Value="2,2,2,2" />
+                </Style>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ContentTemplate">
+            <Setter.Value>
+                <DataTemplate>
+                    <Image Stretch="Uniform" Source="{Binding }" />
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Header" Value="BBB" />
+        <Setter Property="Background" Value="#ff101010" />
+        <Setter Property="Margin" Value="0,5,0,5" />
     </Style>
 </ResourceDictionary>
