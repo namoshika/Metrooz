@@ -88,7 +88,7 @@ namespace GPlusBrowser.ViewModel
                 if (account == null)
                     _accountManagerModel.SelectedAccountIndex = -1;
                 else
-                    account.Initialize();
+                    await account.Initialize();
             }
             else
                 AccountIconUrl = new Uri(_accountModel.AccountIconUrl.Replace("$SIZE_SEGMENT", "s35-c-k"));

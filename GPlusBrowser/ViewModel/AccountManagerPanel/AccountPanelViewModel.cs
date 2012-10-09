@@ -66,12 +66,12 @@ namespace GPlusBrowser.ViewModel
             UserName = _accountModel.Setting.UserName;
             UserIconUrl = new Uri(_accountModel.AccountIconUrl.Replace("$SIZE_SEGMENT", "s35-c-k"));
         }
-        void OpenStreamPanelCommand_Execute(object arg)
+        async void OpenStreamPanelCommand_Execute(object arg)
         {
             var targetIdx = _accountManagerModel.Accounts.IndexOf(_accountModel);
             var seqStatus = _accountManagerModel.Accounts[targetIdx].InitializeSequenceStatus;
             if (seqStatus != AccountInitSeqStatus.UnLogined && seqStatus  < AccountInitSeqStatus.LoadedHomeInit)
-                _accountManagerModel.Accounts[targetIdx].Initialize();
+                await _accountManagerModel.Accounts[targetIdx].Initialize();
             _accountManagerModel.SelectedAccountIndex = targetIdx;
         }
     }
