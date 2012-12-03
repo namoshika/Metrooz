@@ -65,22 +65,50 @@ namespace GPlusBrowser.Controls
             base.OnItemsChanged(e);
             switch (e.Action)
             {
+                case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:
+                    _itemHeights.Clear();
+                    _itemPairDict.Clear();
+                    for (var i = 0; i < Items.Count; i++)
+                    {
+                        var item = Items[i];
+                        var element = (TreeViewItem)ItemContainerGenerator.ContainerFromItem(item);
+                        _itemHeights.Insert(Math.Min(_itemHeights.Count, i), 0);
+                        _itemPairDict.Add(item, element);
+                        //element_SizeChanged(element, null);
+                        var elementOffset = _itemHeights.Take(i).Sum();
+
+                        _updateIsEnableAnimationObservable.OnNext(0);
+                    }
+                    break;
+                case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
+                    for (var i = 0; i < e.NewItems.Count; i++)
+                    {
+                        var idx = e.NewStartingIndex + i;
+                        var element = (TreeViewItem)ItemContainerGenerator.ContainerFromIndex(idx);
+                        _itemHeights.Insert(Math.Min(_itemHeights.Count, idx), 0);
+                        _itemPairDict.Add(ItemContainerGenerator.ItemFromContainer(element), element);
+                        element_SizeChanged(element, null);
+                        var elementOffset = _itemHeights.Take(idx).Sum();
+
+                        _updateIsEnableAnimationObservable.OnNext(0);
+                    }
+                    break;
                 case System.Collections.Specialized.NotifyCollectionChangedAction.Move:
                     var value = _itemHeights[e.NewStartingIndex];
                     _itemHeights[e.NewStartingIndex] = _itemHeights[e.OldStartingIndex];
                     _itemHeights[e.OldStartingIndex] = value;
-
-                    var offset = 0.0;
-                    var top = _scrollviewer.VerticalOffset;
-                    var bottom = _scrollviewer.VerticalOffset + _scrollviewer.ViewportHeight;
-                    TreeViewItem item;
-                    for (var i = 0; (item = (TreeViewItem)ItemContainerGenerator.ContainerFromIndex(i)) != null; i++)
                     {
-                        SetIsEnableAnimation(item, offset < bottom && offset + item.ActualHeight > top);
-                        offset += item.ActualHeight;
+                        var offset = 0.0;
+                        var top = _scrollviewer.VerticalOffset;
+                        var bottom = _scrollviewer.VerticalOffset + _scrollviewer.ViewportHeight;
+                        TreeViewItem item;
+                        for (var i = 0; (item = (TreeViewItem)ItemContainerGenerator.ContainerFromIndex(i)) != null; i++)
+                        {
+                            SetIsEnableAnimation(item, offset < bottom && offset + item.ActualHeight > top);
+                            offset += item.ActualHeight;
+                        }
+                        ScrollOffset = _scrollviewer.VerticalOffset;
                     }
-                    ScrollOffset = _scrollviewer.VerticalOffset;
-
                     break;
                 case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
                     var dataContext = e.OldItems[0];
@@ -153,19 +181,16 @@ namespace GPlusBrowser.Controls
         void element_Loaded(object sender, RoutedEventArgs e)
         {
             var element = (TreeViewItem)sender;
-            var idx = ItemContainerGenerator.IndexFromContainer(element);
-            _itemHeights.Insert(Math.Min(_itemHeights.Count, idx), 0);
-            _itemPairDict.Add(ItemContainerGenerator.ItemFromContainer(element), element);
-            element_SizeChanged(element, null);
+            var item = ItemContainerGenerator.ItemFromContainer(element);
+            if (_itemPairDict.ContainsKey(item))
+                _itemPairDict[item] = element;
             element.Loaded -= element_Loaded;
-
-            var elementOffset = _itemHeights.Take(idx).Sum();
             if (_scrollviewer.VerticalOffset <= 150)
             {
                 _translateTransformer.BeginAnimation(
                     TranslateTransform.YProperty,
                     new System.Windows.Media.Animation.DoubleAnimation(
-                        -element.ActualHeight, 0, new Duration(TimeSpan.FromMilliseconds(300)))
+                        -element.ActualHeight, 0, new Duration(TimeSpan.FromMilliseconds(500)))
                     {
                         AccelerationRatio = 0.0,
                         DecelerationRatio = 1.0
@@ -173,7 +198,10 @@ namespace GPlusBrowser.Controls
                     HandoffBehavior.SnapshotAndReplace);
             }
 
-            _updateIsEnableAnimationObservable.OnNext(0);
+            //var element = (TreeViewItem)sender;
+            //var idx = ItemContainerGenerator.IndexFromContainer(element);
+            //_itemHeights.Insert(Math.Min(_itemHeights.Count, idx), 0);
+            //_itemPairDict.Add(ItemContainerGenerator.ItemFromContainer(element), element);
         }
         void _scrollviewer_ScrollChanged(EventPattern<EventArgs> e)
         {

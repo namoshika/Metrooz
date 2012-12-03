@@ -68,7 +68,7 @@ namespace GPlusBrowser
                 if (NowResizeAnimation)
                     return;
                 mainPane.Width = ActualWidth
-                    - SystemParameters.ResizeFrameHorizontalBorderHeight * 2
+                    - SystemParameters.ResizeFrameHorizontalBorderHeight * 4
                     - (((ViewModel.PageSwitcherViewModel)DataContext).IsShowSidePanel ? sidePane.ActualWidth : 0.0);
             }
         }

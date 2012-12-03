@@ -48,6 +48,7 @@ namespace GPlusBrowser.Controls
         public ItemSelecter()
         {
             ItemsPanel = new ItemsPanelTemplate(new FrameworkElementFactory(typeof(Grid)));
+            ItemContainerGenerator.StatusChanged += ItemContainerGenerator_StatusChanged;
         }
         static ItemSelecter()
         {
@@ -65,23 +66,20 @@ namespace GPlusBrowser.Controls
             get { return (object)GetValue(SelectedItemProperty); }
             set { SetValue(SelectedItemProperty, value); }
         }
-
-        protected override void OnItemsChanged(System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        void ItemContainerGenerator_StatusChanged(object sender, EventArgs e)
         {
-            base.OnItemsChanged(e);
-            switch (e.Action)
+            if (ItemContainerGenerator.Status != System.Windows.Controls.Primitives.GeneratorStatus.ContainersGenerated)
+                return;
+
+            for (var i = 0; i < ItemContainerGenerator.Items.Count; i++)
             {
-                case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:
-                case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
-                case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
-                    for (var i = 0; ; i++)
-                    {
-                        var content = (ContentPresenter)ItemContainerGenerator.ContainerFromIndex(i);
-                        if (content == null)
-                            break;
-                        content.Visibility = i == SelectedIndex ? Visibility.Visible : Visibility.Hidden;
-                    }
+                var content = (ContentPresenter)ItemContainerGenerator.ContainerFromIndex(i);
+                if (content == null)
                     break;
+                if (i == SelectedIndex)
+                    content.Visibility = Visibility.Visible;
+                else
+                    content.ClearValue(FrameworkElement.VisibilityProperty);
             }
         }
         static void SelectedIndexProperty_Changed(object sender, DependencyPropertyChangedEventArgs e)

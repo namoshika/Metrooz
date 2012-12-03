@@ -107,7 +107,7 @@ namespace GPlusBrowser.ViewModel
         }
         void _streamManagerModel_ChangedSelectedCircleIndex(object sender, EventArgs e)
         {
-            UiThreadDispatcher.BeginInvoke(
+            UiThreadDispatcher.Invoke(
                 (Action)delegate() { SelectedCircleIndex = _streamManagerModel.SelectedCircleIndex; },
                 _streamManagerModel.SelectedCircleIndex < DisplayStreams.Count
                     ? DispatcherPriority.DataBind : DispatcherPriority.ContextIdle);
