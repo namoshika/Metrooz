@@ -71,8 +71,8 @@ namespace GPlusBrowser.Model
                             OnUpdatedActivities(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
 
                             var activities = infos.Where(info => info != null)
-                                .Select(info => new Activity(info)).Reverse().ToArray();
-                            _activities.InsertRange(0, activities);
+                                .Select(info => new Activity(info)).ToArray();
+                            _activities.AddRange(activities);
                             OnUpdatedActivities(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, activities, 0));
                         }
                     });

@@ -74,9 +74,6 @@ namespace GPlusBrowser.Controls
                         var element = (TreeViewItem)ItemContainerGenerator.ContainerFromItem(item);
                         _itemHeights.Insert(Math.Min(_itemHeights.Count, i), 0);
                         _itemPairDict.Add(item, element);
-                        //element_SizeChanged(element, null);
-                        var elementOffset = _itemHeights.Take(i).Sum();
-
                         _updateIsEnableAnimationObservable.OnNext(0);
                     }
                     break;
@@ -87,9 +84,6 @@ namespace GPlusBrowser.Controls
                         var element = (TreeViewItem)ItemContainerGenerator.ContainerFromIndex(idx);
                         _itemHeights.Insert(Math.Min(_itemHeights.Count, idx), 0);
                         _itemPairDict.Add(ItemContainerGenerator.ItemFromContainer(element), element);
-                        element_SizeChanged(element, null);
-                        var elementOffset = _itemHeights.Take(idx).Sum();
-
                         _updateIsEnableAnimationObservable.OnNext(0);
                     }
                     break;
@@ -182,9 +176,11 @@ namespace GPlusBrowser.Controls
         {
             var element = (TreeViewItem)sender;
             var item = ItemContainerGenerator.ItemFromContainer(element);
-            if (_itemPairDict.ContainsKey(item))
-                _itemPairDict[item] = element;
+            var idx = ItemContainerGenerator.IndexFromContainer(element);
+            _itemPairDict[item] = element;
+            _itemHeights[Math.Min(_itemHeights.Count, idx)] = element.ActualHeight;
             element.Loaded -= element_Loaded;
+            element_SizeChanged(element, null);
             if (_scrollviewer.VerticalOffset <= 150)
             {
                 _translateTransformer.BeginAnimation(
@@ -197,11 +193,6 @@ namespace GPlusBrowser.Controls
                     },
                     HandoffBehavior.SnapshotAndReplace);
             }
-
-            //var element = (TreeViewItem)sender;
-            //var idx = ItemContainerGenerator.IndexFromContainer(element);
-            //_itemHeights.Insert(Math.Min(_itemHeights.Count, idx), 0);
-            //_itemPairDict.Add(ItemContainerGenerator.ItemFromContainer(element), element);
         }
         void _scrollviewer_ScrollChanged(EventPattern<EventArgs> e)
         {
