@@ -103,6 +103,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="DataCacheDictionary.cs" />
     <Compile Include="Controls\ColumnPanel.cs" />
     <Compile Include="Controls\CommentListBox.cs" />
     <Compile Include="Controls\ExTreeView.cs" />

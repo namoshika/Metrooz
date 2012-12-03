@@ -22,8 +22,7 @@ namespace GPlusBrowser.ViewModel
             _accountManagerModel = accountManagerModel;
             _setting = new SettingViewModel(accountModel.Setting, accountModel, uiThreadDispatcher);
             _userName = _accountModel.Setting.UserName;
-            if (_accountModel.AccountIconUrl != null)
-                _userIconUrl = new Uri(_accountModel.AccountIconUrl.Replace("$SIZE_SEGMENT", "s35-c-k"));
+            AsyncFunc();
             OpenStreamPanelCommand = new RelayCommand(OpenStreamPanelCommand_Execute);
         }
         Account _accountModel;
@@ -61,18 +60,26 @@ namespace GPlusBrowser.ViewModel
         }
         public ICommand OpenStreamPanelCommand { get; private set; }
 
-        void _accountModel_Initialized(object sender, EventArgs e)
+        async void AsyncFunc()
+        {
+            if (_accountModel.AccountIconUrl != null)
+                UserIconUrl = await DataCacheDictionary.DownloadUserIcon(
+                    new Uri(_accountModel.AccountIconUrl.Replace("$SIZE_SEGMENT", "s35-c-k")));
+        }
+        async void _accountModel_Initialized(object sender, EventArgs e)
         {
             UserName = _accountModel.Setting.UserName;
-            UserIconUrl = new Uri(_accountModel.AccountIconUrl.Replace("$SIZE_SEGMENT", "s35-c-k"));
+            UserIconUrl = await DataCacheDictionary.DownloadUserIcon(
+                new Uri(_accountModel.AccountIconUrl.Replace("$SIZE_SEGMENT", "s35-c-k")));
         }
         async void OpenStreamPanelCommand_Execute(object arg)
         {
             var targetIdx = _accountManagerModel.Accounts.IndexOf(_accountModel);
+            _accountManagerModel.SelectedAccountIndex = targetIdx;
+
             var seqStatus = _accountManagerModel.Accounts[targetIdx].InitializeSequenceStatus;
             if (seqStatus != AccountInitSeqStatus.UnLogined && seqStatus  < AccountInitSeqStatus.LoadedHomeInit)
-                await _accountManagerModel.Accounts[targetIdx].Initialize();
-            _accountManagerModel.SelectedAccountIndex = targetIdx;
+                await _accountManagerModel.Accounts[targetIdx].Initialize().ConfigureAwait(false);
         }
     }
 }
