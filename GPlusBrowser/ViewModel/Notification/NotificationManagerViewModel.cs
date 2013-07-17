@@ -5,8 +5,10 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Threading;
-using SunokoLibrary.GooglePlus;
+using SunokoLibrary.Web.GooglePlus;
+using SunokoLibrary.Web.GooglePlus.Primitive;
 
 namespace GPlusBrowser.ViewModel
 {
@@ -14,8 +16,8 @@ namespace GPlusBrowser.ViewModel
 
     public class NotificationManagerViewModel : ViewModelBase
     {
-        public NotificationManagerViewModel(NotificationManager model, Dispatcher uiThreadDispatcher)
-            : base(uiThreadDispatcher)
+        public NotificationManagerViewModel(NotificationManager model, AccountViewModel topLevel, Dispatcher uiThreadDispatcher)
+            : base(uiThreadDispatcher, topLevel)
         {
 #if ENABLED_VMTEST_MODE
             Items = new ObservableCollection<NotificationViewModel>();
@@ -113,12 +115,12 @@ namespace GPlusBrowser.ViewModel
                             case NotificationsFilter.Mension:
                             case NotificationsFilter.OtherPost:
                             case NotificationsFilter.PostIntoYou:
-                                obj = new NotificationWithActivityViewModel((NotificationInfoWithActivity)item, _managerModel, UiThreadDispatcher);
+                                obj = new NotificationWithActivityViewModel((NotificationInfoWithActivity)item, _managerModel, TopLevel, UiThreadDispatcher);
                                 _notifications.Insert(0, obj);
                                 Items.InsertAsync(0, obj, UiThreadDispatcher);
                                 break;
                             case NotificationsFilter.CircleIn:
-                                obj = new NotificationWithProfileViewModel(item, UiThreadDispatcher);
+                                obj = new NotificationWithProfileViewModel(item, TopLevel, UiThreadDispatcher);
                                 _notifications.Insert(0, obj);
                                 Items.InsertAsync(0, obj, UiThreadDispatcher);
                                 break;
@@ -134,9 +136,10 @@ namespace GPlusBrowser.ViewModel
     }
     public abstract class NotificationViewModel : ViewModelBase
     {
-        public NotificationViewModel(Dispatcher uiThreadDispatcher) : base(uiThreadDispatcher) { }
+        public NotificationViewModel(Dispatcher uiThreadDispatcher, AccountViewModel topLevel)
+            : base(uiThreadDispatcher, topLevel) { }
         bool _existOverlaiedIcon;
-        Uri _displayIconUrl;
+        ImageSource _displayIconUrl;
         double _elementHeight;
 
         public abstract NotificationInfo Model { get; }
@@ -158,7 +161,7 @@ namespace GPlusBrowser.ViewModel
                 OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("ElementHeight"));
             }
         }
-        public Uri DisplayIconUrl
+        public ImageSource DisplayIconUrl
         {
             get { return _displayIconUrl; }
             protected set
@@ -170,11 +173,11 @@ namespace GPlusBrowser.ViewModel
     }
     public class NotificationWithActivityViewModel : NotificationViewModel
     {
-        public NotificationWithActivityViewModel(NotificationInfoWithActivity model, NotificationManager managerModel, Dispatcher uiThreadDispatcher)
-            : base(uiThreadDispatcher)
+        public NotificationWithActivityViewModel(NotificationInfoWithActivity model, NotificationManager managerModel, AccountViewModel topLevel, Dispatcher uiThreadDispatcher)
+            : base(uiThreadDispatcher, topLevel)
         {
             if (model.ActivityInfo.PostStatus != PostStatusType.Removed)
-                _target = new ActivityViewModel(new Model.Activity(model.ActivityInfo), uiThreadDispatcher);
+                _target = new ActivityViewModel(new Model.Activity(model.ActivityInfo), topLevel, uiThreadDispatcher);
             _notificationModel = model;
             _notificationModel_Updated(null, null);
             //_notificationModel.Updated += _notificationModel_Updated;
@@ -213,7 +216,7 @@ namespace GPlusBrowser.ViewModel
             }
         }
         public override NotificationInfo Model { get { return _notificationModel; } }
-        void _notificationModel_Updated(object sender, NotificationUpdatedEventArgs e)
+        async void _notificationModel_Updated(object sender, NotificationUpdatedEventArgs e)
         {
             var count = 0;
             _noticeText = string.Format("{0}{1}が投稿にコメントしました。",
@@ -222,16 +225,16 @@ namespace GPlusBrowser.ViewModel
                     ? string.Format("他{0}人", _notificationModel.FollowingNotifications.Length - count)
                     : string.Empty);
             ExistOverlaiedIcon = _notificationModel.FollowingNotifications.Length > 1;
-            DisplayIconUrl = new Uri(_notificationModel.FollowingNotifications.Last()
-                .Actor.IconImageUrlText.Replace("$SIZE_SEGMENT", "s35-c-k"));
+            DisplayIconUrl = await TopLevel.DataCacheDict.DownloadImage(new Uri(_notificationModel.FollowingNotifications.Last()
+                .Actor.IconImageUrlText.Replace("$SIZE_SEGMENT", "s35-c-k")));
             _noticeDate = _notificationModel.LatestNoticeDate.ToString(
                 _notificationModel.LatestNoticeDate > DateTime.Today ? "HH:mm" : "yyyy:MM:dd");
         }
     }
     public class NotificationWithProfileViewModel : NotificationViewModel
     {
-        public NotificationWithProfileViewModel(NotificationInfo model, Dispatcher uiThreadDispatcher)
-            : base(uiThreadDispatcher)
+        public NotificationWithProfileViewModel(NotificationInfo model, AccountViewModel topLevel, Dispatcher uiThreadDispatcher)
+            : base(uiThreadDispatcher, topLevel)
         {
             _notificationModel = model;
             model_Updated(this, null);
@@ -265,10 +268,10 @@ namespace GPlusBrowser.ViewModel
         void model_Updated(object sender, NotificationUpdatedEventArgs e)
         {
             _memberCount = _notificationModel.FollowingNotifications.Length;
-            _members = _notificationModel.FollowingNotifications
-                .Select(obj => new ProfileRegisterViewModel(
-                    0, obj.Actor.Name, new Uri(obj.Actor.IconImageUrlText.Replace("$SIZE_SEGMENT", "s50-c-k")), UiThreadDispatcher))
-                .ToArray();
+            //_members = _notificationModel.FollowingNotifications
+            //    .Select(obj => new ProfileRegisterViewModel(
+            //        0, obj.Actor.Name, new Uri(obj.Actor.IconImageUrlText.Replace("$SIZE_SEGMENT", "s50-c-k")), TopLevel, UiThreadDispatcher))
+            //    .ToArray();
         }
 
 #if ENABLED_VMTEST_MODE
@@ -287,16 +290,17 @@ namespace GPlusBrowser.ViewModel
     }
     public class ProfileRegisterViewModel : ViewModelBase
     {
-        public ProfileRegisterViewModel(int commonFriendLength, string name, Uri profileIconUrl, Dispatcher uiThreadDispatcher)
-            : base(uiThreadDispatcher)
+        public ProfileRegisterViewModel(int commonFriendLength, string name, Uri profileIconUrl, AccountViewModel topLevel, Dispatcher uiThreadDispatcher)
+            : base(uiThreadDispatcher, topLevel)
         {
             _commonFriendLength = commonFriendLength;
             _name = name;
-            _profileIconUrl = profileIconUrl;
+            topLevel.DataCacheDict.DownloadImage(profileIconUrl)
+                .ContinueWith(tsk => _profileIconUrl = tsk.Result);
         }
         int _commonFriendLength;
         string _name;
-        Uri _profileIconUrl;
+        ImageSource _profileIconUrl;
 
         public int CommonFriendLength
         {
@@ -316,7 +320,7 @@ namespace GPlusBrowser.ViewModel
                 OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("Name"));
             }
         }
-        public Uri ProfileIconUrl
+        public ImageSource ProfileIconUrl
         {
             get { return _profileIconUrl; }
             set

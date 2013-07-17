@@ -12,8 +12,8 @@ namespace GPlusBrowser.ViewModel
 
     public class SettingViewModel : ViewModelBase
     {
-        public SettingViewModel(SettingModel setting, Account mainWinModel, Dispatcher uiThreadDispatcher)
-            : base(uiThreadDispatcher)
+        public SettingViewModel(SettingModel setting, Account mainWinModel, AccountViewModel topLevel, Dispatcher uiThreadDispatcher)
+            : base(uiThreadDispatcher, topLevel)
         {
             NotificationText = string.Empty;
 

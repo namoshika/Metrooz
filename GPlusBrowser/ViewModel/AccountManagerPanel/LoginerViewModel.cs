@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Threading;
 
 namespace GPlusBrowser.ViewModel
@@ -12,22 +13,30 @@ namespace GPlusBrowser.ViewModel
 
     public class LoginerViewModel : ViewModelBase
     {
-        public LoginerViewModel(Dispatcher uiThreadDispatcher)
-            : base(uiThreadDispatcher)
+        public LoginerViewModel(AccountManager accountManagerModel, Account target, Dispatcher uiThreadDispatcher)
+            : base(uiThreadDispatcher, null)
         {
-            _syncer = new System.Threading.AutoResetEvent(false);
+            _accountManagerModel = accountManagerModel;
+            IsShowLoginPanel = false;
+            IsRelogin = target != null;
+            TargetAccount = target;
+            OpenAddAccountPanelCommand = new RelayCommand(OpenAddAccountPanelCommand_Executed);
             LoginCommand = new RelayCommand(LoginCommand_Executed);
             CancelCommand = new RelayCommand(CancelCommand_Executed);
+
+            if(target != null)
+                TargetAccount.Initialized += TargetAccount_Initialized;
         }
         bool _loginButtonIsEnabled, _isShowLoginPanel, _isRelogin;
         string _emailAddress;
         string _password;
         string _userName;
         string _notificationText;
-        Uri _iconImageUrl;
+        System.Windows.Media.ImageSource _iconImageUrl;
+        AccountManager _accountManagerModel;
         LoginSequenceStatus _status;
-        System.Threading.AutoResetEvent _syncer;
 
+        public ICommand OpenAddAccountPanelCommand { get; set; }
         public ICommand LoginCommand { get; private set; }
         public ICommand CancelCommand { get; private set; }
         public Account TargetAccount { get; private set; }
@@ -94,7 +103,7 @@ namespace GPlusBrowser.ViewModel
                 OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("NotificationText"));
             }
         }
-        public Uri IconImageUrl
+        public ImageSource IconImageUrl
         {
             get { return _iconImageUrl; }
             set
@@ -114,23 +123,11 @@ namespace GPlusBrowser.ViewModel
             }
         }
 
-        public Task<Account> OpenLoginForm(Account item)
+        void TargetAccount_Initialized(object sender, EventArgs e)
         {
-            return Task.Factory.StartNew(() =>
-                {
-                    IconImageUrl = null;
-                    EmailAddress = null;
-                    Password = null;
-                    UserName = null;
-                    TargetAccount = item;
-                    IsShowLoginPanel = true;
-                    Status = LoginSequenceStatus.Input;
-
-                    _syncer.WaitOne();
-                    return Status == LoginSequenceStatus.Registed ? item : null;
-                });
+            if (TargetAccount.InitializeSequenceStatus >= AccountInitSeqStatus.DisableSession)
+                OpenAddAccountPanelCommand_Executed(null);
         }
-
         async void LoginCommand_Executed(object arg)
         {
             switch (Status)
@@ -154,7 +151,10 @@ namespace GPlusBrowser.ViewModel
                         LoginButtonIsEnabled = true;
 
                         if (isLogin)
-                        { IconImageUrl = new Uri(TargetAccount.AccountIconUrl.Replace("$SIZE_SEGMENT", "s120-c-k")); }
+                        {
+                            IconImageUrl = await DataCacheDictionary.Default.DownloadImage(
+                                new Uri(TargetAccount.AccountIconUrl.Replace("$SIZE_SEGMENT", "s120-c-k")));
+                        }
                         else
                         {
                             NotificationText = isLogin
@@ -165,15 +165,25 @@ namespace GPlusBrowser.ViewModel
                 case LoginSequenceStatus.Success:
                     Status = LoginSequenceStatus.Registed;
                     IsShowLoginPanel = false;
-                    _syncer.Set();
+                    if (IsRelogin == false)
+                        _accountManagerModel.Add(TargetAccount);
+                    else
+                        _accountManagerModel.Initialize();
                     break;
             }
         }
-        void CancelCommand_Executed(object arg)
+        void OpenAddAccountPanelCommand_Executed(object arg)
         {
-            IsShowLoginPanel = false;
-            _syncer.Set();
+            TargetAccount = TargetAccount ?? _accountManagerModel.Create();
+            IconImageUrl = null;
+            EmailAddress = null;
+            Password = null;
+            UserName = null;
+            IsShowLoginPanel = true;
+            Status = LoginSequenceStatus.Input;
         }
+        void CancelCommand_Executed(object arg)
+        { IsShowLoginPanel = false; }
     }
     public enum DisplayMode { Login, Relogin, }
     public enum LoginSequenceStatus { Input, Authing, Fail, Success, Registed }

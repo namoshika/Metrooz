@@ -3,29 +3,37 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows.Threading;
+using System.Windows.Media.Imaging;
 
 namespace GPlusBrowser.ViewModel
 {
-    using SunokoLibrary.GooglePlus;
+    using SunokoLibrary.Web.GooglePlus;
 
     public class AttachedAlbumViewModel : ViewModelBase
     {
-        public AttachedAlbumViewModel(AttachedAlbum attachedAlbumModel, Dispatcher uiThreadDispatcher)
-            : base(uiThreadDispatcher)
+        public AttachedAlbumViewModel(AttachedAlbum attachedAlbumModel, AccountViewModel topLevel, Dispatcher uiThreadDispatcher)
+            : base(uiThreadDispatcher, topLevel)
         {
             _selectedImageIndex = 0;
             _attachedAlbumModel = attachedAlbumModel;
-            _largeImageUrlArray = _attachedAlbumModel.Pictures
-                .Select(info => new Uri(info.ImageUrlText.Replace("$SIZE_SEGMENT", "w640-h480")))
-                .ToArray();
-            _selectedImageUrl = _largeImageUrlArray[_selectedImageIndex];
-            SmallImageUrlList = new ObservableCollection<Uri>(_attachedAlbumModel.Pictures
-                .Select(info => new Uri(info.ImageUrlText.Replace("$SIZE_SEGMENT", "w640-h480"))));
+
+            _thumbnailImages = new BitmapImage[_attachedAlbumModel.Pictures.Length];
+            _mainImages = new BitmapImage[_attachedAlbumModel.Pictures.Length];
+            System.Threading.Tasks.Parallel
+                .ForEach(
+                _attachedAlbumModel.Pictures.Select((info, idx) => new { Info = info, Index = idx }),
+                async pair =>
+                {
+                    _thumbnailImages[pair.Index] = await topLevel.DataCacheDict.DownloadImage(new Uri(pair.Info.ImageUrlText.Replace("$SIZE_SEGMENT", "s50-c-k"))).ConfigureAwait(false);
+                    _mainImages[pair.Index] = await topLevel.DataCacheDict.DownloadImage(new Uri(pair.Info.ImageUrlText.Replace("$SIZE_SEGMENT", "w640-h480"))).ConfigureAwait(false);
+                    if(pair.Index == _selectedImageIndex)
+                        OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("SelectedImage"));
+                });
         }
         int _selectedImageIndex;
-        Uri _selectedImageUrl;
-        Uri[] _largeImageUrlArray;
+        BitmapImage[] _thumbnailImages, _mainImages;
         AttachedAlbum _attachedAlbumModel;
 
         public int SelectedImageIndex
@@ -36,19 +44,12 @@ namespace GPlusBrowser.ViewModel
                 _selectedImageIndex = value;
                 OnPropertyChanged(new System.ComponentModel
                     .PropertyChangedEventArgs("SelectedImageIndex"));
-                SelectedImageUrl = _largeImageUrlArray[value];
-            }
-        }
-        public Uri SelectedImageUrl
-        {
-            get { return _selectedImageUrl; }
-            set
-            {
-                _selectedImageUrl = value;
                 OnPropertyChanged(new System.ComponentModel
-                    .PropertyChangedEventArgs("SelectedImageUrl"));
+                    .PropertyChangedEventArgs("SelectedImage"));
             }
         }
-        public ObservableCollection<Uri> SmallImageUrlList { get; private set; }
+        public BitmapImage SelectedImage
+        { get { return _mainImages[_selectedImageIndex]; } }
+        public BitmapImage[] ThumbnailImages { get { return _thumbnailImages; } }
     }
 }

@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
-using SunokoLibrary.GooglePlus;
+using SunokoLibrary.Web.GooglePlus;
 
 namespace GPlusBrowser.Model
 {
@@ -14,18 +14,16 @@ namespace GPlusBrowser.Model
         public StreamManager(Account account)
         {
             _account = account;
-            _circleStreams = new List<Stream>();
-            _displayStreams = new List<Stream>();
+            ((INotifyCollectionChanged)_account.Circles.Items).CollectionChanged += StreamManager_CollectionChanged;
+            _circleStreams = new ObservableCollection<Stream>() { new Stream(this,  account.PlusClient.Relation.YourCircle) };
             _selectedCircleIndex = -1;
 
-            _account.Circles.FullLoaded += Circles_FullLoaded;
+            CircleStreams = new ReadOnlyObservableCollection<Stream>(_circleStreams);
         }
-        Account _account;
         int _selectedCircleIndex;
-        List<Stream> _circleStreams;
-        List<Stream> _displayStreams;
+        ObservableCollection<Stream> _circleStreams;
+        Account _account;
 
-        public bool IsInitialized { get; private set; }
         public int SelectedCircleIndex
         {
             get { return _selectedCircleIndex; }
@@ -37,120 +35,48 @@ namespace GPlusBrowser.Model
                 OnChangedSelectedCircleIndex(new EventArgs());
             }
         }
-        public ReadOnlyCollection<Stream> CircleStreams
-        { get { return _circleStreams.AsReadOnly(); } }
-        public ReadOnlyCollection<Stream> DisplayStreams
-        { get { return _displayStreams.AsReadOnly(); } }
-
-        public void Initialize()
+        public ReadOnlyObservableCollection<Stream> CircleStreams { get; private set; }
+        void StreamManager_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            try
+            switch(e.Action)
             {
-                lock (_circleStreams)
-                {
-                    SelectedCircleIndex = -1;
+                case NotifyCollectionChangedAction.Reset:
                     foreach (var item in _circleStreams)
                         item.Dispose();
                     _circleStreams.Clear();
-                    _circleStreams.Add(new Stream(this,
-                        _account.GooglePlusClient.Relation.YourCircle));
-                    _circleStreams.AddRange(
-                        _account.Circles.Items.Select(info => new Stream(this, info)));
-                }
-                lock (_displayStreams)
-                {
-                    foreach (var item in _displayStreams)
-                        item.Dispose();
-                    _displayStreams.Clear();
-                    OnChangedDisplayStreams(
-                        new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
-                    foreach (var item in _circleStreams)
-                        _displayStreams.Add(item);
-                }
-                IsInitialized = true;
+                    break;
+                case NotifyCollectionChangedAction.Add:
+                    foreach(CircleInfo item in e.NewItems)
+                        _circleStreams.Insert(e.NewStartingIndex + 1, new Stream(this, item));
+                    if (_selectedCircleIndex < 0)
+                        SelectedCircleIndex = 0;
+                    break;
+                case NotifyCollectionChangedAction.Remove:
+                    foreach (CircleInfo item in e.OldItems)
+                    {
+                        var target = _circleStreams.First(strm => strm.Circle == item);
+                        _circleStreams.Remove(target);
+                        target.Dispose();
+                    }
+                    break;
+                case NotifyCollectionChangedAction.Replace:
+                    var newItem = (CircleInfo)e.NewItems[0];
+                    _circleStreams[e.NewStartingIndex + 1].Circle = newItem;
+                    break;
+                case NotifyCollectionChangedAction.Move:
+                    _circleStreams.Move(e.OldStartingIndex + 1, e.NewStartingIndex + 1);
+                    break;
             }
-            catch (FailToOperationException)
-            { IsInitialized = false; }
-
-            OnInitialized(new EventArgs());
-            lock (_displayStreams)
-                OnChangedDisplayStreams(new NotifyCollectionChangedEventArgs(
-                    NotifyCollectionChangedAction.Add, _displayStreams, 0));
-            if (_circleStreams.Count > 0)
-                SelectedCircleIndex = 0;
-        }
-        public void AddDisplayStream(CircleInfo circles)
-        {
-            var stream = new Stream(this, circles);
-            lock (_displayStreams)
-            {
-                _displayStreams.Add(stream);
-                OnChangedDisplayStreams(new NotifyCollectionChangedEventArgs(
-                    NotifyCollectionChangedAction.Add, stream, _displayStreams.Count - 1));
-            }
-        }
-        public void RemoveDisplayStream(Stream stream)
-        {
-            var index = _displayStreams.IndexOf(stream);
-            if (index < 0)
-                return;
-            lock (_displayStreams)
-            {
-                _displayStreams.Remove(stream);
-                OnChangedDisplayStreams(new NotifyCollectionChangedEventArgs(
-                    NotifyCollectionChangedAction.Remove, stream, index));
-            }
-        }
-        public void MoveDisplayStream(int oldIndex, int newIndex)
-        {
-            lock (_displayStreams)
-            {
-                var item = _displayStreams[oldIndex];
-                lock (_displayStreams)
-                {
-                    _displayStreams.RemoveAt(oldIndex);
-                    _displayStreams.Insert(newIndex + oldIndex < newIndex ? -1 : 0, item);
-                    OnChangedDisplayStreams(new NotifyCollectionChangedEventArgs(
-                        NotifyCollectionChangedAction.Move, item, newIndex, oldIndex));
-                }
-            }
-        }
-        void Circles_FullLoaded(object sender, EventArgs e)
-        {
-            //TODO: 現状ではサークル数が増えていた場合に対処できてない
-            foreach(var item in _account.Circles.Items)
-            {
-                foreach (var itemA in CircleStreams)
-                {
-                    if (itemA.Poster.Id == item.Id)
-                        itemA.Poster = item;
-                    if (itemA.Reader.Id == item.Id)
-                        itemA.Reader = item;
-                }
-                foreach (var itemA in DisplayStreams)
-                {
-                    if (itemA.Poster.Id == item.Id)
-                        itemA.Poster = item;
-                    if (itemA.Reader.Id == item.Id)
-                        itemA.Reader = item;
-                }
-            }
+            
         }
 
-        public event EventHandler Initialized;
-        protected virtual void OnInitialized(EventArgs e)
-        {
-            if (Initialized != null)
-                Initialized(this, e);
-        }
         public event EventHandler ChangedSelectedCircleIndex;
-        protected async virtual void OnChangedSelectedCircleIndex(EventArgs e)
+        protected virtual void OnChangedSelectedCircleIndex(EventArgs e)
         {
-            if (_displayStreams.Count >= 0 && _selectedCircleIndex >= 0)
+            if (_circleStreams.Count >= 0 && _selectedCircleIndex >= 0)
             {
-                var selectedStream = _displayStreams[_selectedCircleIndex];
-                if (_account.Circles.IsFullLoaded == false && selectedStream.Reader.Id != "anyone")
-                    await _account.Circles.FullLoad().ConfigureAwait(false);
+                var selectedStream = _circleStreams[_selectedCircleIndex];
+                selectedStream.Connect();
                 if (selectedStream.IsRefreshed == false)
                     selectedStream.Refresh();
             }
@@ -158,11 +84,7 @@ namespace GPlusBrowser.Model
             if (ChangedSelectedCircleIndex != null)
                 ChangedSelectedCircleIndex(this, e);
         }
-        public event NotifyCollectionChangedEventHandler ChangedDisplayStreams;
-        protected virtual void OnChangedDisplayStreams(NotifyCollectionChangedEventArgs e)
-        {
-            if (ChangedDisplayStreams != null)
-                ChangedDisplayStreams(this, e);
-        }
     }
+    public enum StreamUpdateSeqState
+    { Unloaded, Loaded, Fail }
 }

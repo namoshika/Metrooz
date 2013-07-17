@@ -11,8 +11,8 @@ namespace GPlusBrowser.ViewModel
 
     public class CommentViewModel : ViewModelBase, IDisposable
     {
-        public CommentViewModel(Comment model, Dispatcher uiThreadDispatcher)
-            : base(uiThreadDispatcher)
+        public CommentViewModel(Comment model, AccountViewModel topLevel, Dispatcher uiThreadDispatcher)
+            : base(uiThreadDispatcher, topLevel)
         {
             _model = model;
             Id = model.CommentInfo.Id;
@@ -20,7 +20,7 @@ namespace GPlusBrowser.ViewModel
             model.Refreshed += model_Refreshed;
         }
         Comment _model;
-        Uri _ownerIconUrl;
+        ImageSource _ownerIconUrl;
         string _id;
         string _ownerName;
         string _commentContent;
@@ -63,7 +63,7 @@ namespace GPlusBrowser.ViewModel
                 OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("CommentDate"));
             }
         }
-        public Uri OwnerIconUrl
+        public ImageSource OwnerIconUrl
         {
             get { return _ownerIconUrl; }
             set
@@ -98,12 +98,11 @@ namespace GPlusBrowser.ViewModel
                 ? _model.CommentInfo.CommentDate.ToString("HH:mm")
                 : _model.CommentInfo.CommentDate.ToString("yyyy/MM/dd");
             OwnerName = _model.CommentInfo.Owner.Name;
-            OwnerIconUrl = new Uri(_model.CommentInfo.Owner.IconImageUrlText
-                .Replace("$SIZE_SEGMENT", "s25-c-k"));
+            //OwnerIconUrl = await DataCacheDictionary.DownloadImage(new Uri(_model.CommentInfo.Owner.IconImageUrlText
+            //    .Replace("$SIZE_SEGMENT", "s25-c-k")));
 
-            UiThreadDispatcher.InvokeAsync(
-                () => PostContentInline = ActivityViewModel
-                    .PrivateConvertInlines(_model.CommentInfo.ParsedContent));
+            var element = _model.CommentInfo.ParsedContent;
+            UiThreadDispatcher.InvokeAsync(() => PostContentInline = ActivityViewModel.PrivateConvertInlines(element));
         }
     }
 }

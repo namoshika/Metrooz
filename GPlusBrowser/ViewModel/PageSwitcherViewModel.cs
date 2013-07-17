@@ -13,70 +13,52 @@ namespace GPlusBrowser.ViewModel
     public class PageSwitcherViewModel : ViewModelBase, IDisposable
     {
         public PageSwitcherViewModel(AccountManager accountManagerModel, Dispatcher uiThreadDispatcher)
-            : base(uiThreadDispatcher)
+            : base(uiThreadDispatcher, null)
         {
             _accountManagerModel = accountManagerModel;
             _accountManagerModel.ChangedAccounts += _accountManagerModel_ChangedAccounts;
             _accountManagerModel.ChangedSelectedAccountIndex += _accountManagerModel_ChangedSelectedAccountIndex;
-            _selectedSubPageIndex = -1;
-            Loginer = new LoginerViewModel(uiThreadDispatcher);
-            MainPages = new ObservableCollection<object>();
-            MainPages.Add(new AccountManagerViewModel(accountManagerModel, Loginer, uiThreadDispatcher));
-            SubPages = new ObservableCollection<object>();
+            _selectedMainPageIndex = -1;
+            IsAccountSelectorMode = true;
+            AccountSelector = new AccountSelectorViewModel(accountManagerModel, this, uiThreadDispatcher);
+            Pages = new ObservableCollection<AccountViewModel>();
         }
         AccountManager _accountManagerModel;
-        bool _isShowSidePanel;
-        int _selectedMainPageIndex, _selectedSubPageIndex, _errorMessageTextBoxGridColumnSpan;
+        bool _isAccountSelectorMode;
+        int _selectedMainPageIndex;
 
-        public bool IsShowSidePanel
-        {
-            get { return _isShowSidePanel; }
-            set
-            {
-                _isShowSidePanel = value;
-                ErrorMessageTextBoxGridColumnSpan = value ? 2 : 1;
-                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("IsShowSidePanel"));
-            }
-        }
-        public int ErrorMessageTextBoxGridColumnSpan
-        {
-            get { return _errorMessageTextBoxGridColumnSpan; }
-            set
-            {
-                if (_errorMessageTextBoxGridColumnSpan == value)
-                    return;
-                _errorMessageTextBoxGridColumnSpan = value;
-                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("ErrorMessageTextBoxGridColumnSpan"));
-            }
-        }
-        public int SelectedMainPageIndex
+        public int SelectedPageIndex
         {
             get { return _selectedMainPageIndex; }
             set
             {
                 if (_selectedMainPageIndex == value)
                     return;
+                IsAccountSelectorMode = value < 0;
                 _selectedMainPageIndex = value;
-                _accountManagerModel.SelectedAccountIndex = _selectedMainPageIndex - 1;
-                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("SelectedMainPageIndex"));
+                _accountManagerModel.SelectedAccountIndex = _selectedMainPageIndex;
+                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("SelectedPageIndex"));
             }
         }
-        public int SelectedSubPageIndex
+        public bool IsAccountSelectorMode
         {
-            get { return _selectedSubPageIndex; }
+            get { return _isAccountSelectorMode; }
             set
             {
-                if (_selectedSubPageIndex == value)
+                if (_isAccountSelectorMode == value)
                     return;
-                _selectedSubPageIndex = value;
-                _accountManagerModel.SelectedAccountIndex = _selectedMainPageIndex - 1;
-                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("SelectedSubPageIndex"));
+                _isAccountSelectorMode = value;
+                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("IsAccountSelectorMode"));
             }
         }
-        public LoginerViewModel Loginer { get; set; }
-        public ObservableCollection<object> MainPages { get; set; }
-        public ObservableCollection<object> SubPages { get; set; }
+        public AccountSelectorViewModel AccountSelector { get; set; }
+        public ObservableCollection<AccountViewModel> Pages { get; set; }
 
+        public void Dispose()
+        {
+            foreach (AccountViewModel item in Pages.Skip(1))
+                item.Dispose();
+        }
         void _accountManagerModel_ChangedAccounts(object sender, NotifyCollectionChangedEventArgs e)
         {
             switch (e.Action)
@@ -84,42 +66,24 @@ namespace GPlusBrowser.ViewModel
                 case NotifyCollectionChangedAction.Add:
                     for (var i = 0; i < e.NewItems.Count; i++)
                     {
-                        MainPages.InsertAsync(e.NewStartingIndex + i + 1, new AccountViewModel((Account)e.NewItems[i], _accountManagerModel, Loginer, UiThreadDispatcher), UiThreadDispatcher);
-                        SubPages.InsertAsync(e.NewStartingIndex + i, new NotificationManagerViewModel(((Account)e.NewItems[i]).Notification, UiThreadDispatcher), UiThreadDispatcher);
+                        var accountModel = (Account)e.NewItems[i];
+                        var account = new AccountViewModel(accountModel, _accountManagerModel, UiThreadDispatcher);
+                        Pages.InsertAsync(e.NewStartingIndex + i, account, UiThreadDispatcher);
                     }
                     break;
                 case NotifyCollectionChangedAction.Remove:
                     for (var i = 0; i < e.OldItems.Count; i++)
-                    {
-                        MainPages.RemoveAtAsync(e.OldStartingIndex + 1, UiThreadDispatcher);
-                        SubPages.RemoveAtAsync(e.OldStartingIndex, UiThreadDispatcher);
-                    }
+                        Pages.RemoveAtAsync(e.OldStartingIndex, UiThreadDispatcher);
                     break;
                 case NotifyCollectionChangedAction.Reset:
-                    var accountManager = MainPages.First();
-                    MainPages.Clear();
-                    MainPages.AddAsync(accountManager, UiThreadDispatcher);
-                    SelectedSubPageIndex = -1;
+                    var accountManager = Pages.First();
+                    Pages.Clear();
+                    Pages.AddAsync(accountManager, UiThreadDispatcher);
+                    SelectedPageIndex = -1;
                     break;
             }
         }
         void _accountManagerModel_ChangedSelectedAccountIndex(object sender, EventArgs e)
-        {
-            UiThreadDispatcher.BeginInvoke((Action)delegate()
-            {
-                if (SelectedMainPageIndex == _accountManagerModel.SelectedAccountIndex + 1)
-                    return;
-                SelectedMainPageIndex = _accountManagerModel.SelectedAccountIndex + 1;
-                SelectedSubPageIndex = _accountManagerModel.SelectedAccountIndex;
-            },
-            _accountManagerModel.SelectedAccountIndex < MainPages.Count - 1
-                ? DispatcherPriority.DataBind : DispatcherPriority.ContextIdle);
-        }
-
-        public void Dispose()
-        {
-            foreach (AccountViewModel item in MainPages.Skip(1))
-                item.Dispose();
-        }
+        { SelectedPageIndex = _accountManagerModel.SelectedAccountIndex; }
     }
 }

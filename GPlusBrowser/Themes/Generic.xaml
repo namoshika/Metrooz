@@ -94,15 +94,14 @@
                                     </ControlTemplate>
                                 </ToggleButton.Template>
                             </ToggleButton>
-                            <localCtrl:ExListBox x:Name="itemContainer" Grid.Row="1" Margin="0"
-                                                 IsEnableAnimation="{TemplateBinding IsEnableAnimation}"
+                            <!--<ListBox x:Name="itemContainer" Grid.Row="1" Margin="0"
                                                  ItemsSource="{TemplateBinding ItemsSource}">
-                                <localCtrl:ExListBox.ItemsPanel>
+                                <ListBox.ItemsPanel>
                                     <ItemsPanelTemplate>
                                         <StackPanel VerticalAlignment="Bottom" HorizontalAlignment="Stretch" IsItemsHost="True" />
                                     </ItemsPanelTemplate>
-                                </localCtrl:ExListBox.ItemsPanel>
-                            </localCtrl:ExListBox>
+                                </ListBox.ItemsPanel>
+                            </ListBox>-->
                             <Grid Grid.Row="2" Margin="0,10,0,8">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
@@ -227,7 +226,11 @@
         <Setter Property="ContentTemplate">
             <Setter.Value>
                 <DataTemplate>
-                    <Image Stretch="Uniform" Source="{Binding }" />
+                    <Image Stretch="Uniform" Source="{Binding }">
+                        <Image.CacheMode>
+                            <BitmapCache RenderAtScale="1.0" SnapsToDevicePixels="True" />
+                        </Image.CacheMode>
+                    </Image>
                 </DataTemplate>
             </Setter.Value>
         </Setter>

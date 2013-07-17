@@ -10,7 +10,12 @@ namespace GPlusBrowser.ViewModel
 {
     public abstract class ViewModelBase : System.ComponentModel.INotifyPropertyChanged
     {
-        public ViewModelBase(Dispatcher uiThreadDispatcher) { UiThreadDispatcher = uiThreadDispatcher; }
+        public ViewModelBase(Dispatcher uiThreadDispatcher, AccountViewModel topLevel)
+        {
+            UiThreadDispatcher = uiThreadDispatcher;
+            TopLevel = topLevel;
+        }
+        public AccountViewModel TopLevel { get; private set; }
         protected Dispatcher UiThreadDispatcher { get; private set; }
 
         public event System.ComponentModel.PropertyChangedEventHandler PropertyChanged;

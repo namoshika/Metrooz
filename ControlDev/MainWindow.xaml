@@ -1,0 +1,19 @@
+﻿<Window x:Class="ControlDev.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:GPlusBrowser.Controls"
+        xmlns:localCtrl="clr-namespace:GPlusBrowser.Controls"
+        xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+        xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions"
+        Title="MainWindow" Height="350" Width="525">
+    <!--<Grid>
+        <local:TestControl Height="3000">Test</local:TestControl>
+    </Grid>-->
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Left">
+            <Button Click="Button_Click">CCC</Button>
+            <Button Click="Button_Click_1">DDD</Button>
+        </StackPanel>
+        <local:ExpandableListView x:Name="aaa" ItemsSource="{Binding source}" VirtualizingPanel.IsVirtualizing="False" />
+    </DockPanel>
+</Window>

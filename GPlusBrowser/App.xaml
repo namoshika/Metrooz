@@ -40,6 +40,106 @@
         <ControlTemplate x:Key="iconButtonTemplate" TargetType="{x:Type Button}">
             <ContentPresenter />
         </ControlTemplate>
+        <DataTemplate DataType="{x:Type localVm:AccountViewModel}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid Grid.Column="0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="55" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="55" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Grid.ColumnSpan="2" Width="200" Height="55" VerticalAlignment="Top" HorizontalAlignment="Left">
+                        <Grid.OpacityMask>
+                            <RadialGradientBrush Center="0,0" RadiusX="1" RadiusY="1" GradientOrigin="0,0">
+                                <GradientStop Offset="0" Color="#a0000000" />
+                                <GradientStop Offset="1" Color="#00000000" />
+                            </RadialGradientBrush>
+                        </Grid.OpacityMask>
+                        <Image Width="200" Height="55" VerticalAlignment="Top" HorizontalAlignment="Left" Stretch="UniformToFill" Source="{Binding AccountIconUrl}" />
+                    </Grid>
+                    <Button Grid.Row="0" Grid.Column="0" Width="30" Height="30" Margin="10" Template="{StaticResource iconButtonTemplate}" Command="{Binding BackToAccountManagerCommand}">
+                        <Image Source="/Resources/back.png" />
+                    </Button>
+                    <Grid Grid.Row="0" Grid.Column="1">
+                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Left" Orientation="Horizontal">
+                            <Image Width="35" Height="35" Margin="0,0,10,0" VerticalAlignment="Center" Source="{Binding AccountIconUrl}" />
+                            <TextBlock FontSize="21" Margin="0,0,10,0" VerticalAlignment="Center">Stream/</TextBlock>
+                            <ComboBox MinWidth="150" VerticalAlignment="Center" FontSize="16" SelectedIndex="{Binding Stream.SelectedCircleIndex}" DisplayMemberPath="CircleName" ItemsSource="{Binding Stream.DisplayStreams}" />
+                        </StackPanel>
+                    </Grid>
+                    <localCtrl:ItemSelecter Grid.Row="1" Grid.Column="1" ItemsSource="{Binding Stream.DisplayStreams, Mode=OneWay}" SelectedIndex="{Binding Stream.SelectedCircleIndex}" />
+                    <Grid Grid.ColumnSpan="2" Grid.RowSpan="2" Visibility="{Binding Loginer.IsShowLoginPanel, Converter={StaticResource booleanToVisibilityConverter}}">
+                        <Rectangle Fill="White" Opacity="0.5" />
+                        <ContentPresenter Height="280" Content="{Binding Loginer}" />
+                    </Grid>
+                </Grid>
+                <ContentPresenter Grid.Column="1" Content="{Binding Notification}" />
+            </Grid>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type localVm:AccountSelectorViewModel}">
+            <Grid Grid.ColumnSpan="2" Background="White">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="55" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <TextBlock Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="20,5,5,0" FontSize="21">Account</TextBlock>
+                <StackPanel Grid.Row="1">
+                    <ItemsControl ItemsSource="{Binding Accounts}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel IsItemsHost="True" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type localVm:AccountViewModel}">
+                                <StackPanel Margin="20,0,15,15">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Border Width="35" Height="35" BorderBrush="White" Background="White" BorderThickness="0">
+                                            <Image Margin="0" HorizontalAlignment="Left" VerticalAlignment="Top" Source="{Binding AccountIconUrl}" />
+                                            <Border.Effect>
+                                                <DropShadowEffect Color="Black" Direction="315" Opacity="0.3" BlurRadius="5" ShadowDepth="0" />
+                                            </Border.Effect>
+                                        </Border>
+                                        <TextBlock Padding="0" Margin="10,0,0,0" VerticalAlignment="Center" Text="{Binding UserName}" FontSize="18" />
+                                    </StackPanel>
+                                    <WrapPanel Margin="15,10,0,0">
+                                        <Button Padding="8,5,8,5" Command="{Binding OpenStreamPanelCommand}">ストリームを開く</Button>
+                                    </WrapPanel>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <Button Margin="0,0,50,0" Command="{Binding Loginer.OpenAddAccountPanelCommand}">
+                        <Button.Template>
+                            <ControlTemplate TargetType="{x:Type Button}">
+                                <StackPanel Margin="20,10,15,15" HorizontalAlignment="Left" Orientation="Horizontal">
+                                    <Image Height="35" Width="35" Source="/Resources/add.png" />
+                                    <TextBlock Name="PART_Label" Padding="0" Margin="10,0,0,0" VerticalAlignment="Center" FontSize="18">別のアカウントを登録する。</TextBlock>
+                                </StackPanel>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Trigger.Setters>
+                                            <Setter Property="TextDecorations" TargetName="PART_Label" Value="Underline" />
+                                        </Trigger.Setters>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                </StackPanel>
+                <Grid Grid.RowSpan="2" Visibility="{Binding Path=Loginer.IsShowLoginPanel, Converter={StaticResource booleanToVisibilityConverter}}">
+                    <Rectangle Fill="White" Opacity="0.5" />
+                    <ContentPresenter Height="280" Content="{Binding Loginer}" />
+                </Grid>
+            </Grid>
+        </DataTemplate>
         <DataTemplate DataType="{x:Type localVm:LoginerViewModel}">
             <DataTemplate.Resources>
                 <localVm:LoginSequenceStatusToButtonText x:Key="loginSequenceStatusToButtonText" />
@@ -83,7 +183,7 @@
                         <ColumnDefinition Width="auto" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
-                    <Image Grid.Column="0" Source="{Binding ThumnailUrl}" MaxWidth="150" MaxHeight="150" Stretch="Uniform" VerticalAlignment="Top" Margin="0,8,8,0" Visibility="{Binding ExistThumnailUrl, Converter={StaticResource booleanToVisibilityConverter}}" />
+                    <!--<Image Grid.Column="0" Source="{Binding ThumnailUrl}" MaxWidth="150" MaxHeight="150" Stretch="Uniform" VerticalAlignment="Top" Margin="0,8,8,0" Visibility="{Binding ExistThumnailUrl, Converter={StaticResource booleanToVisibilityConverter}}" />-->
                     <TextBlock Grid.Column="1" Margin="0,8,0,0" TextWrapping="Wrap">
                                             <Hyperlink>
                                                 <i:Interaction.Triggers>
@@ -100,9 +200,9 @@
             </Border>
         </DataTemplate>
         <DataTemplate DataType="{x:Type localVm:AttachedAlbumViewModel}">
-            <localCtrl:ImageBox MaxHeight="300" ItemsSource="{Binding SmallImageUrlList}" Content="{Binding SelectedImageUrl}" />
+            <localCtrl:ImageBox Height="300" ItemsSource="{Binding ThumbnailImages}" Content="{Binding SelectedImage}" />
         </DataTemplate>
-        <DataTemplate DataType="{x:Type localVm:CommentViewModel}">
+        <!--<DataTemplate DataType="{x:Type localVm:CommentViewModel}">
             <Border BorderBrush="LightGray" BorderThickness="0,1,0,0" Padding="5">
                 <DockPanel Margin="0" Focusable="False">
                     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0">
@@ -120,7 +220,7 @@
                     <TextBlock Margin="0,3,0,3" local:InlineBehavior.Inline="{Binding PostContentInline}" TextWrapping="Wrap" />
                 </DockPanel>
             </Border>
-        </DataTemplate>
+        </DataTemplate>-->
         <DataTemplate DataType="{x:Type localVm:ActivityViewModel}">
             <Border BorderBrush="LightGray" BorderThickness="0,1,0,0" Padding="5">
                 <DockPanel Margin="0" Focusable="False">
@@ -155,29 +255,28 @@
                     </StackPanel>
                     <TextBlock DockPanel.Dock="Top" Margin="0,3,0,3" local:InlineBehavior.Inline="{Binding PostContentInline}" TextWrapping="Wrap" />
                     <ContentPresenter DockPanel.Dock="Top" Content="{Binding AttachedContent}" />
-                    <localCtrl:CommentListBox
+                    <!--<localCtrl:CommentListBox
                             PostText="{Binding PostCommentTextA, UpdateSourceTrigger=PropertyChanged, Mode=OneWayToSource}" PostCommand="{Binding PostCommentCommand}"
                             ItemsSource="{Binding Comments}" Margin="15,0,0,0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
-                            IsEnableAnimation="{Binding (localCtrl:ExTreeView.IsEnableAnimation), Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type TreeViewItem}}}"
                             IsWritable="{Binding IsWritableA, Mode=TwoWay}" IsWriteMode="{Binding IsWriteModeA, Mode=TwoWay}">
-                    </localCtrl:CommentListBox>
+                    </localCtrl:CommentListBox>-->
                 </DockPanel>
             </Border>
         </DataTemplate>
         <DataTemplate DataType="{x:Type localVm:StreamViewModel}">
-            <localCtrl:ExTreeView
+            <TreeView
                         Focusable="False" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                        ScrollViewer.VerticalScrollBarVisibility="Visible"
+                        VirtualizingPanel.IsVirtualizing="True"
+                        VirtualizingPanel.VirtualizationMode="Recycling"
                         BorderThickness="0" ItemsSource="{Binding Activities}">
-                <localCtrl:ExTreeView.ItemContainerStyle>
+                <TreeView.ItemContainerStyle>
                     <Style TargetType="TreeViewItem">
                         <Setter Property="Template" Value="{StaticResource postItemTemplate}" />
                         <Setter Property="HorizontalContentAlignment" Value="Stretch" />
                     </Style>
-                </localCtrl:ExTreeView.ItemContainerStyle>
-            </localCtrl:ExTreeView>
+                </TreeView.ItemContainerStyle>
+            </TreeView>
         </DataTemplate>
-
         <DataTemplate DataType="{x:Type localVm:NotificationManagerViewModel}">
             <Grid Margin="10,0,10,0">
                 <Grid.RowDefinitions>
@@ -201,13 +300,13 @@
                 <StackPanel Grid.Row="0" VerticalAlignment="Top" HorizontalAlignment="Right" Orientation="Horizontal" Margin="10,0,10,0">
                     <Button Width="35" Height="35">Pst</Button>
                 </StackPanel>
-                <localCtrl:ExTreeView
+                <TreeView
                                 Background="#fff0f0f0" Focusable="False" Grid.Row="1"
                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                 ScrollViewer.VerticalScrollBarVisibility="Visible"
                                 BorderThickness="0" Padding="5,0,0,0"
                                 ItemsSource="{Binding Items}">
-                    <localCtrl:ExTreeView.Resources>
+                    <TreeView.Resources>
                         <DataTemplate DataType="{x:Type localVm:NotificationWithActivityViewModel}">
                             <StackPanel>
                                 <local:DataPiping.DataPipes>
@@ -258,13 +357,13 @@
                                 </StackPanel>
                             </Border>
                         </DataTemplate>
-                    </localCtrl:ExTreeView.Resources>
-                    <localCtrl:ExTreeView.ItemContainerStyle>
+                    </TreeView.Resources>
+                    <TreeView.ItemContainerStyle>
                         <Style TargetType="TreeViewItem">
                             <Setter Property="Template" Value="{StaticResource postItemTemplate}" />
                             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
                         </Style>
-                    </localCtrl:ExTreeView.ItemContainerStyle>
+                    </TreeView.ItemContainerStyle>
                     <local:DataPiping.DataPipes>
                         <local:DataPipeCollection>
                             <local:DataPipe
@@ -275,7 +374,7 @@
                                         Source="{Binding ScrollOffset, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type localCtrl:ExListBox}}}" />
                         </local:DataPipeCollection>
                     </local:DataPiping.DataPipes>
-                </localCtrl:ExTreeView>
+                </TreeView>
             </Grid>
         </DataTemplate>
     </Application.Resources>

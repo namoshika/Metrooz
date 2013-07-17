@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using SunokoLibrary.GooglePlus;
+using SunokoLibrary.Web.GooglePlus;
 
 namespace GPlusBrowser.Model
 {

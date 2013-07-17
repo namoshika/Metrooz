@@ -6,9 +6,10 @@
         xmlns:local="clr-namespace:GPlusBrowser"
         xmlns:localVm="clr-namespace:GPlusBrowser.ViewModel"
         xmlns:localCtrl="clr-namespace:GPlusBrowser.Controls"
-        Title="GPlusBrowser" Height="650" Width="550" Name="mainWindow">
+        Title="GPlusBrowser" Height="650" Width="900" Name="mainWindow">
     <Grid HorizontalAlignment="Stretch">
         <Grid.Resources>
+            <BooleanToVisibilityConverter x:Key="booleanToVisibilityConverter" />
             <Storyboard x:Key="openSidePanelStoryborard">
                 <BooleanAnimationUsingKeyFrames Storyboard.TargetName="mainWindow" Storyboard.TargetProperty="NowResizeAnimation" BeginTime="0:0:0">
                     <DiscreteBooleanKeyFrame Value="True" KeyTime="0:0:0" />
@@ -30,115 +31,10 @@
                     To="550" Duration="0:0:1" AccelerationRatio="0.01" DecelerationRatio="0.99" />
             </Storyboard>
         </Grid.Resources>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="auto" />
-            <ColumnDefinition Width="auto" />
-        </Grid.ColumnDefinitions>
-        <localCtrl:ItemSelecter x:Name="mainPane" Grid.Column="0" ItemsSource="{Binding MainPages}" SelectedIndex="{Binding SelectedMainPageIndex}">
-            <localCtrl:ItemSelecter.Resources>
-                <DataTemplate DataType="{x:Type localVm:AccountManagerViewModel}">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="55" />
-                            <RowDefinition Height="*" />
-                        </Grid.RowDefinitions>
-                        <TextBlock Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="20,5,5,0" FontSize="21">Account</TextBlock>
-                        <StackPanel Grid.Row="1">
-                            <ItemsControl ItemsSource="{Binding Accounts}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <StackPanel IsItemsHost="True" />
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate DataType="{x:Type localVm:AccountPanelViewModel}">
-                                        <StackPanel Margin="20,0,15,15">
-                                            <StackPanel Orientation="Horizontal">
-                                                <Border Width="35" Height="35" BorderBrush="White" Background="White" BorderThickness="0">
-                                                    <Image Margin="0" HorizontalAlignment="Left" VerticalAlignment="Top" Source="{Binding UserIconUrl}" />
-                                                    <Border.Effect>
-                                                        <DropShadowEffect Color="Black" Direction="315" Opacity="0.3" BlurRadius="5" ShadowDepth="0" />
-                                                    </Border.Effect>
-                                                </Border>
-                                                <TextBlock Padding="0" Margin="10,0,0,0" VerticalAlignment="Center" Text="{Binding UserName}" FontSize="18" />
-                                            </StackPanel>
-                                            <WrapPanel Margin="15,10,0,0">
-                                                <Button Padding="8,5,8,5" Command="{Binding OpenStreamPanelCommand}">ストリームを開く</Button>
-                                            </WrapPanel>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                            <Button Margin="0,0,50,0" Command="{Binding OpenAddAccountPanelCommand}">
-                                <Button.Template>
-                                    <ControlTemplate TargetType="{x:Type Button}">
-                                        <StackPanel Margin="20,10,15,15" HorizontalAlignment="Left" Orientation="Horizontal">
-                                            <Image Height="35" Width="35" Source="/Resources/add.png" />
-                                            <TextBlock Name="PART_Label" Padding="0" Margin="10,0,0,0" VerticalAlignment="Center" FontSize="18">別のアカウントを登録する。</TextBlock>
-                                        </StackPanel>
-                                        <ControlTemplate.Triggers>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Trigger.Setters>
-                                                    <Setter Property="TextDecorations" TargetName="PART_Label" Value="Underline" />
-                                                </Trigger.Setters>
-                                            </Trigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate>
-                                </Button.Template>
-                            </Button>
-                        </StackPanel>
-                    </Grid>
-                </DataTemplate>
-                <DataTemplate DataType="{x:Type localVm:AccountViewModel}">
-                    <Grid Grid.Column="0">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="55" />
-                            <RowDefinition Height="*" />
-                        </Grid.RowDefinitions>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="55" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <Grid Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Grid.ColumnSpan="2" Width="200" Height="55" VerticalAlignment="Top" HorizontalAlignment="Left">
-                            <Grid.OpacityMask>
-                                <RadialGradientBrush Center="0,0" RadiusX="1" RadiusY="1" GradientOrigin="0,0">
-                                    <GradientStop Offset="0" Color="#a0000000" />
-                                    <GradientStop Offset="1" Color="#00000000" />
-                                </RadialGradientBrush>
-                            </Grid.OpacityMask>
-                            <Image Width="200" Height="55" VerticalAlignment="Top" HorizontalAlignment="Left" Stretch="UniformToFill" Source="{Binding AccountIconUrl}" />
-                        </Grid>
-                        <Button Grid.Row="0" Grid.Column="0" Width="30" Height="30" Margin="10" Template="{StaticResource iconButtonTemplate}" Command="{Binding BackToAccountManagerCommand}">
-                            <Image Source="/Resources/back.png" />
-                        </Button>
-                        <Grid Grid.Row="0" Grid.Column="1">
-                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Left" Orientation="Horizontal">
-                                <Image Width="35" Height="35" Margin="0,0,10,0" VerticalAlignment="Center" Source="{Binding AccountIconUrl}" />
-                                <TextBlock FontSize="21" Margin="0,0,10,0" VerticalAlignment="Center">Stream/</TextBlock>
-                                <ComboBox MinWidth="150" VerticalAlignment="Center" FontSize="16" SelectedIndex="{Binding Stream.SelectedCircleIndex}" DisplayMemberPath="CircleName" ItemsSource="{Binding Stream.DisplayStreams}" />
-                            </StackPanel>
-                        </Grid>
-                        <localCtrl:ItemSelecter Grid.Row="1" Grid.Column="1" ItemsSource="{Binding Stream.DisplayStreams, Mode=OneWay}" SelectedIndex="{Binding Stream.SelectedCircleIndex}" />
-                    </Grid>
-                </DataTemplate>
-            </localCtrl:ItemSelecter.Resources>
-        </localCtrl:ItemSelecter>
-        <localCtrl:ItemSelecter x:Name="sidePane" Grid.Column="1" Width="400" ItemsSource="{Binding SubPages}" SelectedIndex="{Binding SelectedSubPageIndex}">
-            <localCtrl:ItemSelecter.Resources>
-                
-            </localCtrl:ItemSelecter.Resources>
-            <i:Interaction.Triggers>
-                <ei:DataTrigger Binding="{Binding IsShowSidePanel}" Value="True">
-                    <ei:ControlStoryboardAction Storyboard="{StaticResource closeSidePanelStoryborard}" ControlStoryboardOption="Stop" />
-                    <ei:ControlStoryboardAction Storyboard="{StaticResource openSidePanelStoryborard}" ControlStoryboardOption="Play" />
-                </ei:DataTrigger>
-                <ei:DataTrigger Binding="{Binding IsShowSidePanel}" Value="False">
-                    <ei:ControlStoryboardAction Storyboard="{StaticResource openSidePanelStoryborard}" ControlStoryboardOption="Stop" />
-                    <ei:ControlStoryboardAction Storyboard="{StaticResource closeSidePanelStoryborard}" ControlStoryboardOption="Play" />
-                </ei:DataTrigger>
-            </i:Interaction.Triggers>
-        </localCtrl:ItemSelecter>
-        <ToggleButton Grid.Column="0" Height="35" Width="35" VerticalAlignment="Bottom" HorizontalAlignment="Left" Margin="0,0,0,8" IsChecked="{Binding IsShowSidePanel}">FlMd</ToggleButton>
+        <localCtrl:ItemSelecter x:Name="mainPane" ItemsSource="{Binding Pages}" SelectedIndex="{Binding SelectedPageIndex}" />
+        <ContentPresenter Visibility="{Binding DataContext.IsAccountSelectorMode, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}, Converter={StaticResource booleanToVisibilityConverter}}" Content="{Binding AccountSelector}" />
+        
+        <!--<ToggleButton Grid.Column="0" Height="35" Width="35" VerticalAlignment="Bottom" HorizontalAlignment="Left" Margin="0,0,0,8" IsChecked="{Binding IsShowSidePanel}">FlMd</ToggleButton>-->
         <TextBlock Grid.ColumnSpan="{Binding ErrorMessageTextBoxGridColumnSpan}" VerticalAlignment="Bottom" HorizontalAlignment="Center" Background="Red" Foreground="White" TextAlignment="Center" Padding="20,5,20,5" Margin="0,0,0,20" FontSize="13"
                    Visibility="Collapsed">
             <i:Interaction.Triggers>
@@ -156,9 +52,5 @@
             </Hyperlink>
             <Run Text=")" />
         </TextBlock>
-        <Grid Grid.ColumnSpan="{Binding ErrorMessageTextBoxGridColumnSpan}" Visibility="{Binding Loginer.IsShowLoginPanel, Converter={StaticResource booleanToVisibilityConverter}}">
-            <Rectangle Fill="White" Opacity="0.5" />
-            <ContentPresenter Height="280" Content="{Binding Loginer}" />
-        </Grid>
     </Grid>
 </Window>

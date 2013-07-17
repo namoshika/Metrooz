@@ -6,7 +6,8 @@ using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Text;
-using SunokoLibrary.GooglePlus;
+using SunokoLibrary.Web.GooglePlus;
+using SunokoLibrary.Web.GooglePlus.Primitive;
 
 namespace GPlusBrowser.Model
 {
@@ -36,7 +37,7 @@ namespace GPlusBrowser.Model
                 if (_notificationModel != null)
                     _notificationModel.Updated -= _notificationModel_Updated;
 
-                _notificationModel = _account.GooglePlusClient.Notification
+                _notificationModel = _account.PlusClient.Notification
                     .GetNotificationContainer(NotificationsFilter.All);
                 _notificationModel.Updated += _notificationModel_Updated;
                 Connect();
@@ -48,7 +49,7 @@ namespace GPlusBrowser.Model
             IsError = false;
             OnChangedIsError(new EventArgs());
             try
-            { await _notificationModel.UpdateAsync(false); }
+            { await _notificationModel.UpdateAsync(false).ConfigureAwait(false); }
             catch (FailToOperationException)
             {
                 IsError = true;
@@ -61,8 +62,9 @@ namespace GPlusBrowser.Model
             {
                 if (Items.Count == 0)
                     return;
-                _account.GooglePlusClient.Notification
-                    .UpdateLastReadTimeAsync(Items.First().LatestNoticeDate);
+                _account.PlusClient.Notification
+                    .UpdateLastReadTimeAsync(Items.First().LatestNoticeDate)
+                    .ConfigureAwait(false);
             }
         }
         public void Connect()
@@ -70,7 +72,7 @@ namespace GPlusBrowser.Model
             if (_notificationTrigger != null)
                 _notificationTrigger.Dispose();
 
-            _notificationTrigger = _account.GooglePlusClient.Activity.GetStream()
+            _notificationTrigger = _account.PlusClient.Activity.GetStream()
                 .OfType<NotificationSignal>()
                 .Throttle(TimeSpan.FromMilliseconds(3000))
                 .Subscribe(signal => Update());

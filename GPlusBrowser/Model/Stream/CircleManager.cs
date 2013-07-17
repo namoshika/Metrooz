@@ -5,7 +5,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using SunokoLibrary.GooglePlus;
+using SunokoLibrary.Web.GooglePlus;
 
 namespace GPlusBrowser.Model
 {
@@ -14,64 +14,58 @@ namespace GPlusBrowser.Model
         public CircleManager(Account mainWindow)
         {
             _accountModel = mainWindow;
-            _items = new List<CircleInfo>();
+            _items = new ObservableCollection<CircleInfo>();
+            Items = new ReadOnlyObservableCollection<CircleInfo>(_items);
+            UpdateStatus = CircleUpdateSeqState.Unloaded;
         }
         Account _accountModel;
-        List<CircleInfo> _items;
-        double _isFullLoaded;
-
-        public bool IsInitialized { get; private set; }
-        public bool IsFullLoaded { get { return _isFullLoaded == 1; } }
-        public ReadOnlyCollection<CircleInfo> Items { get { return _items.AsReadOnly(); } }
-
-        public async void Initialize()
+        ObservableCollection<CircleInfo> _items;
+        public CircleUpdateSeqState UpdateStatus { get; private set; }
+        public ReadOnlyObservableCollection<CircleInfo> Items { get; private set; }
+        public async Task Update(CircleUpdateLevel loadMode = CircleUpdateLevel.Loaded)
         {
             try
             {
-                await _accountModel.GooglePlusClient.Relation
-                    .UpdateCirclesAndBlockAsync(false, CircleUpdateLevel.Loaded).ConfigureAwait(false);
+                await _accountModel.PlusClient.Relation
+                    .UpdateCirclesAndBlockAsync(false, loadMode)
+                    .ConfigureAwait(false);
+
                 lock (_items)
                 {
-                    _items.Clear();
-                    _items.AddRange(_accountModel.GooglePlusClient.Relation.Circles);
+                    var idx = 0;
+                    for (; idx < _accountModel.PlusClient.Relation.Circles.Count; idx++)
+                    {
+                        //PlatformClientはサークル情報更新時にCircles.CircleInfoの同一性を保持しない
+                        //そのため、ストリームの遅延読み込みでCircleInfoの新旧の扱いに面倒な部分がある。
+                        //ここの処理でストリームの遅延読み込みに必要なCircleInfoの新旧の追跡を実現する
+                        var item = _accountModel.PlusClient.Relation.Circles[idx];
+                        var oldItem = _items.FirstOrDefault(info => info.Id == item.Id);
+                        if (oldItem != null)
+                        {
+                            //旧CircleInfoがある場合は場所替えと新しいものへの差し替えを行う
+                            _items.Move(_items.IndexOf(oldItem), idx);
+                            _items[idx] = item;
+                        }
+                        else
+                            _items.Insert(idx, item);
+                    }
+                    for (; idx < _items.Count; idx++)
+                        _items.RemoveAt(idx);
+
+                    UpdateStatus = loadMode == CircleUpdateLevel.Loaded
+                        ? CircleUpdateSeqState.Loaded : CircleUpdateSeqState.FullLoaded;
                 }
-                IsInitialized = true;
+                OnUpdated(new EventArgs());
             }
-            catch (FailToOperationException)
-            { IsInitialized = false; }
-
-            OnInitialized(new EventArgs());
+            catch (FailToUpdateException)
+            { UpdateStatus = CircleUpdateSeqState.Failed; }
         }
-        public async Task FullLoad()
-        {
-            if (System.Threading.Interlocked.CompareExchange(ref _isFullLoaded, 1, 0) == 1)
-                return;
 
-            await _accountModel.GooglePlusClient.Relation
-                .UpdateCirclesAndBlockAsync(true, CircleUpdateLevel.LoadedWithMembers).ConfigureAwait(false);
-            lock (_items)
-            {
-                _items.Clear();
-                _items.AddRange(_accountModel.GooglePlusClient.Relation.Circles);
-            }
-            OnFullLoaded(new EventArgs());
-        }
-        public void ClipCircle(CircleInfo info) { }
-        public Task<CircleInfo> CreateNew(string name) { return null; }
-        public Task<bool> Remove(CircleInfo info) { return null; }
-        public Task<bool> Move(int oldIndex, int newIndex) { return null; }
-
-        public event EventHandler Initialized;
-        protected virtual void OnInitialized(EventArgs e)
+        public event EventHandler Updated;
+        protected virtual void OnUpdated(EventArgs e)
         {
-            if (Initialized != null)
-                Initialized(this, e);
-        }
-        public event EventHandler FullLoaded;
-        protected virtual void OnFullLoaded(EventArgs e)
-        {
-            if (FullLoaded != null)
-                FullLoaded(this, e);
+            if (Updated != null)
+                Updated(this, e);
         }
         public event NotifyCollectionChangedEventHandler ChangedItemsEvent;
         protected virtual void OnChangedItemsEvent(NotifyCollectionChangedEventArgs e)
@@ -80,4 +74,6 @@ namespace GPlusBrowser.Model
                 ChangedItemsEvent(this, e);
         }
     }
+    public enum CircleUpdateSeqState
+    { Unloaded, Loaded, FullLoaded, Failed }
 }

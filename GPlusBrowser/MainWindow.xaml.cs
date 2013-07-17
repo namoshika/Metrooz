@@ -24,16 +24,18 @@ namespace GPlusBrowser
         public MainWindow()
         {
             InitializeComponent();
-            _sizeChangedTrigger = new System.Reactive.Subjects.Subject<EventPattern<EventArgs>>();
-            
+            _sizeChangedTrigger = new System.Reactive.Subjects.Subject<EventPattern<SizeChangedEventArgs>>();
             Loaded += MainWindow_Loaded;
-            Observable.FromEventPattern(this, "SizeChanged")
-                .Merge(_sizeChangedTrigger)
-                .Throttle(TimeSpan.FromMilliseconds(250))
-                .ObserveOn(Dispatcher)
-                .Subscribe(MainWindow_SizeChanged);
+            //Observable.FromEventPattern<SizeChangedEventHandler, SizeChangedEventArgs>(
+            //    conversion: args => new SizeChangedEventHandler(args),
+            //    addHandler: handler => SizeChanged += handler,
+            //    removeHandler: handler => SizeChanged -= handler)
+            //    .Merge(_sizeChangedTrigger)
+            //    .Throttle(TimeSpan.FromMilliseconds(250))
+            //    .ObserveOn(Dispatcher)
+            //    .Subscribe(MainWindow_SizeChanged);
         }
-        System.Reactive.Subjects.Subject<EventPattern<EventArgs>> _sizeChangedTrigger;
+        System.Reactive.Subjects.Subject<EventPattern<SizeChangedEventArgs>> _sizeChangedTrigger;
         Model.SettingModelManager _settingManager;
         Model.AccountManager _accountManager;
         ViewModel.PageSwitcherViewModel _accountSwitcherVM;
@@ -57,26 +59,11 @@ namespace GPlusBrowser
             DataContext = _accountSwitcherVM;
             _accountManager.Initialize();
         }
-        void MainWindow_SizeChanged(EventPattern<EventArgs> e)
-        {
-            //_accountManager.Accounts[0].Initialize();
-            //foreach (var item in _accountManager.Accounts[0].Stream.DisplayStreams)
-            //    item.Refresh();
-            var args = (SizeChangedEventArgs)e.EventArgs;
-            if (args == null || args.WidthChanged)
-            {
-                if (NowResizeAnimation)
-                    return;
-                mainPane.Width = ActualWidth
-                    - SystemParameters.ResizeFrameHorizontalBorderHeight * 4
-                    - (((ViewModel.PageSwitcherViewModel)DataContext).IsShowSidePanel ? sidePane.ActualWidth : 0.0);
-            }
-        }
 
         public static readonly DependencyProperty NowResizeAnimationProperty = DependencyProperty.Register(
             "NowResizeAnimation", typeof(bool), typeof(MainWindow),
             new UIPropertyMetadata(false, (sender, e) =>
-                ((MainWindow)sender)._sizeChangedTrigger.OnNext(new EventPattern<EventArgs>(sender, null))));
+                ((MainWindow)sender)._sizeChangedTrigger.OnNext(new EventPattern<SizeChangedEventArgs>(sender, null))));
     }
 
     public static class InlineBehavior
@@ -96,7 +83,8 @@ namespace GPlusBrowser
                     if (textBlock == null)
                         return;
                     textBlock.Inlines.Clear();
-                    textBlock.Inlines.Add((Inline)e.NewValue);
+                    if (e.NewValue != null)
+                        textBlock.Inlines.Add((Inline)e.NewValue);
                 }));
 
 

@@ -27,6 +27,7 @@ namespace GPlusBrowser
             _accountSwitcherVM = new ViewModel.PageSwitcherViewModel(_accountManager, Dispatcher);
             _notificationControl = new Controls.NotificationControl();
             Exit += App_Exit;
+            App.Current.ShutdownMode = System.Windows.ShutdownMode.OnExplicitShutdown;
 
             _accountManager.Initialize();
 
@@ -85,6 +86,7 @@ namespace GPlusBrowser
             DataCacheDictionary.Clear();
             _accountSwitcherVM.Dispose();
             _accountManager.Dispose();
+            _trayIcon.Dispose();
         }
     }
 }

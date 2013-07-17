@@ -13,8 +13,8 @@ namespace GPlusBrowser.ViewModel
 
     public class StreamItemViewModel : ViewModelBase
     {
-        public StreamItemViewModel(StreamManager streamManagerModel, int targetStreamIndex, Dispatcher uiThreadDispatcher)
-            : base(uiThreadDispatcher)
+        public StreamItemViewModel(StreamManager streamManagerModel, int targetStreamIndex, AccountViewModel topLevel, Dispatcher uiThreadDispatcher)
+            : base(uiThreadDispatcher, topLevel)
         {
             _targetStreamIndex = targetStreamIndex;
             _targetStreamName = streamManagerModel.CircleStreams[targetStreamIndex].Name;

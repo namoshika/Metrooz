@@ -76,9 +76,9 @@ namespace GPlusBrowser.Controls
         public override void OnApplyTemplate()
         {
             base.OnApplyTemplate();
-            itemContainer = (ExListBox)Template.FindName("itemContainer", this);
-            itemContainer.ItemContainerGenerator.ItemsChanged += ItemContainerGenerator_ItemsChanged;
-            itemContainer.ChangedStatus += itemContainer_ChangedStatus;
+            //itemContainer = (ExListBox)Template.FindName("itemContainer", this);
+            //itemContainer.ItemContainerGenerator.ItemsChanged += ItemContainerGenerator_ItemsChanged;
+            //itemContainer.ChangedStatus += itemContainer_ChangedStatus;
         }
         void itemContainer_ChangedStatus(object sender, EventArgs e) { itemContainer.StartExpandAnimation(IsExpand); }
         void ItemContainerGenerator_ItemsChanged(object sender, System.Windows.Controls.Primitives.ItemsChangedEventArgs e)
@@ -105,8 +105,8 @@ namespace GPlusBrowser.Controls
 
         static void Changed_IsExpand(object sender, DependencyPropertyChangedEventArgs e)
         {
-            var element = (CommentListBox)sender;
-            element.itemContainer.StartExpandAnimation((bool)e.NewValue);
+            //var element = (CommentListBox)sender;
+            //element.itemContainer.StartExpandAnimation((bool)e.NewValue);
         }
         static void Changed_IsWriteMode(object sender, DependencyPropertyChangedEventArgs e)
         {
@@ -147,33 +147,33 @@ namespace GPlusBrowser.Controls
 
         public void StartExpandAnimation(bool isExpand)
         {
-            if (isExpand)
-            {
-                if (IsEnableAnimation)
-                    BeginAnimation(
-                        ExListBox.HeightProperty,
-                        new DoubleAnimation(ActualHeight, ExtendHeight, new Duration(TimeSpan.FromMilliseconds(250)))
-                        {
-                            AccelerationRatio = 0.0,
-                            DecelerationRatio = 1.0,
-                        }, HandoffBehavior.SnapshotAndReplace);
-                else
-                    Height = ExtendHeight;
+            //if (isExpand)
+            //{
+            //    if (IsEnableAnimation)
+            //        BeginAnimation(
+            //            ExListBox.HeightProperty,
+            //            new DoubleAnimation(ActualHeight, ExtendHeight, new Duration(TimeSpan.FromMilliseconds(250)))
+            //            {
+            //                AccelerationRatio = 0.0,
+            //                DecelerationRatio = 1.0,
+            //            }, HandoffBehavior.SnapshotAndReplace);
+            //    else
+            //        Height = ExtendHeight;
 
-            }
-            else
-            {
-                if (IsEnableAnimation)
-                    BeginAnimation(
-                        CommentListBox.HeightProperty,
-                        new DoubleAnimation(ActualHeight, ViewportHeight, new Duration(TimeSpan.FromMilliseconds(250)))
-                        {
-                            AccelerationRatio = 0.1,
-                            DecelerationRatio = 0.9,
-                        }, HandoffBehavior.SnapshotAndReplace);
-                else
-                    Height = ViewportHeight;
-            }
+            //}
+            //else
+            //{
+            //    if (IsEnableAnimation)
+            //        BeginAnimation(
+            //            CommentListBox.HeightProperty,
+            //            new DoubleAnimation(ActualHeight, ViewportHeight, new Duration(TimeSpan.FromMilliseconds(250)))
+            //            {
+            //                AccelerationRatio = 0.1,
+            //                DecelerationRatio = 0.9,
+            //            }, HandoffBehavior.SnapshotAndReplace);
+            //    else
+            //        Height = ViewportHeight;
+            //}
         }
         protected override Size ArrangeOverride(Size arrangeBounds)
         {
@@ -211,9 +211,9 @@ namespace GPlusBrowser.Controls
         {
             var element = new ContentPresenter();
             element.RenderTransform = _translateTransformer;
-            element.SizeChanged += element_SizeChanged;
-            element.Loaded += element_Loaded;
-            element.Unloaded += element_Unloaded;
+            //element.SizeChanged += element_SizeChanged;
+            //element.Loaded += element_Loaded;
+            //element.Unloaded += element_Unloaded;
             return element;
         }
 
@@ -222,35 +222,35 @@ namespace GPlusBrowser.Controls
             _measureExtendHeightFlg = true;
             InvalidateArrange();
         }
-        void element_SizeChanged(object sender, SizeChangedEventArgs e)
-        {
-            _measureExtendHeightFlg = true;
-            InvalidateArrange();
-        }
-        void element_Loaded(object sender, RoutedEventArgs e)
-        {
-            var element = (ContentPresenter)sender;
-            var duration = new Duration(TimeSpan.FromMilliseconds(250));
-            var storyboard = new Storyboard();
-            element.Loaded += element_Loaded;
+        //void element_SizeChanged(object sender, SizeChangedEventArgs e)
+        //{
+        //    _measureExtendHeightFlg = true;
+        //    InvalidateArrange();
+        //}
+        //void element_Loaded(object sender, RoutedEventArgs e)
+        //{
+        //    var element = (ContentPresenter)sender;
+        //    var duration = new Duration(TimeSpan.FromMilliseconds(250));
+        //    var storyboard = new Storyboard();
+        //    element.Loaded += element_Loaded;
 
-            if (IsEnableAnimation)
-            {
-                _translateTransformer.BeginAnimation(
-                    TranslateTransform.YProperty,
-                    new DoubleAnimation(element.ActualHeight, 0, duration)
-                    {
-                        AccelerationRatio = 0.0,
-                        DecelerationRatio = 1.0
-                    }, HandoffBehavior.SnapshotAndReplace);
-            }
-        }
-        void element_Unloaded(object sender, RoutedEventArgs e)
-        {
-            var element = (ContentPresenter)sender;
-            element.SizeChanged += element_SizeChanged;
-            element.Unloaded += element_Unloaded;
-        }
+        //    if (IsEnableAnimation)
+        //    {
+        //        _translateTransformer.BeginAnimation(
+        //            TranslateTransform.YProperty,
+        //            new DoubleAnimation(element.ActualHeight, 0, duration)
+        //            {
+        //                AccelerationRatio = 0.0,
+        //                DecelerationRatio = 1.0
+        //            }, HandoffBehavior.SnapshotAndReplace);
+        //    }
+        //}
+        //void element_Unloaded(object sender, RoutedEventArgs e)
+        //{
+        //    var element = (ContentPresenter)sender;
+        //    element.SizeChanged += element_SizeChanged;
+        //    element.Unloaded += element_Unloaded;
+        //}
 
         public event EventHandler ChangedStatus;
         protected virtual void OnChangedStatus(EventArgs e)

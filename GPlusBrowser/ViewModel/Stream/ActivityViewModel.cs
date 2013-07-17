@@ -5,8 +5,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Threading;
-using SunokoLibrary.GooglePlus;
+using SunokoLibrary.Web.GooglePlus;
+using SunokoLibrary.Web.GooglePlus.Primitive;
 
 namespace GPlusBrowser.ViewModel
 {
@@ -14,8 +16,8 @@ namespace GPlusBrowser.ViewModel
 
     public class ActivityViewModel : ViewModelBase, IDisposable
     {
-        public ActivityViewModel(Activity activity, Dispatcher uiThreadDispatcher)
-            : base(uiThreadDispatcher)
+        public ActivityViewModel(Activity activity, AccountViewModel topLevel, Dispatcher uiThreadDispatcher)
+            : base(uiThreadDispatcher, topLevel)
         {
             _isWritableA = true;
             _activity = activity;
@@ -24,7 +26,7 @@ namespace GPlusBrowser.ViewModel
             _comments.Clear();
             lock (_activity.Comments)
                 foreach (var item in _activity.Comments.Select(
-                    comment => (CommentViewModel)new CommentViewModel(comment, uiThreadDispatcher)))
+                    comment => (CommentViewModel)new CommentViewModel(comment, topLevel, uiThreadDispatcher)))
                     Comments.Add(item);
 
             _activity.Comments.CollectionChanged += Comments_CollectionChanged;
@@ -32,7 +34,7 @@ namespace GPlusBrowser.ViewModel
             PostCommentCommand = new RelayCommand(PostCommentCommand_Executed);
         }
         Activity _activity;
-        Uri _iconUrl;
+        ImageSource _iconUrl;
         Uri _activityUrl;
         int _isDisposed;
         bool _isExpandComment, _isWritableA, _isWriteModeA;
@@ -44,7 +46,7 @@ namespace GPlusBrowser.ViewModel
         ObservableCollection<CommentViewModel> _comments;
         System.Windows.Documents.Inline _postContentInline;
 
-        public Uri PostUserIconUrl
+        public ImageSource PostUserIconUrl
         {
             get { return _iconUrl; }
             set
@@ -175,15 +177,14 @@ namespace GPlusBrowser.ViewModel
             _postContentInline = null;
         }
 
-        void _activity_Refreshed(object sender, EventArgs e)
+        async void _activity_Refreshed(object sender, EventArgs e)
         {
             if (_activity.ActivityInfo.PostStatus != PostStatusType.Removed)
             {
                 StyleElement content;
-                using (_activity.ActivityInfo.GetParseLocker())
+                using (await _activity.ActivityInfo.GetParseLocker())
                 {
                     PostUserName = _activity.ActivityInfo.PostUser.Name;
-                    PostUserIconUrl = new Uri(_activity.ActivityInfo.PostUser.IconImageUrlText.Replace("$SIZE_SEGMENT", "s25-c-k"));
                     PostDate = _activity.ActivityInfo.PostDate >= DateTime.Today
                         ? _activity.ActivityInfo.PostDate.ToString("HH:mm")
                         : _activity.ActivityInfo.PostDate.ToString("yyyy/MM/dd");
@@ -199,15 +200,17 @@ namespace GPlusBrowser.ViewModel
                                 string.IsNullOrEmpty(attachedLink.AncourBeginningText)
                                     ? null : attachedLink.AncourBeginningText.Trim('\n', '\r', ' '),
                                 attachedLink.AncourFavicon, attachedLink.AncourUrl, attachedLink.Thumbnail,
-                                UiThreadDispatcher);
+                                TopLevel, UiThreadDispatcher);
                             break;
                         case ContentType.Image:
                             var attachedAlbum = (AttachedAlbum)_activity.ActivityInfo.AttachedContent;
-                            AttachedContent = new AttachedAlbumViewModel(attachedAlbum, UiThreadDispatcher);
+                            AttachedContent = new AttachedAlbumViewModel(attachedAlbum, TopLevel, UiThreadDispatcher);
                             break;
                     }
+                    UiThreadDispatcher.Invoke(() => PostContentInline = PrivateConvertInlines(content));
+                    PostUserIconUrl = await TopLevel.DataCacheDict.DownloadImage(
+                        new Uri(_activity.ActivityInfo.PostUser.IconImageUrlText.Replace("$SIZE_SEGMENT", "s25-c-k")));
                 }
-                UiThreadDispatcher.InvokeAsync(() => PostContentInline = PrivateConvertInlines(content));
             }
         }
         async void PostCommentCommand_Executed(object arg)
@@ -230,7 +233,7 @@ namespace GPlusBrowser.ViewModel
             {
                 case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
                     foreach (var item in e.NewItems)
-                        Comments.AddAsync(new CommentViewModel((Comment)item, UiThreadDispatcher), UiThreadDispatcher);
+                        Comments.AddAsync(new CommentViewModel((Comment)item, TopLevel, UiThreadDispatcher), UiThreadDispatcher);
                     break;
                 case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
                     for (var i = 0; i < e.OldItems.Count; i++)

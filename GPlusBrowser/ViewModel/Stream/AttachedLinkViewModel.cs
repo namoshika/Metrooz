@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Windows.Media;
 
 namespace GPlusBrowser.ViewModel
 {
@@ -9,18 +10,19 @@ namespace GPlusBrowser.ViewModel
     {
         public AttachedLinkViewModel(
             string ancourTitle, string ancourIntroductionText, Uri ancourFaviconUrl, Uri ancourUrl,
-            Uri thumnailUrl, System.Windows.Threading.Dispatcher dispatcher) : base(dispatcher)
+            Uri thumnailUrl, AccountViewModel topLevel, System.Windows.Threading.Dispatcher dispatcher)
+            : base(dispatcher, topLevel)
         {
             AncourTitle = ancourTitle;
             AncourUrl = ancourUrl;
-            ThumnailUrl = thumnailUrl;
-            AncourFaviconUrl = ancourFaviconUrl;
             AncourIntroductionText = ancourIntroductionText;
+            topLevel.DataCacheDict.DownloadImage(thumnailUrl).ContinueWith(tsk => ThumnailUrl = tsk.Result);
+            topLevel.DataCacheDict.DownloadImage(ancourFaviconUrl).ContinueWith(tsk => AncourFaviconUrl = tsk.Result);
         }
         string _ancourTitle;
         Uri _ancourUrl;
-        Uri _thumnailUrl;
-        Uri _ancourFaviconUrl;
+        ImageSource _ancourFaviconUrl;
+        ImageSource _thumnailUrl;
         string _ancourIntroductionText;
 
         public bool ExistAncourIntroductionText { get; private set; }
@@ -46,7 +48,7 @@ namespace GPlusBrowser.ViewModel
                 OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("ExistAncourIntroductionText"));
             }
         }
-        public Uri AncourFaviconUrl
+        public ImageSource AncourFaviconUrl
         {
             get { return _ancourFaviconUrl; }
             set
@@ -57,16 +59,7 @@ namespace GPlusBrowser.ViewModel
                 OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("ExistAncourFaviconUrl"));
             }
         }
-        public Uri AncourUrl
-        {
-            get { return _ancourUrl; }
-            set
-            {
-                _ancourUrl = value;
-                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("AncourUrl"));
-            }
-        }
-        public Uri ThumnailUrl
+        public ImageSource ThumnailUrl
         {
             get { return _thumnailUrl; }
             set
@@ -75,6 +68,15 @@ namespace GPlusBrowser.ViewModel
                 ExistThumnailUrl = value != null;
                 OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("ThumnailUrl"));
                 OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("ExistThumnailUrl"));
+            }
+        }
+        public Uri AncourUrl
+        {
+            get { return _ancourUrl; }
+            set
+            {
+                _ancourUrl = value;
+                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("AncourUrl"));
             }
         }
     }

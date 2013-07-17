@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Collections.ObjectModel;
-using SunokoLibrary.GooglePlus;
+using SunokoLibrary.Web.GooglePlus;
 
 namespace GPlusBrowser.Model
 {

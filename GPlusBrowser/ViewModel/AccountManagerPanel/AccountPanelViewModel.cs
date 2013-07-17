@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Threading;
 
 namespace GPlusBrowser.ViewModel
@@ -14,13 +15,13 @@ namespace GPlusBrowser.ViewModel
 
     public class AccountPanelViewModel : ViewModelBase
     {
-        public AccountPanelViewModel(Account accountModel, AccountManager accountManagerModel, Dispatcher uiThreadDispatcher)
-            : base(uiThreadDispatcher)
+        public AccountPanelViewModel(Account accountModel, AccountManager accountManagerModel, AccountViewModel topLevel, Dispatcher uiThreadDispatcher)
+            : base(uiThreadDispatcher, topLevel)
         {
             _accountModel = accountModel;
             _accountModel.Initialized += _accountModel_Initialized;
             _accountManagerModel = accountManagerModel;
-            _setting = new SettingViewModel(accountModel.Setting, accountModel, uiThreadDispatcher);
+            _setting = new SettingViewModel(accountModel.Setting, accountModel, topLevel, uiThreadDispatcher);
             _userName = _accountModel.Setting.UserName;
             AsyncFunc();
             OpenStreamPanelCommand = new RelayCommand(OpenStreamPanelCommand_Execute);
@@ -28,7 +29,7 @@ namespace GPlusBrowser.ViewModel
         Account _accountModel;
         AccountManager _accountManagerModel;
         SettingViewModel _setting;
-        Uri _userIconUrl;
+        System.Windows.Media.ImageSource _userIconUrl;
         string _userName;
 
         public string UserName
@@ -40,7 +41,7 @@ namespace GPlusBrowser.ViewModel
                 OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("UserName"));
             }
         }
-        public Uri UserIconUrl
+        public ImageSource UserIconUrl
         {
             get { return _userIconUrl; }
             set
@@ -63,13 +64,13 @@ namespace GPlusBrowser.ViewModel
         async void AsyncFunc()
         {
             if (_accountModel.AccountIconUrl != null)
-                UserIconUrl = await DataCacheDictionary.DownloadUserIcon(
+                UserIconUrl = await DataCacheDictionary.Default.DownloadImage(
                     new Uri(_accountModel.AccountIconUrl.Replace("$SIZE_SEGMENT", "s35-c-k")));
         }
         async void _accountModel_Initialized(object sender, EventArgs e)
         {
             UserName = _accountModel.Setting.UserName;
-            UserIconUrl = await DataCacheDictionary.DownloadUserIcon(
+            UserIconUrl = await DataCacheDictionary.Default.DownloadImage(
                 new Uri(_accountModel.AccountIconUrl.Replace("$SIZE_SEGMENT", "s35-c-k")));
         }
         async void OpenStreamPanelCommand_Execute(object arg)

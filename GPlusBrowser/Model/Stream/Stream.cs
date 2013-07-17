@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
-using SunokoLibrary.GooglePlus;
+using SunokoLibrary.Web.GooglePlus;
 
 namespace GPlusBrowser.Model
 {
@@ -14,79 +14,88 @@ namespace GPlusBrowser.Model
         {
             _manager = manager;
             _isRefresh = 0;
-            _activities = new List<Activity>();
-            Poster = circleInfo;
-            Reader = circleInfo;
+            _reader = circleInfo;
+            _activityGetter = circleInfo.GetActivities();
+            _activities = new ObservableCollection<Activity>();
+            Name = circleInfo.Name;
+            Activities = new ReadOnlyObservableCollection<Activity>(_activities);
         }
-        IPostRange _poster;
-        IReadRange _reader;
+        CircleInfo _reader;
         IDisposable _streamObj;
         StreamManager _manager;
         IInfoList<ActivityInfo> _activityGetter;
-        List<Activity> _activities;
+        ObservableCollection<Activity> _activities;
         int _isRefresh;
 
-        public ReadOnlyCollection<Activity> Activities { get { return _activities.AsReadOnly(); } }
+        public ReadOnlyObservableCollection<Activity> Activities { get; private set; }
         public bool IsRefreshed { get { return _isRefresh == 1; } }
-        public bool Postable { get; private set; }
-        public bool Readable { get; private set; }
         public string Name { get; private set; }
 
-        public IPostRange Poster
-        {
-            get { return _poster; }
-            set
-            {
-                Postable = value != null;
-                _poster = value;
-            }
-        }
-        public IReadRange Reader
+        public CircleInfo Circle
         {
             get { return _reader; }
             set
             {
-                if (_reader != value && _reader != null)
-                    _activities.Clear();
-
-                _activityGetter = value.GetActivities();
                 _reader = value;
-                Readable = value != null;
-                Name = value.Name;
-                Connect();
+                Name = _reader.Name;
             }
         }
-        public void Refresh()
+        public async void Refresh()
         {
             if (System.Threading.Interlocked.CompareExchange(ref _isRefresh, 1, 0) == 1)
                 return;
-
-            _activityGetter.TakeAsync(20)
-                .ContinueWith(tsk =>
-                    {
-                        lock (_activities)
-                        {
-                            var infos = tsk.Result;
-                            _activities.Clear();
-                            OnUpdatedActivities(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
-
-                            var activities = infos.Where(info => info != null)
-                                .Select(info => new Activity(info)).ToArray();
-                            _activities.AddRange(activities);
-                            OnUpdatedActivities(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, activities, 0));
-                        }
-                    });
-        }
-        public void Post(string content)
-        {
-            if (Postable)
-                Poster.Post(content);
+            var activities = await _activityGetter.TakeAsync(20).ConfigureAwait(false);
+            lock (_activities)
+            {
+                _activities.Clear();
+                foreach (var item in activities
+                    .Where(info => info != null)
+                    .Select(info => new Activity(info)))
+                    _activities.Add(item);
+            }
         }
         public void Connect()
         {
             if (_streamObj != null)
-                _streamObj.Dispose();
-            _streamObj = _reader.GetStream().Subscribe(activity_OnNext);
+                return;
+
+            _streamObj = _reader.GetStream().Subscribe(async info =>
+                {
+                    using (await info.GetParseLocker())
+                        lock (_activities)
+                            switch (info.PostStatus)
+                            {
+                                case PostStatusType.First:
+                                case PostStatusType.Edited:
+                                    var item = Activities.FirstOrDefault(activity => activity.ActivityInfo.Id == info.Id);
+                                    //itemがnullの場合は更新する。nullでない場合はすでにある値を更新する。
+                                    //しかし更新はActivityオブジェクト自体が行うため、Streamでは行わない
+                                    if (item == null)
+                                    {
+                                        item = new Activity(info);
+                                        _activities.Insert(0, item);
+
+                                        if (_activities.Count > 50)
+                                        {
+                                            _activities[0].Dispose();
+                                            _activities.RemoveAt(0);
+                                        }
+                                    }
+                                    break;
+                                case PostStatusType.Removed:
+                                    item = Activities.FirstOrDefault(activity => activity.ActivityInfo.Id == info.Id);
+                                    var idx = Activities.IndexOf(item);
+                                    if (idx < 0)
+                                        return;
+                                    _activities.Remove(item);
+                                    break;
+                            }
+                },
+                ex =>
+                {
+                    _streamObj.Dispose();
+                    _streamObj = null;
+                });
         }
         public void Dispose()
         {
@@ -94,50 +103,6 @@ namespace GPlusBrowser.Model
                 foreach (var item in _activities)
                     item.Dispose();
             _streamObj.Dispose();
-        }
-        void activity_OnNext(ActivityInfo info)
-        {
-            using (info.GetParseLocker())
-                lock (_activities)
-                    switch (info.PostStatus)
-                    {
-                        case PostStatusType.First:
-                            var item = new Activity(info);
-                            _activities.Add(item);
-                            OnUpdatedActivities(new System.Collections.Specialized.NotifyCollectionChangedEventArgs(
-                                System.Collections.Specialized.NotifyCollectionChangedAction.Add,
-                                item, Activities.Count - 1));
-
-                            if (_activities.Count > 50)
-                            {
-                                _activities[0].Dispose();
-                                _activities.RemoveAt(0);
-                            }
-                            break;
-                        case PostStatusType.Edited:
-                            item = Activities.FirstOrDefault(activity => activity.ActivityInfo.Id == info.Id);
-                            //itemがnullの場合は更新する。nullでない場合はすでにある値を更新する。
-                            //しかし更新はActivityオブジェクト自体が行うため、Streamでは行わない
-                            if (item == null)
-                                goto case PostStatusType.First;
-                            break;
-                        case PostStatusType.Removed:
-                            item = Activities.FirstOrDefault(activity => activity.ActivityInfo.Id == info.Id);
-                            var idx = Activities.IndexOf(item);
-                            if (idx < 0)
-                                return;
-                            _activities.Remove(item);
-                            OnUpdatedActivities(new System.Collections.Specialized.NotifyCollectionChangedEventArgs(
-                                System.Collections.Specialized.NotifyCollectionChangedAction.Remove, item, idx));
-                            break;
-                    }
-        }
-
-        public event System.Collections.Specialized.NotifyCollectionChangedEventHandler UpdatedActivities;
-        protected virtual void OnUpdatedActivities(System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
-        {
-            if (UpdatedActivities != null)
-                UpdatedActivities(this, e);
         }
     }
 }
