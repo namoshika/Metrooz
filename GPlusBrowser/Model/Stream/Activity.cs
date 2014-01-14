@@ -5,28 +5,67 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Collections.ObjectModel;
 using SunokoLibrary.Web.GooglePlus;
+using SunokoLibrary.Web.GooglePlus.Primitive;
+using System.Reactive.Linq;
 
 namespace GPlusBrowser.Model
 {
     public class Activity : IDisposable
     {
-        public Activity(ActivityInfo info)
+        public Activity(ActivityInfo target)
         {
             Comments = new ObservableCollection<Comment>();
-            ActivityInfo = info;
-            ActivityInfo.Refreshed += _info_Refreshed;
-            _commentObj = ActivityInfo.GetComments(false, true).Subscribe(_info_comment_OnNext);
+            CoreInfo = target;
+            Initialize();
         }
-        IDisposable _commentObj;
-
-        public ActivityInfo ActivityInfo { get; private set; }
+        public ActivityInfo CoreInfo { get; private set; }
         public ObservableCollection<Comment> Comments { get; private set; }
 
+        public async void Initialize()
+        {
+            foreach (var item in await CoreInfo.GetComments(false, false).ToArray())
+                RefreshComment(item);
+        }
+        public void Dispose()
+        {
+            if (Comments != null)
+                Comments.Clear();
+        }
+        public void RefreshComment(CommentInfo comment)
+        {
+            lock (Comments)
+            {
+                var item = Comments.FirstOrDefault(cmme => cmme.CommentInfo.Id == comment.Id);
+                switch (comment.Status)
+                {
+                    case PostStatusType.Removed:
+                        if (item != null)
+                            Comments.Remove(item);
+                        break;
+                    case PostStatusType.First:
+                    case PostStatusType.Edited:
+                        if (item != null)
+                            item.Refresh(comment);
+                        else
+                        {
+                            var idx = Comments.Count - 1;
+                            for (; idx >= 0 && Comments[idx].CommentInfo.PostDate > comment.PostDate; idx--) ;
+                            Comments.Insert(idx + 1, new Comment(comment));
+                        }
+                        break;
+                }
+            }
+        }
+        public async Task RefreshActivity()
+        {
+            await CoreInfo.UpdateGetActivityAsync(false, ActivityUpdateApiFlag.GetActivities);
+            OnUpdated(new EventArgs());
+        }
         public async Task<bool> CommentPost(string content)
         {
             try
             {
-                await ActivityInfo.PostComment(content).ConfigureAwait(false);
+                await CoreInfo.PostComment(content).ConfigureAwait(false);
                 return true;
             }
             catch (FailToOperationException)
@@ -35,36 +74,6 @@ namespace GPlusBrowser.Model
                     System.Diagnostics.Debugger.Break();
                 return false;
             }
-        }
-        public void Dispose()
-        {
-            _commentObj.Dispose();
-            Comments.Clear();
-        }
-        void _info_Refreshed(object sender, EventArgs e) { OnUpdated(new EventArgs()); }
-        void _info_comment_OnNext(CommentInfo comment)
-        {
-            lock(Comments)
-                switch (comment.Status)
-                {
-                    case PostStatusType.Removed:
-                        var item = Comments.FirstOrDefault(cmme => cmme.CommentInfo.Id == comment.Id);
-                        if (item != null)
-                            Comments.Remove(item);
-                        break;
-                    case PostStatusType.Edited:
-                        item = Comments.FirstOrDefault(comme => comme.CommentInfo.Id == comment.Id);
-                        if (item != null)
-                            item.Refresh(comment);
-                        else
-                            goto default;
-                        break;
-                    default:
-                        var idx = Comments.Count - 1;
-                        for (; idx >= 0 && Comments[idx].CommentInfo.CommentDate > comment.CommentDate; idx--) ;
-                        Comments.Insert(idx + 1, new Comment(comment));
-                        break;
-                }
         }
 
         public event EventHandler Updated;

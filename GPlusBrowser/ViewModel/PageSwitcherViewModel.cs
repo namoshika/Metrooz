@@ -16,8 +16,7 @@ namespace GPlusBrowser.ViewModel
             : base(uiThreadDispatcher, null)
         {
             _accountManagerModel = accountManagerModel;
-            _accountManagerModel.ChangedAccounts += _accountManagerModel_ChangedAccounts;
-            _accountManagerModel.ChangedSelectedAccountIndex += _accountManagerModel_ChangedSelectedAccountIndex;
+            ((INotifyCollectionChanged)_accountManagerModel.Accounts).CollectionChanged += PageSwitcherViewModel_CollectionChanged;
             _selectedMainPageIndex = -1;
             IsAccountSelectorMode = true;
             AccountSelector = new AccountSelectorViewModel(accountManagerModel, this, uiThreadDispatcher);
@@ -36,7 +35,6 @@ namespace GPlusBrowser.ViewModel
                     return;
                 IsAccountSelectorMode = value < 0;
                 _selectedMainPageIndex = value;
-                _accountManagerModel.SelectedAccountIndex = _selectedMainPageIndex;
                 OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("SelectedPageIndex"));
             }
         }
@@ -59,7 +57,7 @@ namespace GPlusBrowser.ViewModel
             foreach (AccountViewModel item in Pages.Skip(1))
                 item.Dispose();
         }
-        void _accountManagerModel_ChangedAccounts(object sender, NotifyCollectionChangedEventArgs e)
+        void PageSwitcherViewModel_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             switch (e.Action)
             {
@@ -67,23 +65,43 @@ namespace GPlusBrowser.ViewModel
                     for (var i = 0; i < e.NewItems.Count; i++)
                     {
                         var accountModel = (Account)e.NewItems[i];
-                        var account = new AccountViewModel(accountModel, _accountManagerModel, UiThreadDispatcher);
+                        var account = new AccountViewModel(accountModel, UiThreadDispatcher);
+                        account.OpenedStreamPanel += account_OpenedStreamPanel;
+                        account.BackedToAccountManager += account_BackedToAccountManager;
                         Pages.InsertAsync(e.NewStartingIndex + i, account, UiThreadDispatcher);
                     }
                     break;
                 case NotifyCollectionChangedAction.Remove:
                     for (var i = 0; i < e.OldItems.Count; i++)
+                    {
+                        var account = Pages[e.OldStartingIndex];
+                        account.OpenedStreamPanel -= account_OpenedStreamPanel;
+                        account.BackedToAccountManager -= account_BackedToAccountManager;
                         Pages.RemoveAtAsync(e.OldStartingIndex, UiThreadDispatcher);
+                    }
                     break;
                 case NotifyCollectionChangedAction.Reset:
-                    var accountManager = Pages.First();
-                    Pages.Clear();
-                    Pages.AddAsync(accountManager, UiThreadDispatcher);
-                    SelectedPageIndex = -1;
+                    if (Pages.Count > 0)
+                    {
+                        var accountManager = Pages.First();
+                        foreach (var item in Pages.OfType<AccountViewModel>())
+                        {
+                            item.OpenedStreamPanel -= account_OpenedStreamPanel;
+                            item.BackedToAccountManager -= account_BackedToAccountManager;
+                        }
+                        Pages.Clear();
+                        Pages.AddAsync(accountManager, UiThreadDispatcher);
+                        SelectedPageIndex = -1;
+                    }
                     break;
             }
         }
-        void _accountManagerModel_ChangedSelectedAccountIndex(object sender, EventArgs e)
-        { SelectedPageIndex = _accountManagerModel.SelectedAccountIndex; }
+        void account_OpenedStreamPanel(object sender, EventArgs e)
+        {
+            var idx = Pages.IndexOf((AccountViewModel)sender);
+            SelectedPageIndex = idx;
+        }
+        void account_BackedToAccountManager(object sender, EventArgs e)
+        { SelectedPageIndex = -1; }
     }
 }

@@ -5,15 +5,13 @@
         xmlns:localCtrl="clr-namespace:GPlusBrowser.Controls"
         xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
         xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions"
-        Title="MainWindow" Height="350" Width="525">
+        Title="MainWindow" Height="350" Width="300">
     <!--<Grid>
         <local:TestControl Height="3000">Test</local:TestControl>
     </Grid>-->
-    <DockPanel>
-        <StackPanel DockPanel.Dock="Left">
-            <Button Click="Button_Click">CCC</Button>
-            <Button Click="Button_Click_1">DDD</Button>
-        </StackPanel>
-        <local:ExpandableListView x:Name="aaa" ItemsSource="{Binding source}" VirtualizingPanel.IsVirtualizing="False" />
-    </DockPanel>
+    <StackPanel DockPanel.Dock="Left">
+        <Button Click="Button_Click">CCC</Button>
+        <Button Click="Button_Click_1">DDD</Button>
+        <local:ExpandableListView x:Name="aaa" Background="Aqua" ItemsSource="{Binding source}" VirtualizingPanel.IsVirtualizing="False" />
+    </StackPanel>
 </Window>

@@ -3,92 +3,79 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using SunokoLibrary.Threading;
 using SunokoLibrary.Web.GooglePlus;
+using SunokoLibrary.Web.GooglePlus.Primitive;
 
 namespace GPlusBrowser.Model
 {
     public class Account : IDisposable
     {
-        public Account(SettingModel setting)
+        public Account(IPlatformClientBuilder setting)
         {
-            Setting = setting;            
-            Notification = new NotificationManager(this);
-            AccountIconUrl = setting.UserIconUrl;
-            InitializeSequenceStatus = setting.Cookies == null
-                ? AccountInitSeqStatus.UnLogined : AccountInitSeqStatus.Logined;
+            Builder = setting;
+            IsConnected = false;
+            IsInitialized = false;
         }
 
-        public TalkGadgetBindStatus IsConnected { get; private set; }
-        public AccountInitSeqStatus InitializeSequenceStatus { get; private set; }
+        public bool IsConnected { get; private set; }
+        public bool IsInitialized { get; private set; }
         public PlatformClient PlusClient { get; private set; }
+        public IPlatformClientBuilder Builder { get; private set; }
         public CircleManager Circles { get; private set; }
         public StreamManager Stream { get; private set; }
-        public SettingModel Setting { get; private set; }
-        public NotificationManager Notification { get; private set; }
+        //public NotificationManager Notification { get; private set; }
         public ProfileInfo MyProfile { get; private set; }
-        public string AccountIconUrl { get; private set; }
+        readonly AsyncLocker _initSyncer = new AsyncLocker();
 
-        public async Task Initialize()
+        public async Task Initialize(bool isForced)
         {
-            if (InitializeSequenceStatus < AccountInitSeqStatus.Logined)
-                throw new InvalidOperationException("InitializeSequenceStatusがLoginedを満たさない状態でのInitialize()呼び出しは無効です。");
+            await _initSyncer.LockAsync(isForced, () => isForced || IsInitialized == false, null,
+                async () =>
+                {
+                    if (PlusClient != null)
+                    {
+                        PlusClient.Activity.ChangedIsConnected -= ActivityManager_ChangedIsConnected;
+                        PlusClient.Dispose();
+                    }
+                    try
+                    {
+                        //G+APIライブラリの初期化を行う
+                        PlusClient = await Builder.Build();
+                        MyProfile = await PlusClient.Relation.GetProfileOfMeAsync(false).ConfigureAwait(false);
 
-            try
-            {
-                PlusClient = await PlatformClient.Create(Setting.Cookies).ConfigureAwait(false);
-                InitializeSequenceStatus = AccountInitSeqStatus.Logined;
-                PlusClient.Activity.ChangedIsConnected += Activity_ChangedIsConnected;
-                await PlusClient.Relation.UpdateCirclesAndBlockAsync(false, CircleUpdateLevel.Loaded).ConfigureAwait(false);
-                MyProfile = await PlusClient.Relation.GetProfileOfMeAsync(false).ConfigureAwait(false);
-                Circles = new CircleManager(this);
-                Stream = new StreamManager(this);
-                InitializeSequenceStatus = AccountInitSeqStatus.LoadedHomeInit;
+                        //各モジュールの初期化を行う
+                        Circles = new CircleManager(this);
+                        Stream = new StreamManager(this);
+                        //Notification = new NotificationManager(this);
+                        //Notification.Initialize();
+                        await Stream.Initialize();
+                        await Circles.Initialize(CircleUpdateLevel.Loaded);
+                        Connect();
+                        PlusClient.Activity.ChangedIsConnected += ActivityManager_ChangedIsConnected;
 
-                AccountIconUrl = MyProfile.IconImageUrlText;
-                if (Setting.UserIconUrl != MyProfile.IconImageUrlText)
-                    Setting.UserIconUrl = MyProfile.IconImageUrlText;
-                if (Setting.UserName != MyProfile.Name)
-                    Setting.UserName = MyProfile.Name;
-
-                Notification.Initialize();
-                await Circles.Update();
-                InitializeSequenceStatus = AccountInitSeqStatus.LoadedFullDatas;
-            }
-            catch (FailToOperationException)
-            { InitializeSequenceStatus = AccountInitSeqStatus.DisableSession; }
-
-            OnInitialized(new EventArgs());
-        }
-        public async Task Login(string mail, string password)
-        {
-            try
-            {
-                var cookie = new System.Net.CookieContainer();
-                var client = await PlatformClient.Create(cookie, mail, password).ConfigureAwait(false);
-                var profileIcon = (await client.Relation.GetProfileOfMeAsync(false).ConfigureAwait(false)).IconImageUrlText;
-                InitializeSequenceStatus = AccountInitSeqStatus.Logined;
-                Setting.MailAddress = mail;
-                Setting.UserIconUrl = profileIcon;
-                Setting.Cookies = cookie;
-                Setting.Save();
-                AccountIconUrl = profileIcon;
-            }
-            catch (FailToOperationException)
-            { InitializeSequenceStatus = AccountInitSeqStatus.UnLogined; }
+                        IsInitialized = true;
+                        OnInitialized(new EventArgs());
+                    }
+                    catch (FailToOperationException)
+                    { IsInitialized = false; }
+                }, null);
         }
         public void Connect()
         {
-            IsConnected = TalkGadgetBindStatus.Disconnected;
-            Notification.Connect();
+            //Stream.Connect();
+            //Notification.Connect();
         }
         public void Dispose()
         {
+            IsInitialized = false;
+            PlusClient.Activity.ChangedIsConnected -= ActivityManager_ChangedIsConnected;
+            PlusClient.Dispose();
             OnDisposed(new EventArgs());
         }
-        void Activity_ChangedIsConnected(object sender, EventArgs e)
+        void ActivityManager_ChangedIsConnected(object sender, EventArgs e)
         {
-            IsConnected = PlusClient.Activity.IsConnected
-              ? TalkGadgetBindStatus.Connected : TalkGadgetBindStatus.DisableConnect;
+            IsConnected = PlusClient.Activity.IsConnected;
             OnChangedConnectStatus(new EventArgs());
         }
 
@@ -111,8 +98,4 @@ namespace GPlusBrowser.Model
                 ChangedConnectStatus(this, e);
         }
     }
-    public enum AccountInitSeqStatus
-    { UnLogined, Logined, LoadedHomeInit, LoadedFullDatas, DisableSession, }
-    public enum TalkGadgetBindStatus
-    { Disconnected, Connected, DisableConnect, }
 }

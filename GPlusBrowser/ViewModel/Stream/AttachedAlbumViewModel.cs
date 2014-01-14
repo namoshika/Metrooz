@@ -10,6 +10,7 @@ using System.Windows.Media.Imaging;
 namespace GPlusBrowser.ViewModel
 {
     using SunokoLibrary.Web.GooglePlus;
+    using SunokoLibrary.Web.GooglePlus.Primitive;
 
     public class AttachedAlbumViewModel : ViewModelBase
     {
@@ -26,8 +27,8 @@ namespace GPlusBrowser.ViewModel
                 _attachedAlbumModel.Pictures.Select((info, idx) => new { Info = info, Index = idx }),
                 async pair =>
                 {
-                    _thumbnailImages[pair.Index] = await topLevel.DataCacheDict.DownloadImage(new Uri(pair.Info.ImageUrlText.Replace("$SIZE_SEGMENT", "s50-c-k"))).ConfigureAwait(false);
-                    _mainImages[pair.Index] = await topLevel.DataCacheDict.DownloadImage(new Uri(pair.Info.ImageUrlText.Replace("$SIZE_SEGMENT", "w640-h480"))).ConfigureAwait(false);
+                    _thumbnailImages[pair.Index] = await topLevel.DataCacheDict.DownloadImage(new Uri(pair.Info.ThumbnailUrl.Replace("$SIZE_SEGMENT", "s50-c-k"))).ConfigureAwait(false);
+                    _mainImages[pair.Index] = await topLevel.DataCacheDict.DownloadImage(new Uri(pair.Info.ThumbnailUrl.Replace("$SIZE_SEGMENT", "w640-h480"))).ConfigureAwait(false);
                     if(pair.Index == _selectedImageIndex)
                         OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("SelectedImage"));
                 });

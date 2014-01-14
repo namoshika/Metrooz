@@ -23,186 +23,133 @@ namespace GPlusBrowser.Controls
     {
         public ExpandableListView()
         {
-            ExpandAnimationDuration = new Duration(TimeSpan.FromMilliseconds(200));
-            ItemContainerGenerator.ItemsChanged += ItemContainerGenerator_ItemsChanged;
-            Loaded += CommentListBox_Loaded;
+            _expandAnimationDuration = _insertAnimationDuration = (Duration)TimeSpan.FromMilliseconds(200);
+            _displayMaxCount = 2;
+            Loaded += ExpandableListView_Loaded;
         }
         static ExpandableListView()
         {
             DefaultStyleKeyProperty.OverrideMetadata(
                 typeof(ExpandableListView), new FrameworkPropertyMetadata(typeof(ExpandableListView)));
         }
-        ItemsPresenter _itemContainer;
-        CollapsibleStackPanel _itemPanel;
+        ScrollViewer _itemContainer;
+        Duration _expandAnimationDuration;
+        Duration _insertAnimationDuration;
+        int _displayMaxCount;
 
         public bool IsExpand
         {
             get { return (bool)GetValue(IsExpandProperty); }
             set { SetValue(IsExpandProperty, value); }
         }
-        public bool Expandable
+        public double ScrollOffset
         {
-            get { return (bool)GetValue(ExpandableProperty); }
-            set { SetValue(ExpandableProperty, value); }
+            get { return (double)GetValue(ScrollOffsetProperty); }
+            set { SetValue(ScrollOffsetProperty, value); }
         }
-        public int DisplayableCount
+        protected override DependencyObject GetContainerForItemOverride()
         {
-            get { return (int)GetValue(DisplayableCountProperty); }
-            set { SetValue(DisplayableCountProperty, value); }
+            var container = (FrameworkElement)base.GetContainerForItemOverride();
+            container.Loaded += itemPresenter_Loaded;
+            return container;
         }
-        public int CommentCount
+        protected override void ClearContainerForItemOverride(DependencyObject element, object item)
         {
-            get { return (int)GetValue(CommentCountProperty); }
-            set { SetValue(CommentCountProperty, value); }
-        }
-        public Duration ExpandAnimationDuration { get; set; }
-        void CommentListBox_Loaded(object sender, RoutedEventArgs e)
-        {
-            _itemContainer = (ItemsPresenter)Template.FindName("itemContainer", this);
-            _itemPanel = (CollapsibleStackPanel)VisualTreeHelper.GetChild(_itemContainer, 0);
-            _itemPanel.RenderTransform = new TranslateTransform();
-        }
-        void ItemContainerGenerator_ItemsChanged(object sender, System.Windows.Controls.Primitives.ItemsChangedEventArgs e)
-        {
-            var generator = ((System.Windows.Controls.Primitives.IItemContainerGenerator)ItemContainerGenerator);
-            var startPos = e.Position;
-            switch (e.Action)
+            base.ClearContainerForItemOverride(element, item);
+            ((FrameworkElement)element).SizeChanged -= itemPresenter_SizeChanged;
+            ((FrameworkElement)element).Loaded -= itemPresenter_Loaded;
+
+            var newAreaHeight = 0.0;
+            for (var i = IsExpand ? 0 : Math.Max(Items.Count - _displayMaxCount, 0); i < Items.Count; i++)
             {
-                case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
-
-                    //新しい高さと上方向へのスライド量を計算
-                    //新しく以下される項目数と現状維持項目、表示領域外へ押し出される項目数を計算
-                    int i;
-                    var height = 0.0;
-                    var shiftLen = 0.0;
-                    using (generator.StartAt(startPos, System.Windows.Controls.Primitives.GeneratorDirection.Forward))
-                        for (i = Math.Max(e.ItemCount - DisplayableCount, 0); i < e.ItemCount; i++)
-                        {
-                            var ctrl = (FrameworkElement)generator.GenerateNext();
-                            generator.PrepareItemContainer(ctrl);
-                            ctrl.Measure(new Size(_itemPanel.ActualWidth, double.PositiveInfinity));
-                            ctrl.InvalidateMeasure();
-                            height += ctrl.DesiredSize.Height;
-                        }
-                    var newSlotLen = i;
-                    int kepSlotLen = Math.Max(Math.Min(Items.Count, DisplayableCount) - newSlotLen, 0);
-                    var delSlotLen = Math.Min(Items.Count - e.ItemCount, DisplayableCount) - kepSlotLen;
-                    if (kepSlotLen > 0)
-                        for (i = Items.Count - newSlotLen - kepSlotLen; i < Items.Count - newSlotLen; i++)
-                            height += ((FrameworkElement)ItemContainerGenerator.ContainerFromIndex(i)).ActualHeight;
-                    if (delSlotLen > 0)
-                        for (i = Items.Count - newSlotLen - kepSlotLen - delSlotLen; i < Items.Count - newSlotLen - kepSlotLen; i++)
-                            shiftLen += ((FrameworkElement)ItemContainerGenerator.ContainerFromIndex(i)).ActualHeight;
-
-
-                    var board = new Storyboard();
-                    var bgnTime = KeyTime.FromPercent(0.0);
-                    var endTime = KeyTime.FromPercent(1.0);
-                    var nowHeight = _itemContainer.ActualHeight;
-                    var duration = (Duration)TimeSpan.FromMilliseconds(500);
-                    board.FillBehavior = FillBehavior.Stop;
-
-                    var aaaAnime = new Int32AnimationUsingKeyFrames();
-                    aaaAnime.Duration = duration;
-                    board.Children.Add(aaaAnime);
-                    Storyboard.SetTarget(aaaAnime, _itemPanel);
-                    Storyboard.SetTargetProperty(aaaAnime, new PropertyPath("DisplayableCount"));
-                    aaaAnime.KeyFrames.Add(new DiscreteInt32KeyFrame(Math.Max(newSlotLen + kepSlotLen + delSlotLen, 3), bgnTime));
-                    aaaAnime.KeyFrames.Add(new DiscreteInt32KeyFrame(Math.Max(newSlotLen + kepSlotLen, 2), endTime));
-
-                    var translateAnime = new DoubleAnimationUsingKeyFrames();
-                    board.Children.Add(translateAnime);
-                    Storyboard.SetTarget(translateAnime, _itemPanel);
-                    Storyboard.SetTargetProperty(translateAnime, new PropertyPath("RenderTransform.Y"));
-                    translateAnime.Duration = duration;
-                    translateAnime.KeyFrames.Add(new LinearDoubleKeyFrame(0.0, bgnTime));
-                    translateAnime.KeyFrames.Add(new LinearDoubleKeyFrame(-shiftLen, endTime));
-                    translateAnime.KeyFrames.Add(new DiscreteDoubleKeyFrame(0.0, endTime));
-
-                    var heightAnime = new DoubleAnimationUsingKeyFrames();
-                    heightAnime.Duration = duration;
-                    board.Children.Add(heightAnime);
-                    Storyboard.SetTarget(heightAnime, _itemContainer);
-                    Storyboard.SetTargetProperty(heightAnime, new PropertyPath("Height"));
-                    heightAnime.KeyFrames.Add(new LinearDoubleKeyFrame(nowHeight, bgnTime));
-                    heightAnime.KeyFrames.Add(new LinearDoubleKeyFrame(height, endTime));
-                    heightAnime.KeyFrames.Add(new DiscreteDoubleKeyFrame(double.NaN, endTime));
-
-                    BeginStoryboard(board, HandoffBehavior.SnapshotAndReplace);
-                    break;
-                case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
-
-                    break;
+                var container = (FrameworkElement)ItemContainerGenerator.ContainerFromIndex(i);
+                newAreaHeight += container.ActualHeight;
             }
+            _itemContainer.BeginAnimation(HeightProperty,
+                new DoubleAnimation(newAreaHeight, TimeSpan.Zero));
+            BeginAnimation(ScrollOffsetProperty,
+                new DoubleAnimation(_itemContainer.ExtentHeight - ((FrameworkElement)element).ActualHeight - newAreaHeight,
+                    TimeSpan.Zero));
+        }
+        void ExpandableListView_Loaded(object sender, RoutedEventArgs e)
+        {
+            _itemContainer = (ScrollViewer)Template.FindName("PART_scroller_itemsPresenter", this);
+        }
+        void itemPresenter_Loaded(object sender, RoutedEventArgs e)
+        {
+            var target = (FrameworkElement)sender;
+            target.Loaded -= itemPresenter_Loaded;
+            target.SizeChanged += itemPresenter_SizeChanged;
+
+            var newAreaHeight = 0.0;
+            for (var i = IsExpand ? 0 : Math.Max(Items.Count - _displayMaxCount, 0); i < Items.Count; i++)
+            {
+                var container = (FrameworkElement)ItemContainerGenerator.ContainerFromIndex(i);
+                newAreaHeight += container.ActualHeight;
+            }
+
+            //スクロール
+            var scrollAnime = new DoubleAnimation(_itemContainer.ExtentHeight - newAreaHeight, _insertAnimationDuration);
+            var heightAnime = new DoubleAnimation(newAreaHeight, _insertAnimationDuration);
+            BeginAnimation(ScrollOffsetProperty, scrollAnime, HandoffBehavior.SnapshotAndReplace);
+            _itemContainer.BeginAnimation(HeightProperty, heightAnime, HandoffBehavior.SnapshotAndReplace);
+        }
+        void itemPresenter_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            var newAreaHeight = 0.0;
+            for (var i = IsExpand ? 0 : Math.Max(Items.Count - _displayMaxCount, 0); i < Items.Count; i++)
+            {
+                var container = (FrameworkElement)ItemContainerGenerator.ContainerFromIndex(i);
+                newAreaHeight += container.ActualHeight;
+            }
+            _itemContainer.BeginAnimation(HeightProperty,
+                new DoubleAnimation(newAreaHeight, TimeSpan.Zero));
+            BeginAnimation(ScrollOffsetProperty,
+                new DoubleAnimation(_itemContainer.ExtentHeight - newAreaHeight, TimeSpan.Zero));
         }
 
         public static readonly DependencyProperty IsExpandProperty = DependencyProperty.Register(
             "IsExpand", typeof(bool), typeof(ExpandableListView),
             new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.AffectsMeasure, Changed_IsExpand));
-        public static readonly DependencyProperty ExpandableProperty = DependencyProperty.Register(
-            "Expandable", typeof(bool), typeof(ExpandableListView), new PropertyMetadata(false));
-        public static readonly DependencyProperty DisplayableCountProperty = DependencyProperty.Register(
-            "DisplayableCount", typeof(int), typeof(ExpandableListView), new PropertyMetadata(2));
-        public static readonly DependencyProperty CommentCountProperty = DependencyProperty.Register(
-            "CommentCount", typeof(int), typeof(ExpandableListView), new UIPropertyMetadata(0));
+        [System.ComponentModel.Browsable(false)]
+        public static readonly DependencyProperty ScrollOffsetProperty = DependencyProperty.Register(
+            "ScrollOffset",typeof(double),typeof(ExpandableListView), new PropertyMetadata(0.0, Changed_ScrollOffset));
 
-        static void Changed_IsExpand(object sender, DependencyPropertyChangedEventArgs e)
+        static void Changed_IsExpand(DependencyObject sender, DependencyPropertyChangedEventArgs e)
         {
-            var element = (ExpandableListView)sender;
-            var board = new Storyboard();
+            var target = (ExpandableListView)sender;
             var duration = (Duration)TimeSpan.FromMilliseconds(500);
-            var bgnKeyTime = KeyTime.FromPercent(0.0);
-            var endKeyTime = KeyTime.FromPercent(1.0);
-            board.FillBehavior = FillBehavior.Stop;
 
-            var commeLstBxAnime = new DoubleAnimationUsingKeyFrames();
-            Storyboard.SetTarget(commeLstBxAnime, element._itemContainer);
-            Storyboard.SetTargetProperty(commeLstBxAnime, new PropertyPath(FrameworkElement.HeightProperty));
-            board.Children.Add(commeLstBxAnime);
-            commeLstBxAnime.Duration = duration;
             if ((bool)e.NewValue)
             {
-                //開く時
-                var beforeHeight = element._itemContainer.ActualHeight;
-                element._itemPanel.DisplayableCount = int.MaxValue;
-                element._itemPanel.Measure(new Size(element._itemPanel.ActualHeight, double.PositiveInfinity));
-                var affterHeight = element._itemPanel.DesiredSize.Height;
-                commeLstBxAnime.KeyFrames.Add(new LinearDoubleKeyFrame(beforeHeight, bgnKeyTime));
-                commeLstBxAnime.KeyFrames.Add(new LinearDoubleKeyFrame(affterHeight, endKeyTime));
-                commeLstBxAnime.KeyFrames.Add(new DiscreteDoubleKeyFrame(double.NaN, endKeyTime));
-
-                var yOffset = element._itemContainer.ActualHeight - element._itemPanel.DesiredSize.Height;
-                var offsetAnime = new DoubleAnimationUsingKeyFrames();
-                offsetAnime.Duration = duration;
-                Storyboard.SetTarget(offsetAnime, element._itemPanel);
-                Storyboard.SetTargetProperty(offsetAnime, new PropertyPath("RenderTransform.Y"));
-                board.Children.Add(offsetAnime);
-                offsetAnime.KeyFrames.Add(new LinearDoubleKeyFrame(yOffset, bgnKeyTime));
-                offsetAnime.KeyFrames.Add(new LinearDoubleKeyFrame(0.0, endKeyTime));
+                target._itemContainer.BeginAnimation(HeightProperty,
+                    new DoubleAnimation(target._itemContainer.ExtentHeight, duration), HandoffBehavior.SnapshotAndReplace);
+                target.BeginAnimation(ScrollOffsetProperty,
+                    new DoubleAnimation(0.0, TimeSpan.Zero) { BeginTime = duration.TimeSpan },
+                    HandoffBehavior.SnapshotAndReplace);
             }
             else
             {
-                var beforeHeight = element._itemPanel.ActualHeight;
-                element._itemPanel.DisplayableCount = element.DisplayableCount;
-                element._itemPanel.Measure(new Size(element._itemPanel.ActualHeight, double.PositiveInfinity));
-                var affterHeight = element._itemPanel.DesiredSize.Height;
-                element._itemPanel.DisplayableCount = int.MaxValue;
-                commeLstBxAnime.KeyFrames.Add(new LinearDoubleKeyFrame(beforeHeight, bgnKeyTime));
-                commeLstBxAnime.KeyFrames.Add(new LinearDoubleKeyFrame(affterHeight, endKeyTime));
-                commeLstBxAnime.KeyFrames.Add(new DiscreteDoubleKeyFrame(double.NaN, endKeyTime));
-                commeLstBxAnime.Completed += (a, b) => element._itemPanel.DisplayableCount = element.DisplayableCount;
+                var newAreaHeight = 0.0;
+                for (var i = target.IsExpand ? 0 : Math.Max(target.Items.Count - target._displayMaxCount, 0); i < target.Items.Count; i++)
+                {
+                    var container = (FrameworkElement)target.ItemContainerGenerator.ContainerFromIndex(i);
+                    newAreaHeight += container.ActualHeight;
+                }
 
-                var yOffset = affterHeight - beforeHeight;
-                var offsetAnime = new DoubleAnimationUsingKeyFrames();
-                offsetAnime.Duration = duration;
-                Storyboard.SetTarget(offsetAnime, element._itemPanel);
-                Storyboard.SetTargetProperty(offsetAnime, new PropertyPath("RenderTransform.Y"));
-                board.Children.Add(offsetAnime);
-                offsetAnime.KeyFrames.Add(new LinearDoubleKeyFrame(0.0, bgnKeyTime));
-                offsetAnime.KeyFrames.Add(new LinearDoubleKeyFrame(yOffset, endKeyTime));
-                offsetAnime.KeyFrames.Add(new DiscreteDoubleKeyFrame(0.0, endKeyTime));
+                target._itemContainer.BeginAnimation(HeightProperty,
+                    new DoubleAnimation(newAreaHeight, duration), HandoffBehavior.SnapshotAndReplace);
+                target.BeginAnimation(ScrollOffsetProperty,
+                    new DoubleAnimation(target._itemContainer.ExtentHeight - newAreaHeight, TimeSpan.Zero) { BeginTime = TimeSpan.Zero },
+                    HandoffBehavior.SnapshotAndReplace);
             }
-            element._itemContainer.BeginStoryboard(board, HandoffBehavior.SnapshotAndReplace);
+        }
+        static void Changed_ScrollOffset(DependencyObject sender, DependencyPropertyChangedEventArgs e)
+        {
+            var mediator = (ExpandableListView)sender;
+            var scrollViewer = mediator._itemContainer;
+            if (null != scrollViewer)
+                scrollViewer.ScrollToVerticalOffset((double)e.NewValue);
         }
     }
     public class CollapsibleStackPanel : VirtualizingPanel
@@ -264,14 +211,17 @@ namespace GPlusBrowser.Controls
         }
         protected override Size ArrangeOverride(Size finalSize)
         {
-            var xOffset = 0.0;
-            foreach (UIElement item in InternalChildren)
+            var xOffset = finalSize.Height;
+            var hSum = 0.0;
+            for (var i = InternalChildren.Count - 1; i >= 0; i--)
             {
+                UIElement item = InternalChildren[i];
+                xOffset -= item.DesiredSize.Height;
+                hSum += item.DesiredSize.Height;
                 item.Arrange(new Rect(0, xOffset, item.DesiredSize.Width, item.DesiredSize.Height));
-                xOffset += item.DesiredSize.Height;
             }
             var w = double.IsNaN(Width) ? finalSize.Width : Width;
-            var h = double.IsNaN(Height) ? Math.Min(xOffset, finalSize.Height) : Height;
+            var h = double.IsNaN(Height) ? Math.Min(hSum, finalSize.Height) : Height;
             return new Size(w, h);
         }
 

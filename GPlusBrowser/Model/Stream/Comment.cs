@@ -10,7 +10,6 @@ namespace GPlusBrowser.Model
     {
         public Comment(CommentInfo info) { Refresh(info); }
         public CommentInfo CommentInfo { get; private set; }
-
         public void Refresh(CommentInfo info)
         {
             CommentInfo = info;

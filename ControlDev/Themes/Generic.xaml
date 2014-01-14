@@ -17,30 +17,30 @@
                                 <RowDefinition Height="30" />
                                 <RowDefinition Height="auto" />
                             </Grid.RowDefinitions>
-                            <ToggleButton Grid.Row="0" Height="30" FontWeight="Bold" FontSize="13"
+                            <ToggleButton Grid.Row="0" FontWeight="Bold" FontSize="13"
                                           IsChecked="{Binding IsExpand, RelativeSource={RelativeSource TemplatedParent}}">
                                 <ToggleButton.Content>ExpandButton</ToggleButton.Content>
                                 <ToggleButton.Template>
                                     <ControlTemplate TargetType="{x:Type ToggleButton}">
-                                        <Border BorderBrush="LightGray" BorderThickness="0,1,0,0">
-                                            <UniformGrid Background="#f0f0f0">
-                                                <ContentPresenter Margin="10,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center" />
-                                            </UniformGrid>
+                                        <Border BorderBrush="LightGray" BorderThickness="0,1,0,0" Background="#f0f0f0">
+                                            <ContentPresenter Margin="10,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center" />
                                         </Border>
                                     </ControlTemplate>
                                 </ToggleButton.Template>
                             </ToggleButton>
-                            <ItemsPresenter Name="itemContainer" Grid.Row="1" VerticalAlignment="Top" ClipToBounds="True" />
+                            <ScrollViewer Name="PART_scroller_itemsPresenter" Grid.Row="1" VerticalAlignment="Top" Height="0.0">
+                                <ItemsPresenter />
+                            </ScrollViewer>
                         </Grid>
                     </Border>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
-        <Setter Property="ItemsPanel">
+        <Setter Property="ItemContainerStyle">
             <Setter.Value>
-                <ItemsPanelTemplate>
-                    <local:CollapsibleStackPanel IsItemsHost="True" />
-                </ItemsPanelTemplate>
+                <Style TargetType="FrameworkElement">
+                    <Setter Property="RenderTransform" Value="{Binding ShiftTranslater, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:ExpandableListView}}}" />
+                </Style>
             </Setter.Value>
         </Setter>
     </Style>

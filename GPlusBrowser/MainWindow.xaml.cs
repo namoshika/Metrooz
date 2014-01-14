@@ -25,6 +25,9 @@ namespace GPlusBrowser
         {
             InitializeComponent();
             _sizeChangedTrigger = new System.Reactive.Subjects.Subject<EventPattern<SizeChangedEventArgs>>();
+            _settingManager = new Model.SettingModelManager();
+            _accountManager = new Model.AccountManager();
+            _accountSwitcherVM = new ViewModel.PageSwitcherViewModel(_accountManager, Dispatcher);
             Loaded += MainWindow_Loaded;
             //Observable.FromEventPattern<SizeChangedEventHandler, SizeChangedEventArgs>(
             //    conversion: args => new SizeChangedEventHandler(args),
@@ -49,15 +52,16 @@ namespace GPlusBrowser
         {
             _accountSwitcherVM.Dispose();
             _accountManager.Dispose();
+            DataCacheDictionary.Clear();
             base.OnClosed(e);
         }
-        void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        async void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             _settingManager = new Model.SettingModelManager();
             _accountManager = new Model.AccountManager();
             _accountSwitcherVM = new ViewModel.PageSwitcherViewModel(_accountManager, Dispatcher);
             DataContext = _accountSwitcherVM;
-            _accountManager.Initialize();
+            await _accountManager.Initialize();
         }
 
         public static readonly DependencyProperty NowResizeAnimationProperty = DependencyProperty.Register(

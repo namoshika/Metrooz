@@ -16,6 +16,7 @@
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <WarningLevel>4</WarningLevel>
+    <ExpressionBlendVersion>5.0.40218.0</ExpressionBlendVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -70,6 +71,7 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.Expression.Effects" />
     <Reference Include="Microsoft.Expression.Interactions, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Assemblies\Microsoft.Expression.Interactions.dll</HintPath>
@@ -77,14 +79,15 @@
     <Reference Include="PresentationFramework.Aero" />
     <Reference Include="System" />
     <Reference Include="System.configuration" />
-    <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Net.Http" />
-    <Reference Include="System.Net.Http.Extensions">
-      <HintPath>..\packages\Microsoft.Net.Http.2.1.10\lib\net45\System.Net.Http.Extensions.dll</HintPath>
+    <Reference Include="System.Net.Http.Extensions, Version=2.2.18.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Microsoft.Net.Http.2.2.18\lib\net45\System.Net.Http.Extensions.dll</HintPath>
     </Reference>
-    <Reference Include="System.Net.Http.Primitives">
-      <HintPath>..\packages\Microsoft.Net.Http.2.1.10\lib\net45\System.Net.Http.Primitives.dll</HintPath>
+    <Reference Include="System.Net.Http.Primitives, Version=4.2.18.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Microsoft.Net.Http.2.2.18\lib\net45\System.Net.Http.Primitives.dll</HintPath>
     </Reference>
     <Reference Include="System.Net.Http.WebRequest" />
     <Reference Include="System.Reactive.Core, Version=2.1.30214.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
@@ -116,7 +119,6 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Xaml">
       <RequiredTargetFramework>4.0</RequiredTargetFramework>
     </Reference>
@@ -133,10 +135,11 @@
     <Compile Include="Controls\NotificationWindow.cs" />
     <Compile Include="DataCacheDictionary.cs" />
     <Compile Include="Controls\ColumnPanel.cs" />
-    <Compile Include="Controls\CommentListBox.cs" />
+    <Compile Include="Controls\ExpandableListView.cs" />
     <Compile Include="Controls\ExTreeView.cs" />
     <Compile Include="Controls\ImageBox.cs" />
     <Compile Include="Controls\ItemSelecter.cs" />
+    <Compile Include="AppException.cs" />
     <Compile Include="Model\NotificationManager.cs" />
     <Compile Include="ObservableCollectionEx.cs" />
     <Compile Include="Model\AccountManager.cs" />
@@ -147,10 +150,7 @@
     <Compile Include="Model\Stream\CircleManager.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="ViewModel\AccountManagerPanel\AccountSelectorViewModel.cs" />
-    <Compile Include="ViewModel\AccountManagerPanel\AccountPanelViewModel.cs" />
-    <Compile Include="ViewModel\AccountManagerPanel\StreamItemViewModel.cs" />
     <Compile Include="ViewModel\PageSwitcherViewModel.cs" />
-    <Compile Include="ViewModel\AccountManagerPanel\LoginerViewModel.cs" />
     <Compile Include="ViewModel\Stream\AttachedAlbumViewModel.cs" />
     <Compile Include="ViewModel\Notification\NotificationManagerViewModel.cs" />
     <Compile Include="ViewModel\Stream\AttachedLinkViewModel.cs" />
@@ -191,18 +191,13 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <None Include="app.config" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
     <AppDesigner Include="Properties\" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\SnkLib_GooglePlus\SnkLib_GooglePlus.csproj">
-      <Project>{A19C98E5-7048-43E2-98F0-689A3FFE2A82}</Project>
-      <Name>SnkLib_GooglePlus</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\back.png" />
@@ -216,8 +211,22 @@
   <ItemGroup>
     <Resource Include="Resources\TrayIcon.ico" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\snklib.web.googleplus-2.0\SnkLib.MainLibrary\SnkLib.MainLibrary.csproj">
+      <Project>{a19c98e5-7048-43e2-98f0-689a3ffe2a82}</Project>
+      <Name>SnkLib.MainLibrary</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\snklib.web.googleplus-2.0\SnkLib.PS.win\SnkLib.PS.win.csproj">
+      <Project>{37846c4e-2f87-46e9-b036-9569f422bf63}</Project>
+      <Name>SnkLib.PS.win</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Import Project="..\packages\Microsoft.Bcl.Build.1.0.7\tools\Microsoft.Bcl.Build.targets" />
+  <Import Project="..\packages\Microsoft.Bcl.Build.1.0.13\tools\Microsoft.Bcl.Build.targets" Condition="Exists('..\packages\Microsoft.Bcl.Build.1.0.13\tools\Microsoft.Bcl.Build.targets')" />
+  <Target Name="EnsureBclBuildImported" BeforeTargets="BeforeBuild" Condition="'$(BclBuildImported)' == ''">
+    <Error Condition="!Exists('..\packages\Microsoft.Bcl.Build.1.0.13\tools\Microsoft.Bcl.Build.targets')" Text="This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=317567." HelpKeyword="BCLBUILD2001" />
+    <Error Condition="Exists('..\packages\Microsoft.Bcl.Build.1.0.13\tools\Microsoft.Bcl.Build.targets')" Text="The build restored NuGet packages. Build the project again to include these packages in the build. For more information, see http://go.microsoft.com/fwlink/?LinkID=317568." HelpKeyword="BCLBUILD2002" />
+  </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

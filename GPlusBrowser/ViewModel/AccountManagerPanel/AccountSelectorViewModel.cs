@@ -19,7 +19,6 @@ namespace GPlusBrowser.ViewModel
         {
             _accountManagerModel = accountManagerModel;
             _accountManagerVM = accountManagerVM;
-            Loginer = new LoginerViewModel(accountManagerModel, null, uiThreadDispatcher);
         }
         AccountManager _accountManagerModel;
         PageSwitcherViewModel _accountManagerVM;
@@ -44,7 +43,6 @@ namespace GPlusBrowser.ViewModel
                 OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("StatusText"));
             }
         }
-        public LoginerViewModel Loginer { get; set; }
         public ObservableCollection<AccountViewModel> Accounts { get { return _accountManagerVM.Pages; } }
     }
 }

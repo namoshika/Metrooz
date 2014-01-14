@@ -19,23 +19,23 @@ namespace GPlusBrowser.ViewModel
 
             PropertyChanged += SettingViewModel_PropertyChanged;
             SaveConfigCommand = new RelayCommand(
-                async obj =>
+                obj =>
                 {
                     NotificationText = string.Empty;
                     Status = SettingStatusType.Checking;
-                    if (EmailAddress != null && Password != null)
-                    {
-                        await mainWinModel.Login(EmailAddress, Password).ConfigureAwait(false);
-                        Status = SettingStatusType.FailLogin;
-                        NotificationText = "ログインに失敗しました。";
-                    }
-                    else
-                    {
-                        Status = SettingStatusType.Normal;
-                        NotificationText = string.Empty;
-                        IsModified = false;
-                        IsExpanded = false;
-                    }
+                    //if (EmailAddress != null && Password != null)
+                    //{
+                    //    await mainWinModel.Login(EmailAddress, Password).ConfigureAwait(false);
+                    //    Status = SettingStatusType.FailLogin;
+                    //    NotificationText = "ログインに失敗しました。";
+                    //}
+                    //else
+                    //{
+                    //    Status = SettingStatusType.Normal;
+                    //    NotificationText = string.Empty;
+                    //    IsModified = false;
+                    //    IsExpanded = false;
+                    //}
                 });
             CancelConfigCommand = new RelayCommand(
                 obj =>

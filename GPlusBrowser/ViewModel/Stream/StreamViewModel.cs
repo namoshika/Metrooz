@@ -76,6 +76,8 @@ namespace GPlusBrowser.ViewModel
                 OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("Activities"));
             }
         }
+        public void Connect()
+        { _circle.Connect(); }
         public void Dispose()
         {
             _activityCount = 0;

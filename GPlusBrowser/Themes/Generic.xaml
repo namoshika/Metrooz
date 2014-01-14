@@ -61,10 +61,10 @@
             </Setter.Value>
         </Setter>
     </Style>
-    <Style TargetType="{x:Type local:CommentListBox}">
+    <Style TargetType="{x:Type local:ExpandableListView}">
         <Setter Property="Template">
             <Setter.Value>
-                <ControlTemplate TargetType="{x:Type local:CommentListBox}">
+                <ControlTemplate TargetType="{x:Type local:ExpandableListView}">
                     <Border Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}">
@@ -72,86 +72,32 @@
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="30" />
                                 <RowDefinition Height="auto" />
-                                <RowDefinition Height="auto" />
-                                <RowDefinition Height="auto" />
                             </Grid.RowDefinitions>
-                            <ToggleButton Grid.Row="0" Height="30" FontWeight="Bold" FontSize="13"
-                                          Visibility="{Binding Expandable, ElementName=itemContainer, Converter={StaticResource boolToVisibilityConverter}}"
+                            <ToggleButton Grid.Row="0" FontWeight="Bold" FontSize="13"
                                           IsChecked="{Binding IsExpand, RelativeSource={RelativeSource TemplatedParent}}">
-                                <ToggleButton.Content>
-                                    <MultiBinding Converter="{StaticResource isExpandCommentCountToStringConverter}">
-                                        <Binding Path="IsExpand" RelativeSource="{RelativeSource Mode=TemplatedParent}" />
-                                        <Binding Path="CommentCount" RelativeSource="{RelativeSource Mode=TemplatedParent}" />
-                                    </MultiBinding>
-                                </ToggleButton.Content>
+                                <ToggleButton.Content>ExpandButton</ToggleButton.Content>
                                 <ToggleButton.Template>
                                     <ControlTemplate TargetType="{x:Type ToggleButton}">
-                                        <Border BorderBrush="LightGray" BorderThickness="0,1,0,0">
-                                            <UniformGrid Background="#f0f0f0">
-                                                <ContentPresenter Margin="10,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center" />
-                                            </UniformGrid>
+                                        <Border BorderBrush="LightGray" BorderThickness="0,1,0,0" Background="#f0f0f0">
+                                            <ContentPresenter Margin="10,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center" />
                                         </Border>
                                     </ControlTemplate>
                                 </ToggleButton.Template>
                             </ToggleButton>
-                            <!--<ListBox x:Name="itemContainer" Grid.Row="1" Margin="0"
-                                                 ItemsSource="{TemplateBinding ItemsSource}">
-                                <ListBox.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <StackPanel VerticalAlignment="Bottom" HorizontalAlignment="Stretch" IsItemsHost="True" />
-                                    </ItemsPanelTemplate>
-                                </ListBox.ItemsPanel>
-                            </ListBox>-->
-                            <Grid Grid.Row="2" Margin="0,10,0,8">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="auto" />
-                                </Grid.ColumnDefinitions>
-                                <TextBox Grid.Column="0" BorderBrush="LightGray" BorderThickness="1" IsEnabled="{TemplateBinding IsWritable}"
-                                         Margin="0" AcceptsReturn="True" TextWrapping="Wrap"
-                                         Text="{Binding PostText, RelativeSource={RelativeSource TemplatedParent}, UpdateSourceTrigger=PropertyChanged}"
-                                         localCtrl:PlaceHolderBehavior.Text="コメントを追加..." localCtrl:PlaceHolderBehavior.VerticalAlignment="Top">
-                                    <i:Interaction.Triggers>
-                                        <ei:DataTrigger Binding="{Binding IsWriteMode, RelativeSource={RelativeSource TemplatedParent}}" Value="False">
-                                            <ei:ChangePropertyAction PropertyName="Padding" TargetObject="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type TextBox}}}" Value="0" />
-                                        </ei:DataTrigger>
-                                        <ei:DataTrigger Binding="{Binding IsWriteMode, RelativeSource={RelativeSource TemplatedParent}}" Value="True">
-                                            <ei:ChangePropertyAction PropertyName="Padding" TargetObject="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type TextBox}}}" Value="0,0,0,25" />
-                                        </ei:DataTrigger>
-                                        <i:EventTrigger EventName="PreviewMouseDown">
-                                            <ei:ChangePropertyAction PropertyName="IsWriteMode" TargetObject="{Binding RelativeSource={RelativeSource TemplatedParent}}" Value="True" />
-                                        </i:EventTrigger>
-                                    </i:Interaction.Triggers>
-                                    <TextBox.InputBindings>
-                                        <KeyBinding Key="Enter" Modifiers="Shift" Command="{Binding PostCommand, RelativeSource={RelativeSource TemplatedParent}}" />
-                                    </TextBox.InputBindings>
-                                </TextBox>
-                                <ToggleButton Grid.Column="1" Margin="5,0,0,0" Padding="8,0,8,0" Content="閉"
-                                              IsChecked="{Binding IsExpand, RelativeSource={RelativeSource TemplatedParent}}">
-                                    <ToggleButton.Visibility>
-                                        <MultiBinding Converter="{StaticResource isExpandExpandableToVisibility}">
-                                            <Binding Path="IsExpand" RelativeSource="{RelativeSource TemplatedParent}" />
-                                            <Binding ElementName="itemContainer" Path="Expandable" />
-                                        </MultiBinding>
-                                    </ToggleButton.Visibility>
-                                </ToggleButton>
-                            </Grid>
-                            <StackPanel Grid.Row="3" Margin="0,0,0,5" Orientation="Horizontal"
-                                        Visibility="{Binding IsWriteMode, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type localCtrl:CommentListBox}}, Converter={StaticResource boolToVisibilityConverter}}">
-                                <Button Padding="10,3,10,3" Margin="0,0,8,0" IsEnabled="{Binding IsWritable}"
-                                        Content="コメントを投稿" Command="{TemplateBinding PostCommand}" />
-                                <Button Padding="10,3,10,3" Margin="0,0,8,0" Content="キャンセル">
-                                    <i:Interaction.Triggers>
-                                        <i:EventTrigger EventName="Click">
-                                            <ei:ChangePropertyAction PropertyName="IsWriteMode" TargetObject="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}}" Value="False" />
-                                            <ei:ChangePropertyAction PropertyName="IsWritable" TargetObject="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}}" Value="True" />
-                                        </i:EventTrigger>
-                                    </i:Interaction.Triggers>
-                                </Button>
-                            </StackPanel>
+                            <ScrollViewer Name="PART_scroller_itemsPresenter" Grid.Row="1" VerticalAlignment="Top" Height="0.0"
+                                          ScrollViewer.CanContentScroll="False">
+                                <ItemsPresenter />
+                            </ScrollViewer>
                         </Grid>
                     </Border>
                 </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ItemContainerStyle">
+            <Setter.Value>
+                <Style TargetType="FrameworkElement">
+                    <Setter Property="RenderTransform" Value="{Binding ShiftTranslater, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:ExpandableListView}}}" />
+                </Style>
             </Setter.Value>
         </Setter>
     </Style>

@@ -34,12 +34,7 @@ namespace GPlusBrowser.Model
         {
             lock (_syncerInit)
             {
-                if (_notificationModel != null)
-                    _notificationModel.Updated -= _notificationModel_Updated;
-
-                _notificationModel = _account.PlusClient.Notification
-                    .GetNotificationContainer(NotificationsFilter.All);
-                _notificationModel.Updated += _notificationModel_Updated;
+                _notificationModel = _account.PlusClient.Notification.GetNotifications(NotificationsFilter.All);
                 Connect();
             }
             Update();
@@ -49,7 +44,11 @@ namespace GPlusBrowser.Model
             IsError = false;
             OnChangedIsError(new EventArgs());
             try
-            { await _notificationModel.UpdateAsync(false).ConfigureAwait(false); }
+            {
+                await _notificationModel.UpdateAsync(MaxItemCount).ConfigureAwait(false);
+                UnreadItemCount = _notificationModel.Notifications.Count(info => info.IsReaded == false);
+                OnUpdated(new EventArgs());
+            }
             catch (FailToOperationException)
             {
                 IsError = true;
@@ -62,8 +61,7 @@ namespace GPlusBrowser.Model
             {
                 if (Items.Count == 0)
                     return;
-                _account.PlusClient.Notification
-                    .UpdateLastReadTimeAsync(Items.First().LatestNoticeDate)
+                _notificationModel.UpdateLatestCheckTimeAsync(Items.First().NoticedDate)
                     .ConfigureAwait(false);
             }
         }
@@ -84,12 +82,6 @@ namespace GPlusBrowser.Model
             if (_notificationTrigger != null)
                 _notificationTrigger.Dispose();
         }
-        void _notificationModel_Updated(object sender, NotificationContainerUpdatedEventArgs e)
-        {
-            UnreadItemCount = _notificationModel.Notifications
-                .Count(info => info.IsReaded == false);
-            OnUpdated(e);
-        }
 
         public event EventHandler ChangedIsError;
         protected virtual void OnChangedIsError(EventArgs e)
@@ -97,8 +89,8 @@ namespace GPlusBrowser.Model
             if (ChangedIsError != null)
                 ChangedIsError(this, e);
         }
-        public event NotificationContainerEventHandler Updated;
-        protected virtual void OnUpdated(NotificationContainerUpdatedEventArgs e)
+        public event EventHandler Updated;
+        protected virtual void OnUpdated(EventArgs e)
         {
             if (Updated != null)
                 Updated(this, e);

@@ -10,34 +10,43 @@ namespace GPlusBrowser.Model
     public class SettingModelManager
     {
         public SettingModelManager()
-        {
-            Items = new List<SettingModel>();
-        }
+        { Items = new List<SettingModel>(); }
 
         public List<SettingModel> Items { get; private set; }
-        public System.Threading.Tasks.Task Save()
+        public void Save()
         {
-            return System.Threading.Tasks.Task.Factory.StartNew(() =>
+            Properties.Settings.Default.AccountSettings = Items.ToArray();
+            Properties.Settings.Default.Save();
+
+            var exLst = new List<Exception>();
+            foreach (var item in Items)
+                try { item.Save(); }
+                catch(Exception e)
                 {
-                    Properties.Settings.Default.AccountSettings = Items.ToArray();
-                    Properties.Settings.Default.Save();
-                    foreach (var item in Items)
-                        item.Save();
-                });
+                    if (System.Diagnostics.Debugger.IsAttached)
+                        exLst.Add(e);
+                }
+            if (exLst.Count > 0)
+                throw new AggregateException("設定の保存中にエラーが発生しました。", exLst);
         }
-        public System.Threading.Tasks.Task Reload()
+        public void Reload()
         {
-            return System.Threading.Tasks.Task.Factory.StartNew(() =>
-                {
-                    Properties.Settings.Default.Reload();
-                    Items.Clear();
-                    if (Properties.Settings.Default.AccountSettings != null)
+            Properties.Settings.Default.Reload();
+            Items.Clear();
+            if (Properties.Settings.Default.AccountSettings != null)
+            {
+                var exLst = new List<Exception>();
+                Items.AddRange(Properties.Settings.Default.AccountSettings);
+                foreach (var item in Items)
+                    try { item.Load(); }
+                    catch (Exception e)
                     {
-                        Items.AddRange(Properties.Settings.Default.AccountSettings);
-                        foreach (var item in Items)
-                            item.Load();
+                        if (System.Diagnostics.Debugger.IsAttached)
+                            exLst.Add(e);
                     }
-                });
+                if (exLst.Count > 0)
+                    throw new AggregateException("設定の保存中にエラーが発生しました。", exLst);
+            }
         }
     }
 }

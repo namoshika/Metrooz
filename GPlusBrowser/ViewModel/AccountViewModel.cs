@@ -14,28 +14,25 @@ namespace GPlusBrowser.ViewModel
 
     public class AccountViewModel : ViewModelBase, IDisposable
     {
-        public AccountViewModel(Account model, AccountManager manager, Dispatcher uiThreadDispatcher)
+        public AccountViewModel(Account model, Dispatcher uiThreadDispatcher)
             : base(uiThreadDispatcher, null)
         {
             _accountModel = model;
             _accountModel.Initialized += _accountModel_Initialized;
             _accountModel.ChangedConnectStatus += _accountModel_ChangedConnectStatus;
-            _accountManagerModel = manager;
-            _userName = _accountModel.Setting.UserName;
-            _loginer = new LoginerViewModel(manager, model, uiThreadDispatcher);
-            DataCacheDictionary.Default.DownloadImage(new Uri(_accountModel.AccountIconUrl.Replace("$SIZE_SEGMENT", "s35-c-k")))
-                .ContinueWith(tsk => _accountIconUrl = tsk.Result);
+            _userName = _accountModel.Builder.Name;
+            //DataCacheDictionary.Default
+            //    .DownloadImage(new Uri(_accountModel.Builder.IconUrl.Replace("$SIZE_SEGMENT", "s35-c-k")))
+            //    .ContinueWith(tsk => UserIconUrl = tsk.Result);
 
             OpenStreamPanelCommand = new RelayCommand(OpenStreamPanelCommand_Execute);
             BackToAccountManagerCommand = new RelayCommand(BackToAccountManagerCommand_Execute);
             ConnectStreamCommand = new RelayCommand(ConnectStreamCommand_Execute);
         }
         Account _accountModel;
-        AccountManager _accountManagerModel;
-        NotificationManagerViewModel _notification;
+        //NotificationManagerViewModel _notification;
         StreamManagerViewModel _stream;
-        LoginerViewModel _loginer;
-        ImageSource _accountIconUrl;
+        ImageSource _userIconUrl;
         bool _isShowStatusText;
         string _statusText;
         string _userName;
@@ -68,13 +65,13 @@ namespace GPlusBrowser.ViewModel
                 OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("UserName"));
             }
         }
-        public LoginerViewModel Loginer
+        public ImageSource UserIconUrl
         {
-            get { return _loginer; }
+            get { return _userIconUrl; }
             set
             {
-                _loginer = value;
-                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("Loginer"));
+                _userIconUrl = value;
+                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("UserIconUrl"));
             }
         }
         public StreamManagerViewModel Stream
@@ -86,24 +83,15 @@ namespace GPlusBrowser.ViewModel
                 OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("Stream"));
             }
         }
-        public NotificationManagerViewModel Notification
-        {
-            get { return _notification; }
-            set
-            {
-                _notification = value;
-                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("Notification"));
-            }
-        }
-        public ImageSource AccountIconUrl
-        {
-            get { return _accountIconUrl; }
-            set
-            {
-                _accountIconUrl = value;
-                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("AccountIconUrl"));
-            }
-        }
+        //public NotificationManagerViewModel Notification
+        //{
+        //    get { return _notification; }
+        //    set
+        //    {
+        //        _notification = value;
+        //        OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("Notification"));
+        //    }
+        //}
         public ICommand OpenStreamPanelCommand { get; private set; }
         public ICommand BackToAccountManagerCommand { get; private set; }
         public ICommand ConnectStreamCommand { get; private set; }
@@ -111,7 +99,6 @@ namespace GPlusBrowser.ViewModel
         {
             _accountModel.Initialized -= _accountModel_Initialized;
             _accountModel = null;
-            _accountManagerModel = null;
             if (_stream != null)
                 _stream.Dispose();
             _stream = null;
@@ -119,20 +106,23 @@ namespace GPlusBrowser.ViewModel
 
         async void _accountModel_Initialized(object sender, EventArgs e)
         {
-            //DisableSessionの場合はLoginer内部でログイン & 初期化が行われる
-            if (_accountModel.InitializeSequenceStatus < AccountInitSeqStatus.DisableSession)
+            if (_accountModel.IsInitialized == false)
+                Stream.SelectedCircleIndex = -1;
+            else
             {
                 DataCacheDict = new DataCacheDictionary(_accountModel.PlusClient.NormalHttpClient);
                 Stream = new StreamManagerViewModel(_accountModel.Stream, this, UiThreadDispatcher);
-                Notification = new NotificationManagerViewModel(_accountModel.Notification, this, UiThreadDispatcher);
+                //Notification = new NotificationManagerViewModel(_accountModel.Notification, this, UiThreadDispatcher);
                 UserName = _accountModel.MyProfile.Name;
-                AccountIconUrl = await DataCacheDict.DownloadImage(
-                    new Uri(_accountModel.AccountIconUrl.Replace("$SIZE_SEGMENT", "s35-c-k")));
+                UserIconUrl = await DataCacheDict.DownloadImage(
+                    new Uri(_accountModel.Builder.IconUrl
+                        .Replace("$SIZE_SEGMENT", "s35-c-k")
+                        .Replace("$SIZE_NUM", "80")));
             }
         }
         void _accountModel_ChangedConnectStatus(object sender, EventArgs e)
         {
-            if (_accountModel.IsConnected != TalkGadgetBindStatus.DisableConnect)
+            if (_accountModel.IsConnected)
                 IsShowStatusText = false;
             else
             {
@@ -142,19 +132,25 @@ namespace GPlusBrowser.ViewModel
         }
         async void OpenStreamPanelCommand_Execute(object arg)
         {
-            var targetIdx = _accountManagerModel.Accounts.IndexOf(_accountModel);
-            _accountManagerModel.SelectedAccountIndex = targetIdx;
-
-            var seqStatus = _accountManagerModel.Accounts[targetIdx].InitializeSequenceStatus;
-            if (seqStatus != AccountInitSeqStatus.UnLogined && seqStatus < AccountInitSeqStatus.LoadedHomeInit)
-                await _accountManagerModel.Accounts[targetIdx].Initialize().ConfigureAwait(false);
+            OnOpenedStreamPanel(new EventArgs());
+            await _accountModel.Initialize(false);
         }
         void BackToAccountManagerCommand_Execute(object arg)
-        { _accountManagerModel.SelectedAccountIndex = -1; }
+        { OnBackedToAccountManager(new EventArgs()); }
         void ConnectStreamCommand_Execute(object arg)
+        { _accountModel.Connect(); }
+
+        public event EventHandler OpenedStreamPanel;
+        protected virtual void OnOpenedStreamPanel(EventArgs e)
         {
-            var account = _accountManagerModel.Accounts[_accountManagerModel.SelectedAccountIndex];
-            account.Connect();
+            if (OpenedStreamPanel != null)
+                OpenedStreamPanel(this, e);
+        }
+        public event EventHandler BackedToAccountManager;
+        protected virtual void OnBackedToAccountManager(EventArgs e)
+        {
+            if (BackedToAccountManager != null)
+                BackedToAccountManager(this, e);
         }
     }
 }

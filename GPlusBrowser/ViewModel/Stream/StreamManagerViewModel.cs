@@ -15,12 +15,14 @@ namespace GPlusBrowser.ViewModel
         public StreamManagerViewModel(StreamManager streamManager, AccountViewModel topLevel, Dispatcher uiThreadDispatcher)
             : base(uiThreadDispatcher, topLevel)
         {
+            _selectedCircleIndex = -1;
             _streamManagerModel = streamManager;
             ((INotifyCollectionChanged)_streamManagerModel.CircleStreams).CollectionChanged += _stream_ChangedDisplayStreams;
-            _streamManagerModel.ChangedSelectedCircleIndex += _streamManagerModel_ChangedSelectedCircleIndex;
             _displayStreams = new ObservableCollection<StreamViewModel>(
                 _streamManagerModel.CircleStreams.Select(vm => new StreamViewModel(vm, topLevel, uiThreadDispatcher))); ;
-            _selectedCircleIndex = 0;
+
+            if (_displayStreams.Count > 0)
+                SelectedCircleIndex = 0;
         }
         bool _isError;
         int _selectedCircleIndex;
@@ -45,8 +47,9 @@ namespace GPlusBrowser.ViewModel
             {
                 if (_selectedCircleIndex == value)
                     return;
+                if (value > -1)
+                    _displayStreams[value].Connect();
                 _selectedCircleIndex = value;
-                _streamManagerModel.SelectedCircleIndex = value;
                 OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("SelectedCircleIndex"));
             }
         }
@@ -66,7 +69,6 @@ namespace GPlusBrowser.ViewModel
 
             SelectedCircleIndex = -1;
             ((INotifyCollectionChanged)_streamManagerModel.CircleStreams).CollectionChanged -= _stream_ChangedDisplayStreams;
-            _streamManagerModel.ChangedSelectedCircleIndex -= _streamManagerModel_ChangedSelectedCircleIndex;
             _streamManagerModel = null;
 
             foreach (var item in DisplayStreams)
@@ -99,7 +101,5 @@ namespace GPlusBrowser.ViewModel
                         break;
                 }
         }
-        void _streamManagerModel_ChangedSelectedCircleIndex(object sender, EventArgs e)
-        { UiThreadDispatcher.Invoke((Action)delegate() { SelectedCircleIndex = _streamManagerModel.SelectedCircleIndex; }); }
     }
 }

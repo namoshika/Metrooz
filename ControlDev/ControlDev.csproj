@@ -82,7 +82,7 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Controls\CommentListBox.cs" />
+    <Compile Include="Controls\ExpandableListView.cs" />
     <Compile Include="Controls\TestControl.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>

@@ -6,7 +6,6 @@ using System.Xml.Linq;
 
 namespace GPlusBrowser.Model
 {
-    [Serializable]
     public class SettingModel
     {
         public SettingModel()
@@ -18,15 +17,85 @@ namespace GPlusBrowser.Model
         }
         System.IO.DirectoryInfo _settingDirectory;
         System.Runtime.Serialization.Formatters.Binary.BinaryFormatter _cookieFormatter;
+        System.Net.CookieContainer _cookies;
+        string _mailAddress;
+        string _userName;
+        string _userIconUrl;
 
-        public string MailAddress { get; set; }
-        public string UserName { get; set; }
-        public string UserIconUrl { get; set; }
         [System.Xml.Serialization.XmlIgnore]
-        public System.Net.CookieContainer Cookies { get; set; }
+        public SettingStatus IsSaved { get; private set; }
+        [System.Xml.Serialization.XmlIgnore]
+        public System.Net.CookieContainer Cookies
+        {
+            get { return _cookies; }
+            set
+            {
+                _cookies = value;
+                IsSaved = SettingStatus.NotSaved;
+            }
+        }
+        public string MailAddress
+        {
+            get { return _mailAddress; }
+            set
+            {
+                _mailAddress = value;
+                IsSaved = SettingStatus.NotSaved;
+            }
+        }
+        public string UserName
+        {
+            get { return _userName; }
+            set
+            {
+                _userName = value;
+                IsSaved = SettingStatus.NotSaved;
+            }
+        }
+        public string UserIconUrl
+        {
+            get { return _userIconUrl; }
+            set
+            {
+                _userIconUrl = value;
+                IsSaved = SettingStatus.NotSaved;
+            }
+        }
 
-        public void Save() { SerializeCookie(); }
-        public void Load() { DeserializeCookie(); }
+        public void Save()
+        {
+            try
+            {
+                SerializeCookie();
+                IsSaved = SettingStatus.Saved;
+            }
+            catch (Exception e)
+            {
+                IsSaved = SettingStatus.Error;
+
+                var ex = new AppException("設定の保存に失敗しました。", e);
+                ex.Data.Add("MailAddress", MailAddress);
+                ex.Data.Add("SettingDirectory", _settingDirectory);
+                throw ex;
+            }
+        }
+        public void Load()
+        {
+            try
+            {
+                DeserializeCookie();
+                IsSaved = SettingStatus.Saved;
+            }
+            catch (Exception e)
+            {
+                IsSaved = SettingStatus.Error;
+
+                var ex = new AppException("設定の読み込みに失敗しました。", e);
+                ex.Data.Add("MailAddress", MailAddress);
+                ex.Data.Add("SettingDirectory", _settingDirectory);
+                throw ex;
+            }
+        }
         void SerializeCookie()
         {
             if (string.IsNullOrEmpty(MailAddress))
@@ -51,4 +120,6 @@ namespace GPlusBrowser.Model
                 Cookies = new System.Net.CookieContainer();
         }
     }
+    public enum SettingStatus
+    { NotSaved, Saved, Error, }
 }

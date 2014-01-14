@@ -62,7 +62,7 @@ namespace GPlusBrowser
             }
             catch (System.Net.Http.HttpRequestException)
             {
-                System.Diagnostics.Debug.Assert(false, "DataCacheDictionary.DownloadImage()の結果、通信エラーが発生しました。");
+                //System.Diagnostics.Debug.Assert(false, "DataCacheDictionary.DownloadImage()の結果、通信エラーが発生しました。");
                 return null;
             }
         }

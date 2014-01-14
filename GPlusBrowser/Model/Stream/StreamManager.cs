@@ -14,75 +14,52 @@ namespace GPlusBrowser.Model
         public StreamManager(Account account)
         {
             _account = account;
-            ((INotifyCollectionChanged)_account.Circles.Items).CollectionChanged += StreamManager_CollectionChanged;
-            _circleStreams = new ObservableCollection<Stream>() { new Stream(this,  account.PlusClient.Relation.YourCircle) };
-            _selectedCircleIndex = -1;
-
-            CircleStreams = new ReadOnlyObservableCollection<Stream>(_circleStreams);
+            _account.Circles.Items.CollectionChanged += StreamManager_CollectionChanged;
+            CircleStreams = new ObservableCollection<Stream>();
         }
-        int _selectedCircleIndex;
-        ObservableCollection<Stream> _circleStreams;
         Account _account;
 
-        public int SelectedCircleIndex
+        public ObservableCollection<Stream> CircleStreams { get; private set; }
+        public async Task Initialize()
         {
-            get { return _selectedCircleIndex; }
-            set
-            {
-                if (_selectedCircleIndex == value)
-                    return;
-                _selectedCircleIndex = value;
-                OnChangedSelectedCircleIndex(new EventArgs());
-            }
+            await _account.PlusClient.Relation.UpdateCirclesAndBlockAsync(false, CircleUpdateLevel.Loaded);
+            CircleStreams.Add(new Stream(this) { Circle = _account.PlusClient.Relation.YourCircle });
         }
-        public ReadOnlyObservableCollection<Stream> CircleStreams { get; private set; }
+        public void Connect()
+        {
+            foreach (var item in CircleStreams)
+                item.Connect();
+        }
         void StreamManager_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             switch(e.Action)
             {
                 case NotifyCollectionChangedAction.Reset:
-                    foreach (var item in _circleStreams)
+                    foreach (var item in CircleStreams)
                         item.Dispose();
-                    _circleStreams.Clear();
+                    CircleStreams.Clear();
                     break;
                 case NotifyCollectionChangedAction.Add:
-                    foreach(CircleInfo item in e.NewItems)
-                        _circleStreams.Insert(e.NewStartingIndex + 1, new Stream(this, item));
-                    if (_selectedCircleIndex < 0)
-                        SelectedCircleIndex = 0;
+                    foreach (CircleInfo item in e.NewItems)
+                        CircleStreams.Insert(e.NewStartingIndex + 1, new Stream(this) { Circle = item });
                     break;
                 case NotifyCollectionChangedAction.Remove:
                     foreach (CircleInfo item in e.OldItems)
                     {
-                        var target = _circleStreams.First(strm => strm.Circle == item);
-                        _circleStreams.Remove(target);
+                        var target = CircleStreams.First(strm => strm.Circle == item);
+                        CircleStreams.Remove(target);
                         target.Dispose();
                     }
                     break;
                 case NotifyCollectionChangedAction.Replace:
                     var newItem = (CircleInfo)e.NewItems[0];
-                    _circleStreams[e.NewStartingIndex + 1].Circle = newItem;
+                    CircleStreams[e.NewStartingIndex + 1].Circle = newItem;
                     break;
                 case NotifyCollectionChangedAction.Move:
-                    _circleStreams.Move(e.OldStartingIndex + 1, e.NewStartingIndex + 1);
+                    CircleStreams.Move(e.OldStartingIndex + 1, e.NewStartingIndex + 1);
                     break;
             }
             
-        }
-
-        public event EventHandler ChangedSelectedCircleIndex;
-        protected virtual void OnChangedSelectedCircleIndex(EventArgs e)
-        {
-            if (_circleStreams.Count >= 0 && _selectedCircleIndex >= 0)
-            {
-                var selectedStream = _circleStreams[_selectedCircleIndex];
-                selectedStream.Connect();
-                if (selectedStream.IsRefreshed == false)
-                    selectedStream.Refresh();
-            }
-
-            if (ChangedSelectedCircleIndex != null)
-                ChangedSelectedCircleIndex(this, e);
         }
     }
     public enum StreamUpdateSeqState

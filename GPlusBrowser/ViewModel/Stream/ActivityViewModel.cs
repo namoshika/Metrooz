@@ -20,20 +20,20 @@ namespace GPlusBrowser.ViewModel
             : base(uiThreadDispatcher, topLevel)
         {
             _isWritableA = true;
-            _activity = activity;
+            _model = activity;
             _comments = new ObservableCollection<CommentViewModel>();
             _activity_Refreshed(null, null);
             _comments.Clear();
-            lock (_activity.Comments)
-                foreach (var item in _activity.Comments.Select(
+            lock (_model.Comments)
+                foreach (var item in _model.Comments.Select(
                     comment => (CommentViewModel)new CommentViewModel(comment, topLevel, uiThreadDispatcher)))
                     Comments.Add(item);
 
-            _activity.Comments.CollectionChanged += Comments_CollectionChanged;
-            _activity.Updated += _activity_Refreshed;
+            _model.Comments.CollectionChanged += _activity_Comments_CollectionChanged;
+            _model.Updated += _activity_Refreshed;
             PostCommentCommand = new RelayCommand(PostCommentCommand_Executed);
         }
-        Activity _activity;
+        Activity _model;
         ImageSource _iconUrl;
         Uri _activityUrl;
         int _isDisposed;
@@ -160,12 +160,12 @@ namespace GPlusBrowser.ViewModel
             if (System.Threading.Interlocked.CompareExchange(ref _isDisposed, 1, 0) == 1)
                 return;
 
-            _activity.Updated -= _activity_Refreshed;
-            _activity.Comments.CollectionChanged -= Comments_CollectionChanged;
+            _model.Updated -= _activity_Refreshed;
+            _model.Comments.CollectionChanged -= _activity_Comments_CollectionChanged;
             foreach (var item in _comments)
                 item.Dispose();
             _comments.ClearAsync(UiThreadDispatcher);
-            _activity = null;
+            _model = null;
             _iconUrl = null;
             _activityUrl = null;
             _postUserName = null;
@@ -177,49 +177,13 @@ namespace GPlusBrowser.ViewModel
             _postContentInline = null;
         }
 
-        async void _activity_Refreshed(object sender, EventArgs e)
-        {
-            if (_activity.ActivityInfo.PostStatus != PostStatusType.Removed)
-            {
-                StyleElement content;
-                using (await _activity.ActivityInfo.GetParseLocker())
-                {
-                    PostUserName = _activity.ActivityInfo.PostUser.Name;
-                    PostDate = _activity.ActivityInfo.PostDate >= DateTime.Today
-                        ? _activity.ActivityInfo.PostDate.ToString("HH:mm")
-                        : _activity.ActivityInfo.PostDate.ToString("yyyy/MM/dd");
-                    content = _activity.ActivityInfo.ParsedContent;
-                    ActivityUrl = _activity.ActivityInfo.PostUrl;
-
-                    switch (_activity.ActivityInfo.AttachedContentType)
-                    {
-                        case ContentType.Link:
-                            var attachedLink = (AttachedLink)_activity.ActivityInfo.AttachedContent;
-                            AttachedContent = new AttachedLinkViewModel(
-                                attachedLink.AncourTitle,
-                                string.IsNullOrEmpty(attachedLink.AncourBeginningText)
-                                    ? null : attachedLink.AncourBeginningText.Trim('\n', '\r', ' '),
-                                attachedLink.AncourFavicon, attachedLink.AncourUrl, attachedLink.Thumbnail,
-                                TopLevel, UiThreadDispatcher);
-                            break;
-                        case ContentType.Image:
-                            var attachedAlbum = (AttachedAlbum)_activity.ActivityInfo.AttachedContent;
-                            AttachedContent = new AttachedAlbumViewModel(attachedAlbum, TopLevel, UiThreadDispatcher);
-                            break;
-                    }
-                    UiThreadDispatcher.Invoke(() => PostContentInline = PrivateConvertInlines(content));
-                    PostUserIconUrl = await TopLevel.DataCacheDict.DownloadImage(
-                        new Uri(_activity.ActivityInfo.PostUser.IconImageUrlText.Replace("$SIZE_SEGMENT", "s25-c-k")));
-                }
-            }
-        }
         async void PostCommentCommand_Executed(object arg)
         {
             if (string.IsNullOrEmpty(PostCommentTextA) || IsWritableA == false)
                 return;
             IsWritableA = false;
             try
-            { await _activity.CommentPost(PostCommentTextA).ConfigureAwait(false); }
+            { await _model.CommentPost(PostCommentTextA).ConfigureAwait(false); }
             finally
             {
                 PostCommentTextA = null;
@@ -227,7 +191,42 @@ namespace GPlusBrowser.ViewModel
                 IsWriteModeA = false;
             }
         }
-        void Comments_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        async void _activity_Refreshed(object sender, EventArgs e)
+        {
+            if (_model.CoreInfo.PostStatus != PostStatusType.Removed)
+            {
+                StyleElement content;
+                PostUserName = _model.CoreInfo.PostUser.Name;
+                PostDate = _model.CoreInfo.PostDate >= DateTime.Today
+                    ? _model.CoreInfo.PostDate.ToString("HH:mm")
+                    : _model.CoreInfo.PostDate.ToString("yyyy/MM/dd");
+                content = _model.CoreInfo.GetParsedContent();
+                ActivityUrl = _model.CoreInfo.PostUrl;
+
+                if (_model.CoreInfo.AttachedContent != null)
+                    if (_model.CoreInfo.AttachedContent.Type == ContentType.Album)
+                    {
+                        var attachedAlbum = (AttachedAlbum)_model.CoreInfo.AttachedContent;
+                        AttachedContent = new AttachedAlbumViewModel(attachedAlbum, TopLevel, UiThreadDispatcher);
+                    }
+                    else if (_model.CoreInfo.AttachedContent.Type == ContentType.Link)
+                    {
+                        var attachedLink = (AttachedLink)_model.CoreInfo.AttachedContent;
+                        AttachedContent = new AttachedLinkViewModel(
+                            attachedLink.Title,
+                            string.IsNullOrEmpty(attachedLink.Summary)
+                                ? null : attachedLink.Summary.Trim('\n', '\r', ' '),
+                            attachedLink.FaviconUrl, attachedLink.LinkUrl, attachedLink.OriginalThumbnailUrl,
+                            TopLevel, UiThreadDispatcher);
+                    }
+                UiThreadDispatcher.Invoke(() => PostContentInline = PrivateConvertInlines(content));
+                PostUserIconUrl = await TopLevel.DataCacheDict.DownloadImage(
+                    new Uri(_model.CoreInfo.PostUser.IconImageUrl
+                        .Replace("$SIZE_SEGMENT", "s25-c-k")
+                        .Replace("$SIZE_NUM", "80")));
+            }
+        }
+        void _activity_Comments_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
             switch (e.Action)
             {
@@ -250,6 +249,8 @@ namespace GPlusBrowser.ViewModel
 
         public static System.Windows.Documents.Inline PrivateConvertInlines(ContentElement tree)
         {
+            if (tree == null)
+                return null;
             System.Windows.Documents.Inline inline = null;
             switch (tree.Type)
             {

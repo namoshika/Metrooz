@@ -92,17 +92,17 @@ namespace GPlusBrowser.ViewModel
             _postContentInline = null;
         }
 
-        void model_Refreshed(object sender, EventArgs e)
+        async void model_Refreshed(object sender, EventArgs e)
         {
-            CommentDate = _model.CommentInfo.CommentDate >= DateTime.Today
-                ? _model.CommentInfo.CommentDate.ToString("HH:mm")
-                : _model.CommentInfo.CommentDate.ToString("yyyy/MM/dd");
+            CommentDate = _model.CommentInfo.PostDate >= DateTime.Today
+                ? _model.CommentInfo.PostDate.ToString("HH:mm")
+                : _model.CommentInfo.PostDate.ToString("yyyy/MM/dd");
             OwnerName = _model.CommentInfo.Owner.Name;
-            //OwnerIconUrl = await DataCacheDictionary.DownloadImage(new Uri(_model.CommentInfo.Owner.IconImageUrlText
-            //    .Replace("$SIZE_SEGMENT", "s25-c-k")));
+            OwnerIconUrl = await TopLevel.DataCacheDict.DownloadImage(new Uri(_model.CommentInfo.Owner.IconImageUrl
+                .Replace("$SIZE_SEGMENT", "s25-c-k").Replace("$SIZE_NUM", "80")));
 
-            var element = _model.CommentInfo.ParsedContent;
-            UiThreadDispatcher.InvokeAsync(() => PostContentInline = ActivityViewModel.PrivateConvertInlines(element));
+            var element = _model.CommentInfo.GetParsedContent();
+            UiThreadDispatcher.Invoke(() => PostContentInline = ActivityViewModel.PrivateConvertInlines(element));
         }
     }
 }
