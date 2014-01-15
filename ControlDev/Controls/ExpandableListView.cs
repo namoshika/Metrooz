@@ -23,8 +23,9 @@ namespace GPlusBrowser.Controls
     {
         public ExpandableListView()
         {
-            _expandAnimationDuration = _insertAnimationDuration = (Duration)TimeSpan.FromMilliseconds(200);
+            _expandAnimationDuration = _insertAnimationDuration = (Duration)TimeSpan.FromMilliseconds(100);
             _displayMaxCount = 2;
+            ShiftTranslater = new TranslateTransform();
             Loaded += ExpandableListView_Loaded;
         }
         static ExpandableListView()
@@ -32,7 +33,8 @@ namespace GPlusBrowser.Controls
             DefaultStyleKeyProperty.OverrideMetadata(
                 typeof(ExpandableListView), new FrameworkPropertyMetadata(typeof(ExpandableListView)));
         }
-        ScrollViewer _itemContainer;
+        FrameworkElement _itemContainer;
+        StackPanel _itemsPanel;
         Duration _expandAnimationDuration;
         Duration _insertAnimationDuration;
         int _displayMaxCount;
@@ -46,6 +48,11 @@ namespace GPlusBrowser.Controls
         {
             get { return (double)GetValue(ScrollOffsetProperty); }
             set { SetValue(ScrollOffsetProperty, value); }
+        }
+        public TranslateTransform ShiftTranslater
+        {
+            get { return (TranslateTransform)GetValue(ShiftTranslaterProperty); }
+            set { SetValue(ShiftTranslaterProperty, value); }
         }
         protected override DependencyObject GetContainerForItemOverride()
         {
@@ -68,12 +75,15 @@ namespace GPlusBrowser.Controls
             _itemContainer.BeginAnimation(HeightProperty,
                 new DoubleAnimation(newAreaHeight, TimeSpan.Zero));
             BeginAnimation(ScrollOffsetProperty,
-                new DoubleAnimation(_itemContainer.ExtentHeight - ((FrameworkElement)element).ActualHeight - newAreaHeight,
+                new DoubleAnimation(_itemsPanel.ActualHeight - ((FrameworkElement)element).ActualHeight - newAreaHeight,
                     TimeSpan.Zero));
         }
         void ExpandableListView_Loaded(object sender, RoutedEventArgs e)
         {
-            _itemContainer = (ScrollViewer)Template.FindName("PART_scroller_itemsPresenter", this);
+            _itemContainer = (FrameworkElement)Template.FindName("PART_scroller_itemsPresenter", this);
+            _itemsPanel = (StackPanel)
+                VisualTreeHelper.GetChild(
+                VisualTreeHelper.GetChild(_itemContainer, 0), 0);
         }
         void itemPresenter_Loaded(object sender, RoutedEventArgs e)
         {
@@ -89,7 +99,7 @@ namespace GPlusBrowser.Controls
             }
 
             //スクロール
-            var scrollAnime = new DoubleAnimation(_itemContainer.ExtentHeight - newAreaHeight, _insertAnimationDuration);
+            var scrollAnime = new DoubleAnimation(newAreaHeight - _itemsPanel.ActualHeight, _insertAnimationDuration);
             var heightAnime = new DoubleAnimation(newAreaHeight, _insertAnimationDuration);
             BeginAnimation(ScrollOffsetProperty, scrollAnime, HandoffBehavior.SnapshotAndReplace);
             _itemContainer.BeginAnimation(HeightProperty, heightAnime, HandoffBehavior.SnapshotAndReplace);
@@ -105,7 +115,7 @@ namespace GPlusBrowser.Controls
             _itemContainer.BeginAnimation(HeightProperty,
                 new DoubleAnimation(newAreaHeight, TimeSpan.Zero));
             BeginAnimation(ScrollOffsetProperty,
-                new DoubleAnimation(_itemContainer.ExtentHeight - newAreaHeight, TimeSpan.Zero));
+                new DoubleAnimation(newAreaHeight - _itemsPanel.ActualHeight, TimeSpan.Zero));
         }
 
         public static readonly DependencyProperty IsExpandProperty = DependencyProperty.Register(
@@ -114,6 +124,10 @@ namespace GPlusBrowser.Controls
         [System.ComponentModel.Browsable(false)]
         public static readonly DependencyProperty ScrollOffsetProperty = DependencyProperty.Register(
             "ScrollOffset",typeof(double),typeof(ExpandableListView), new PropertyMetadata(0.0, Changed_ScrollOffset));
+        public static readonly DependencyProperty ShiftTranslaterProperty = DependencyProperty.Register(
+            "ShiftTranslater", typeof(TranslateTransform), typeof(ExpandableListView));
+
+
 
         static void Changed_IsExpand(DependencyObject sender, DependencyPropertyChangedEventArgs e)
         {
@@ -122,11 +136,10 @@ namespace GPlusBrowser.Controls
 
             if ((bool)e.NewValue)
             {
-                target._itemContainer.BeginAnimation(HeightProperty,
-                    new DoubleAnimation(target._itemContainer.ExtentHeight, duration), HandoffBehavior.SnapshotAndReplace);
-                target.BeginAnimation(ScrollOffsetProperty,
-                    new DoubleAnimation(0.0, TimeSpan.Zero) { BeginTime = duration.TimeSpan },
-                    HandoffBehavior.SnapshotAndReplace);
+                var heightAnime = new DoubleAnimation(target._itemsPanel.ActualHeight, duration);
+                var scrollAnime = new DoubleAnimation(0.0, duration);
+                target._itemContainer.BeginAnimation(HeightProperty, heightAnime, HandoffBehavior.SnapshotAndReplace);
+                target.BeginAnimation(ScrollOffsetProperty, scrollAnime, HandoffBehavior.SnapshotAndReplace);
             }
             else
             {
@@ -136,20 +149,16 @@ namespace GPlusBrowser.Controls
                     var container = (FrameworkElement)target.ItemContainerGenerator.ContainerFromIndex(i);
                     newAreaHeight += container.ActualHeight;
                 }
-
-                target._itemContainer.BeginAnimation(HeightProperty,
-                    new DoubleAnimation(newAreaHeight, duration), HandoffBehavior.SnapshotAndReplace);
-                target.BeginAnimation(ScrollOffsetProperty,
-                    new DoubleAnimation(target._itemContainer.ExtentHeight - newAreaHeight, TimeSpan.Zero) { BeginTime = TimeSpan.Zero },
-                    HandoffBehavior.SnapshotAndReplace);
+                var heightAnime = new DoubleAnimation(newAreaHeight, duration);
+                var scrollAnime = new DoubleAnimation(newAreaHeight - target._itemsPanel.ActualHeight, duration);
+                target._itemContainer.BeginAnimation(HeightProperty, heightAnime, HandoffBehavior.SnapshotAndReplace);
+                target.BeginAnimation(ScrollOffsetProperty, scrollAnime, HandoffBehavior.SnapshotAndReplace);
             }
         }
         static void Changed_ScrollOffset(DependencyObject sender, DependencyPropertyChangedEventArgs e)
         {
             var mediator = (ExpandableListView)sender;
-            var scrollViewer = mediator._itemContainer;
-            if (null != scrollViewer)
-                scrollViewer.ScrollToVerticalOffset((double)e.NewValue);
+            mediator.ShiftTranslater.Y = (double)e.NewValue;
         }
     }
     public class CollapsibleStackPanel : VirtualizingPanel

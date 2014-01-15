@@ -8,7 +8,6 @@
     xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions">
 
     <BooleanToVisibilityConverter x:Key="boolToVisibilityConverter" />
-    <localCtrl:IsExpandExpandableToVisibility x:Key="isExpandExpandableToVisibility" />
     <localCtrl:IsExpandCommentCountToStringConverter x:Key="isExpandCommentCountToStringConverter" />
 
     <Style TargetType="{x:Type localCtrl:NotificationWindow}">
@@ -73,9 +72,9 @@
                                 <RowDefinition Height="30" />
                                 <RowDefinition Height="auto" />
                             </Grid.RowDefinitions>
-                            <ToggleButton Grid.Row="0" FontWeight="Bold" FontSize="13"
+                            <ToggleButton Grid.Row="0" FontWeight="Bold" FontSize="13" Content="{TemplateBinding Header}"
+                                          Visibility="{TemplateBinding Expandable, Converter={StaticResource boolToVisibilityConverter}}"
                                           IsChecked="{Binding IsExpand, RelativeSource={RelativeSource TemplatedParent}}">
-                                <ToggleButton.Content>ExpandButton</ToggleButton.Content>
                                 <ToggleButton.Template>
                                     <ControlTemplate TargetType="{x:Type ToggleButton}">
                                         <Border BorderBrush="LightGray" BorderThickness="0,1,0,0" Background="#f0f0f0">
@@ -84,13 +83,19 @@
                                     </ControlTemplate>
                                 </ToggleButton.Template>
                             </ToggleButton>
-                            <ScrollViewer Name="PART_scroller_itemsPresenter" Grid.Row="1" VerticalAlignment="Top" Height="0.0"
-                                          ScrollViewer.CanContentScroll="False">
+                            <Border Name="PART_scroller_itemsPresenter" Grid.Row="1" VerticalAlignment="Top" Height="0.0">
                                 <ItemsPresenter />
-                            </ScrollViewer>
+                            </Border>
                         </Grid>
                     </Border>
                 </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ItemsPanel">
+            <Setter.Value>
+                <ItemsPanelTemplate>
+                    <StackPanel IsItemsHost="True" />
+                </ItemsPanelTemplate>
             </Setter.Value>
         </Setter>
         <Setter Property="ItemContainerStyle">

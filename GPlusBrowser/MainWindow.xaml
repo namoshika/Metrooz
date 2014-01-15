@@ -6,10 +6,11 @@
         xmlns:local="clr-namespace:GPlusBrowser"
         xmlns:localVm="clr-namespace:GPlusBrowser.ViewModel"
         xmlns:localCtrl="clr-namespace:GPlusBrowser.Controls"
-        Title="GPlusBrowser" Height="650" Width="450" Name="mainWindow">
+        Title="GPlusBrowser" Height="650" Width="500" Name="mainWindow">
     <Grid>
         <Grid.Resources>
             <BooleanToVisibilityConverter x:Key="booleanToVisibilityConverter" />
+            <localCtrl:IsExpandCommentCountToStringConverter x:Key="aaa" />
             <ControlTemplate x:Key="postItemTemplate" TargetType="{x:Type TreeViewItem}" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
                 <Grid Margin="0">
                     <Grid.RowDefinitions>
@@ -196,20 +197,14 @@
                         </StackPanel>
                         <TextBlock DockPanel.Dock="Top" Margin="0,3,0,3" local:InlineBehavior.Inline="{Binding PostContentInline}" TextWrapping="Wrap" />
                         <ContentPresenter DockPanel.Dock="Top" Content="{Binding AttachedContent}" />
-                        <ItemsControl ItemsSource="{Binding Comments}" Margin="15,10,0,10" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <StackPanel />
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                        </ItemsControl>
-                        <!--<localCtrl:ExpandableListView ItemsSource="{Binding Comments}" Margin="15,10,0,10" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <StackPanel />
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                        </localCtrl:ExpandableListView>-->
+                        <localCtrl:ExpandableListView ItemsSource="{Binding Comments}" Margin="15,10,0,10" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                            <localCtrl:ExpandableListView.Header>
+                                <MultiBinding Converter="{StaticResource aaa}">
+                                    <Binding RelativeSource="{RelativeSource Self}" Path="IsExpand" />
+                                    <Binding RelativeSource="{RelativeSource Self}" Path="Items.Count" />
+                                </MultiBinding>
+                            </localCtrl:ExpandableListView.Header>
+                        </localCtrl:ExpandableListView>
                     </DockPanel>
                 </Border>
             </DataTemplate>

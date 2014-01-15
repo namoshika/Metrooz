@@ -28,12 +28,19 @@
                                     </ControlTemplate>
                                 </ToggleButton.Template>
                             </ToggleButton>
-                            <ScrollViewer Name="PART_scroller_itemsPresenter" Grid.Row="1" VerticalAlignment="Top" Height="0.0">
+                            <Border Name="PART_scroller_itemsPresenter" Grid.Row="1" VerticalAlignment="Top" Height="0.0">
                                 <ItemsPresenter />
-                            </ScrollViewer>
+                            </Border>
                         </Grid>
                     </Border>
                 </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ItemsPanel">
+            <Setter.Value>
+                <ItemsPanelTemplate>
+                    <StackPanel IsItemsHost="True" />
+                </ItemsPanelTemplate>
             </Setter.Value>
         </Setter>
         <Setter Property="ItemContainerStyle">
