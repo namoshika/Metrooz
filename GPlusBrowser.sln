@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ControlDev", "ControlDev\Co
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SnkLib.MainLibrary", "snklib.web.googleplus-2.0\SnkLib.MainLibrary\SnkLib.MainLibrary.csproj", "{A19C98E5-7048-43E2-98F0-689A3FFE2A82}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SnkLib.PS.win", "snklib.web.googleplus-2.0\SnkLib.PS.win\SnkLib.PS.win.csproj", "{37846C4E-2F87-46E9-B036-9569F422BF63}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SnkLib.Platform", "snklib.web.googleplus-2.0\SnkLib.Platform\SnkLib.Platform.csproj", "{37846C4E-2F87-46E9-B036-9569F422BF63}"
 EndProject
 Global
 	GlobalSection(TestCaseManagementSettings) = postSolution
@@ -44,14 +44,14 @@ Global
 		{A19C98E5-7048-43E2-98F0-689A3FFE2A82}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A19C98E5-7048-43E2-98F0-689A3FFE2A82}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{A19C98E5-7048-43E2-98F0-689A3FFE2A82}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{37846C4E-2F87-46E9-B036-9569F422BF63}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{37846C4E-2F87-46E9-B036-9569F422BF63}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{37846C4E-2F87-46E9-B036-9569F422BF63}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{37846C4E-2F87-46E9-B036-9569F422BF63}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{37846C4E-2F87-46E9-B036-9569F422BF63}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{37846C4E-2F87-46E9-B036-9569F422BF63}.Release|Any CPU.Build.0 = Release|Any CPU
-		{37846C4E-2F87-46E9-B036-9569F422BF63}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{37846C4E-2F87-46E9-B036-9569F422BF63}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{37846C4E-2F87-46E9-B036-9569F422BF63}.Debug|Any CPU.ActiveCfg = win.Debug|Any CPU
+		{37846C4E-2F87-46E9-B036-9569F422BF63}.Debug|Any CPU.Build.0 = win.Debug|Any CPU
+		{37846C4E-2F87-46E9-B036-9569F422BF63}.Debug|Mixed Platforms.ActiveCfg = win.Debug|Any CPU
+		{37846C4E-2F87-46E9-B036-9569F422BF63}.Debug|Mixed Platforms.Build.0 = win.Debug|Any CPU
+		{37846C4E-2F87-46E9-B036-9569F422BF63}.Release|Any CPU.ActiveCfg = win.Release|Any CPU
+		{37846C4E-2F87-46E9-B036-9569F422BF63}.Release|Any CPU.Build.0 = win.Release|Any CPU
+		{37846C4E-2F87-46E9-B036-9569F422BF63}.Release|Mixed Platforms.ActiveCfg = win.Release|Any CPU
+		{37846C4E-2F87-46E9-B036-9569F422BF63}.Release|Mixed Platforms.Build.0 = win.Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

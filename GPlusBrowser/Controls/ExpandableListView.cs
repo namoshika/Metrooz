@@ -24,6 +24,7 @@ namespace GPlusBrowser.Controls
         {
             _expandAnimationDuration = _insertAnimationDuration = (Duration)TimeSpan.FromMilliseconds(100);
             _displayMaxCount = 2;
+            _addTimes = new Dictionary<object, DateTime>();
             ShiftTranslater = new TranslateTransform();
             Loaded += ExpandableListView_Loaded;
         }
@@ -36,6 +37,7 @@ namespace GPlusBrowser.Controls
         StackPanel _itemsPanel;
         Duration _expandAnimationDuration;
         Duration _insertAnimationDuration;
+        Dictionary<object, DateTime> _addTimes;
         int _displayMaxCount;
 
         public bool IsExpand
@@ -62,6 +64,18 @@ namespace GPlusBrowser.Controls
         {
             base.OnItemsChanged(e);
             Expandable = Items.Count > 2;
+
+            switch (e.Action)
+            {
+                case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
+                    foreach (var item in e.NewItems)
+                        _addTimes.Add(item, DateTime.UtcNow);
+                    break;
+                case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
+                    foreach (var item in e.OldItems)
+                        _addTimes.Remove(item);
+                    break;
+            }
         }
         protected override DependencyObject GetContainerForItemOverride()
         {
@@ -81,11 +95,13 @@ namespace GPlusBrowser.Controls
                 var container = (FrameworkElement)ItemContainerGenerator.ContainerFromIndex(i);
                 newAreaHeight += container.ActualHeight;
             }
-            _itemContainer.BeginAnimation(HeightProperty,
-                new DoubleAnimation(newAreaHeight, TimeSpan.Zero));
-            BeginAnimation(ScrollOffsetProperty,
-                new DoubleAnimation(_itemsPanel.ActualHeight - ((FrameworkElement)element).ActualHeight - newAreaHeight,
-                    TimeSpan.Zero));
+            if (_itemContainer != null)
+                _itemContainer.BeginAnimation(HeightProperty,
+                    new DoubleAnimation(newAreaHeight, TimeSpan.Zero));
+            if (_itemsPanel != null)
+                BeginAnimation(ScrollOffsetProperty,
+                    new DoubleAnimation(_itemsPanel.ActualHeight - ((FrameworkElement)element).ActualHeight - newAreaHeight,
+                        TimeSpan.Zero));
         }
         void ExpandableListView_Loaded(object sender, RoutedEventArgs e)
         {
@@ -97,9 +113,9 @@ namespace GPlusBrowser.Controls
         void itemPresenter_Loaded(object sender, RoutedEventArgs e)
         {
             var target = (FrameworkElement)sender;
+            var data = ItemContainerGenerator.ItemFromContainer(target);
             target.Loaded -= itemPresenter_Loaded;
             target.SizeChanged += itemPresenter_SizeChanged;
-
             var newAreaHeight = 0.0;
             for (var i = IsExpand ? 0 : Math.Max(Items.Count - _displayMaxCount, 0); i < Items.Count; i++)
             {
@@ -107,11 +123,21 @@ namespace GPlusBrowser.Controls
                 newAreaHeight += container.ActualHeight;
             }
 
-            //スクロール
-            var scrollAnime = new DoubleAnimation(newAreaHeight - _itemsPanel.ActualHeight, _insertAnimationDuration);
-            var heightAnime = new DoubleAnimation(newAreaHeight, _insertAnimationDuration);
-            BeginAnimation(ScrollOffsetProperty, scrollAnime, HandoffBehavior.SnapshotAndReplace);
-            _itemContainer.BeginAnimation(HeightProperty, heightAnime, HandoffBehavior.SnapshotAndReplace);
+            if (_addTimes.ContainsKey(data) && DateTime.UtcNow - _addTimes[data] < TimeSpan.FromMilliseconds(10))
+            {
+                //スクロール
+                var scrollAnime = new DoubleAnimation(newAreaHeight - _itemsPanel.ActualHeight, _insertAnimationDuration);
+                var heightAnime = new DoubleAnimation(newAreaHeight, _insertAnimationDuration);
+                BeginAnimation(ScrollOffsetProperty, scrollAnime, HandoffBehavior.SnapshotAndReplace);
+                _itemContainer.BeginAnimation(HeightProperty, heightAnime, HandoffBehavior.SnapshotAndReplace);
+            }
+            else
+            {
+                var scrollAnime = new DoubleAnimation(newAreaHeight - _itemsPanel.ActualHeight, TimeSpan.Zero);
+                var heightAnime = new DoubleAnimation(newAreaHeight, TimeSpan.Zero);
+                BeginAnimation(ScrollOffsetProperty, scrollAnime, HandoffBehavior.SnapshotAndReplace);
+                _itemContainer.BeginAnimation(HeightProperty, heightAnime, HandoffBehavior.SnapshotAndReplace);
+            }
         }
         void itemPresenter_SizeChanged(object sender, SizeChangedEventArgs e)
         {

@@ -138,7 +138,6 @@
     <Compile Include="Controls\ExpandableListView.cs" />
     <Compile Include="Controls\ExTreeView.cs" />
     <Compile Include="Controls\ImageBox.cs" />
-    <Compile Include="Controls\ItemSelecter.cs" />
     <Compile Include="AppException.cs" />
     <Compile Include="Model\NotificationManager.cs" />
     <Compile Include="ObservableCollectionEx.cs" />
@@ -191,7 +190,6 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <None Include="app.config" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -216,9 +214,9 @@
       <Project>{a19c98e5-7048-43e2-98f0-689a3ffe2a82}</Project>
       <Name>SnkLib.MainLibrary</Name>
     </ProjectReference>
-    <ProjectReference Include="..\snklib.web.googleplus-2.0\SnkLib.PS.win\SnkLib.PS.win.csproj">
+    <ProjectReference Include="..\snklib.web.googleplus-2.0\SnkLib.Platform\SnkLib.Platform.csproj">
       <Project>{37846c4e-2f87-46e9-b036-9569f422bf63}</Project>
-      <Name>SnkLib.PS.win</Name>
+      <Name>SnkLib.Platform</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
