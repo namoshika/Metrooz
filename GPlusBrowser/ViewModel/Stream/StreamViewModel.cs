@@ -64,7 +64,10 @@ namespace GPlusBrowser.ViewModel
                 Activities.Clear();
                 if (value != null)
                     foreach (var item in _circle.Activities.ToArray())
-                        Activities.Add(new ActivityViewModel(item, _sourceAccount, UiThreadDispatcher));
+                    {
+                        var viewModel = new ActivityViewModel(item, _sourceAccount, UiThreadDispatcher);
+                        Activities.Add(viewModel);
+                    }
             }
         }
         public ObservableCollection<ActivityViewModel> Activities
@@ -96,10 +99,10 @@ namespace GPlusBrowser.ViewModel
                     case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
                         for (var i = e.NewItems.Count - 1; i >= 0; i--)
                         {
-                            var viewModel = new ActivityViewModel((Activity)e.NewItems[i], _sourceAccount, UiThreadDispatcher);
                             var idx = e.NewStartingIndex + i;
                             if (idx >= 0 && idx < MaxActivitiesCount - 1)
                             {
+                                var viewModel = new ActivityViewModel((Activity)e.NewItems[i], _sourceAccount, UiThreadDispatcher);
                                 Activities.InsertAsync(idx, viewModel, UiThreadDispatcher);
                                 _activityCount++;
                             }
@@ -132,8 +135,8 @@ namespace GPlusBrowser.ViewModel
                         {
                             for (var i = _circle.Activities.Count - _activityCount - 1; i >= 0 && _activityCount < _maxActivityCount; i--)
                             {
-                                Activities.AddAsync(new ActivityViewModel(
-                                    _circle.Activities[i], _sourceAccount, UiThreadDispatcher), UiThreadDispatcher);
+                                var viewModel = new ActivityViewModel(_circle.Activities[i], _sourceAccount, UiThreadDispatcher);
+                                Activities.AddAsync(viewModel, UiThreadDispatcher);
                                 _activityCount++;
                             }
                         }

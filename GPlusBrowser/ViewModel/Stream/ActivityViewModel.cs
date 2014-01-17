@@ -21,8 +21,7 @@ namespace GPlusBrowser.ViewModel
         {
             _model = activity;
             _comments = new ObservableCollection<CommentViewModel>();
-            _activity_Refreshed(null, null);
-            _comments.Clear();
+            Refresh().Wait();
             lock (_model.Comments)
                 foreach (var item in _model.Comments.Select(
                     comment => (CommentViewModel)new CommentViewModel(comment, topLevel, uiThreadDispatcher)))
@@ -38,12 +37,12 @@ namespace GPlusBrowser.ViewModel
         Uri _activityUrl;
         int _isDisposed;
         string _postUserName;
-        string _postContent;
         string _postDate;
+        string _postText;
         string _postCommentText;
         object _attachedContent;
         ObservableCollection<CommentViewModel> _comments;
-        System.Windows.Documents.Inline _postContentInline;
+        ContentElement _postContentInline;
 
         public ImageSource PostUserIconUrl
         {
@@ -72,15 +71,6 @@ namespace GPlusBrowser.ViewModel
                 OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("PostUserName"));
             }
         }
-        public string PostContent
-        {
-            get { return _postContent; }
-            set
-            {
-                _postContent = value;
-                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("PostContent"));
-            }
-        }
         public string PostDate
         {
             get { return _postDate; }
@@ -88,6 +78,15 @@ namespace GPlusBrowser.ViewModel
             {
                 _postDate = value;
                 OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("PostDate"));
+            }
+        }
+        public string PostText
+        {
+            get { return _postText; }
+            set
+            {
+                _postText = value;
+                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("PostText"));
             }
         }
         public string PostCommentText
@@ -117,7 +116,7 @@ namespace GPlusBrowser.ViewModel
                 OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("Comments"));
             }
         }
-        public System.Windows.Documents.Inline PostContentInline
+        public ContentElement PostContentInline
         {
             get { return _postContentInline; }
             set
@@ -136,42 +135,7 @@ namespace GPlusBrowser.ViewModel
             }
         }
         public ICommand PostCommentCommand { get; private set; }
-        public void Dispose()
-        {
-            if (System.Threading.Interlocked.CompareExchange(ref _isDisposed, 1, 0) == 1)
-                return;
-
-            _model.Updated -= _activity_Refreshed;
-            _model.Comments.CollectionChanged -= _activity_Comments_CollectionChanged;
-            foreach (var item in _comments)
-                item.Dispose();
-            _comments.ClearAsync(UiThreadDispatcher);
-            _model = null;
-            _iconUrl = null;
-            _activityUrl = null;
-            _postUserName = null;
-            _postContent = null;
-            _postDate = null;
-            _postCommentText = null;
-            _attachedContent = null;
-            _comments = null;
-            _postContentInline = null;
-        }
-
-        async void PostCommentCommand_Executed(object arg)
-        {
-            if (string.IsNullOrEmpty(PostCommentText) || ShareBoxStatus != CommentPostBoxState.Writing)
-                return;
-            try
-            {
-                ShareBoxStatus = CommentPostBoxState.Sending;
-                await _model.CommentPost(PostCommentText).ConfigureAwait(false);
-                ShareBoxStatus = CommentPostBoxState.Deactive;
-            }
-            finally
-            { PostCommentText = null; }
-        }
-        async void _activity_Refreshed(object sender, EventArgs e)
+        public async Task Refresh()
         {
             if (_model.CoreInfo.PostStatus != PostStatusType.Removed)
             {
@@ -198,13 +162,49 @@ namespace GPlusBrowser.ViewModel
                             attachedLink.FaviconUrl, attachedLink.LinkUrl, attachedLink.OriginalThumbnailUrl,
                             TopLevel, UiThreadDispatcher);
                     }
-                UiThreadDispatcher.Invoke(() => PostContentInline = PrivateConvertInlines(content));
+                PostText = _model.CoreInfo.Text;
+                PostContentInline = content;
                 PostUserIconUrl = await TopLevel.DataCacheDict.DownloadImage(
                     new Uri(_model.CoreInfo.PostUser.IconImageUrl
                         .Replace("$SIZE_SEGMENT", "s25-c-k")
                         .Replace("$SIZE_NUM", "80")));
             }
         }
+        public void Dispose()
+        {
+            if (System.Threading.Interlocked.CompareExchange(ref _isDisposed, 1, 0) == 1)
+                return;
+
+            _model.Updated -= _activity_Refreshed;
+            _model.Comments.CollectionChanged -= _activity_Comments_CollectionChanged;
+            foreach (var item in _comments)
+                item.Dispose();
+            _comments.ClearAsync(UiThreadDispatcher);
+            _model = null;
+            _iconUrl = null;
+            _activityUrl = null;
+            _postUserName = null;
+            _postDate = null;
+            _postCommentText = null;
+            _attachedContent = null;
+            _comments = null;
+            _postContentInline = null;
+        }
+
+        async void PostCommentCommand_Executed(object arg)
+        {
+            if (string.IsNullOrEmpty(PostCommentText) || ShareBoxStatus != CommentPostBoxState.Writing)
+                return;
+            try
+            {
+                ShareBoxStatus = CommentPostBoxState.Sending;
+                await _model.CommentPost(PostCommentText).ConfigureAwait(false);
+                ShareBoxStatus = CommentPostBoxState.Deactive;
+            }
+            finally
+            { PostCommentText = null; }
+        }
+        async void _activity_Refreshed(object sender, EventArgs e) { await Refresh(); }
         void _activity_Comments_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
             switch (e.Action)
@@ -224,72 +224,6 @@ namespace GPlusBrowser.ViewModel
                     Comments.ClearAsync(UiThreadDispatcher);
                     break;
             }
-        }
-
-        public static System.Windows.Documents.Inline PrivateConvertInlines(ContentElement tree)
-        {
-            if (tree == null)
-                return null;
-            System.Windows.Documents.Inline inline = null;
-            switch (tree.Type)
-            {
-                case ElementType.Style:
-                    var styleEle = ((StyleElement)tree);
-                    switch (styleEle.Style)
-                    {
-                        case StyleType.Bold:
-                            inline = new System.Windows.Documents.Bold();
-                            ((System.Windows.Documents.Bold)inline).Inlines.AddRange(
-                                ((StyleElement)tree).Children.Select(ele => PrivateConvertInlines(ele)));
-                            break;
-                        case StyleType.Italic:
-                            inline = new System.Windows.Documents.Italic();
-                            ((System.Windows.Documents.Italic)inline).Inlines.AddRange(
-                                ((StyleElement)tree).Children.Select(ele => PrivateConvertInlines(ele)));
-                            break;
-                        case StyleType.Middle:
-                            inline = new System.Windows.Documents.Span();
-                            inline.TextDecorations.Add(System.Windows.TextDecorations.Strikethrough);
-                            ((System.Windows.Documents.Span)inline).Inlines.AddRange(
-                                ((StyleElement)tree).Children.Select(ele => PrivateConvertInlines(ele)));
-                            break;
-                        default:
-                            inline = new System.Windows.Documents.Span();
-                            ((System.Windows.Documents.Span)inline).Inlines.AddRange(
-                                ((StyleElement)tree).Children.Select(ele => PrivateConvertInlines(ele)));
-                            break;
-                    }
-                    break;
-                case ElementType.Hyperlink:
-                    var hyperEle = (HyperlinkElement)tree;
-                    var target = hyperEle.Target;
-                    inline = new System.Windows.Documents.Hyperlink(
-                        new System.Windows.Documents.Run(hyperEle.Text));
-                    ((System.Windows.Documents.Hyperlink)inline).Click += (sender, e) =>
-                        { System.Diagnostics.Process.Start(target.AbsoluteUri); };
-                    break;
-                case ElementType.Mension:
-                    var spanInline = new System.Windows.Documents.Span();
-                    spanInline.Inlines.AddRange(
-                        new System.Windows.Documents.Inline[]
-                        {
-                            new System.Windows.Documents.Run("+"),
-                            new System.Windows.Documents.Hyperlink(
-                                new System.Windows.Documents.Run(((MensionElement)tree).Text.Substring(1)))
-                                { TextDecorations = null }
-                        });
-                    inline = spanInline;
-                    break;
-                case ElementType.Text:
-                    inline = new System.Windows.Documents.Run(((TextElement)tree).Text);
-                    break;
-                case ElementType.Break:
-                    inline = new System.Windows.Documents.LineBreak();
-                    break;
-                default:
-                    throw new Exception();
-            }
-            return inline;
         }
     }
     public enum CommentPostBoxState

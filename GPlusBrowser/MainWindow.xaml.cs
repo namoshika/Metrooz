@@ -7,12 +7,12 @@ using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using SunokoLibrary.Web.GooglePlus;
 
 namespace GPlusBrowser
 {
@@ -42,11 +42,6 @@ namespace GPlusBrowser
         Model.SettingModelManager _settingManager;
         Model.AccountManager _accountManager;
         ViewModel.AccountSwitcherViewModel _accountSwitcherVM;
-        public bool NowResizeAnimation
-        {
-            get { return (bool)GetValue(NowResizeAnimationProperty); }
-            set { SetValue(NowResizeAnimationProperty, value); }
-        }
 
         protected override void OnClosed(EventArgs e)
         {
@@ -63,11 +58,6 @@ namespace GPlusBrowser
             DataContext = _accountSwitcherVM;
             await _accountManager.Initialize();
         }
-
-        public static readonly DependencyProperty NowResizeAnimationProperty = DependencyProperty.Register(
-            "NowResizeAnimation", typeof(bool), typeof(MainWindow),
-            new UIPropertyMetadata(false, (sender, e) =>
-                ((MainWindow)sender)._sizeChangedTrigger.OnNext(new EventPattern<SizeChangedEventArgs>(sender, null))));
     }
 
     public static class InlineBehavior
@@ -76,19 +66,85 @@ namespace GPlusBrowser
         { return (System.Windows.Documents.Inline)obj.GetValue(InlineProperty); }
         public static void SetInline(DependencyObject obj, System.Windows.Documents.Inline value)
         { obj.SetValue(InlineProperty, value); }
+        public static System.Windows.Documents.Inline PrivateConvertInlines(SunokoLibrary.Web.GooglePlus.ContentElement tree)
+        {
+            if (tree == null)
+                return null;
+            System.Windows.Documents.Inline inline = null;
+            switch (tree.Type)
+            {
+                case ElementType.Style:
+                    var styleEle = ((StyleElement)tree);
+                    switch (styleEle.Style)
+                    {
+                        case StyleType.Bold:
+                            inline = new System.Windows.Documents.Bold();
+                            ((System.Windows.Documents.Bold)inline).Inlines.AddRange(
+                                ((StyleElement)tree).Children.Select(ele => PrivateConvertInlines(ele)));
+                            break;
+                        case StyleType.Italic:
+                            inline = new System.Windows.Documents.Italic();
+                            ((System.Windows.Documents.Italic)inline).Inlines.AddRange(
+                                ((StyleElement)tree).Children.Select(ele => PrivateConvertInlines(ele)));
+                            break;
+                        case StyleType.Middle:
+                            inline = new System.Windows.Documents.Span();
+                            inline.TextDecorations.Add(System.Windows.TextDecorations.Strikethrough);
+                            ((System.Windows.Documents.Span)inline).Inlines.AddRange(
+                                ((StyleElement)tree).Children.Select(ele => PrivateConvertInlines(ele)));
+                            break;
+                        default:
+                            inline = new System.Windows.Documents.Span();
+                            ((System.Windows.Documents.Span)inline).Inlines.AddRange(
+                                ((StyleElement)tree).Children.Select(ele => PrivateConvertInlines(ele)));
+                            break;
+                    }
+                    break;
+                case ElementType.Hyperlink:
+                    var hyperEle = (HyperlinkElement)tree;
+                    var target = hyperEle.Target;
+                    inline = new System.Windows.Documents.Hyperlink(
+                        new System.Windows.Documents.Run(hyperEle.Text));
+                    ((System.Windows.Documents.Hyperlink)inline).Click += (sender, e) =>
+                    { System.Diagnostics.Process.Start(target.AbsoluteUri); };
+                    break;
+                case ElementType.Mension:
+                    var spanInline = new System.Windows.Documents.Span();
+                    spanInline.Inlines.AddRange(
+                        new System.Windows.Documents.Inline[]
+                        {
+                            new System.Windows.Documents.Run("+"),
+                            new System.Windows.Documents.Hyperlink(
+                                new System.Windows.Documents.Run(((MensionElement)tree).Text.Substring(1)))
+                                { TextDecorations = null }
+                        });
+                    inline = spanInline;
+                    break;
+                case ElementType.Text:
+                    inline = new System.Windows.Documents.Run(((TextElement)tree).Text);
+                    break;
+                case ElementType.Break:
+                    inline = new System.Windows.Documents.LineBreak();
+                    break;
+                default:
+                    throw new Exception();
+            }
+            return inline;
+        }
 
-        // Using a DependencyProperty as the backing store for Inline.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty InlineProperty = DependencyProperty.RegisterAttached(
-            "Inline", typeof(System.Windows.Documents.Inline), typeof(InlineBehavior),
-            new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender,
+            "Inline", typeof(SunokoLibrary.Web.GooglePlus.ContentElement), typeof(InlineBehavior),
+            new UIPropertyMetadata(null,
                 (sender, e) =>
                 {
                     var textBlock = sender as TextBlock;
-                    if (textBlock == null)
-                        return;
-                    textBlock.Inlines.Clear();
                     if (e.NewValue != null)
-                        textBlock.Inlines.Add((Inline)e.NewValue);
+                    {
+                        textBlock.Inlines.Clear();
+                        textBlock.Inlines.Add(PrivateConvertInlines((SunokoLibrary.Web.GooglePlus.ContentElement)e.NewValue));
+                    }
+                    else
+                        textBlock.Inlines.Clear();
                 }));
 
 

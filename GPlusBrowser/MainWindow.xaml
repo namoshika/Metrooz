@@ -95,7 +95,7 @@
                     </Grid>
                     <TabControl Grid.Row="1" Grid.Column="1" ItemsSource="{Binding Stream.DisplayStreams, Mode=OneWay}" SelectedIndex="{Binding Stream.SelectedCircleIndex}" Style="{StaticResource PageSwitcherStyle}" />
                 </Grid>
-                <ContentPresenter Grid.Column="1" Content="{Binding Notification}" />
+                <!--<ContentPresenter Grid.Column="1" Content="{Binding Notification}" />-->
             </Grid>
         </DataTemplate>
         <DataTemplate DataType="{x:Type localVm:AccountSelectorViewModel}">
@@ -152,7 +152,6 @@
                     <TextBlock DockPanel.Dock="Bottom" Margin="0,3,0,3" local:InlineBehavior.Inline="{Binding PostContentInline}" TextWrapping="Wrap" />
                     <Image DockPanel.Dock="Left" Width="25" Height="25" SnapsToDevicePixels="True" Source="{Binding OwnerIconUrl}" />
                     <TextBlock DockPanel.Dock="Left" Margin="5,0,0,0" VerticalAlignment="Center"><Run Text="{Binding OwnerName}" /><Run Text=" "/><Run Foreground="Gray" Text="{Binding CommentDate, StringFormat=- \{0\} -}" /></TextBlock>
-
                 </DockPanel>
             </Border>
         </DataTemplate>

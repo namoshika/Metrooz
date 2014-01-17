@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Media;
 using System.Windows.Threading;
+using SunokoLibrary.Web.GooglePlus;
 
 namespace GPlusBrowser.ViewModel
 {
@@ -25,7 +26,7 @@ namespace GPlusBrowser.ViewModel
         string _ownerName;
         string _commentContent;
         string _commentDate;
-        System.Windows.Documents.Inline _postContentInline;
+        ContentElement _postContentInline;
 
         public string Id
         {
@@ -72,7 +73,7 @@ namespace GPlusBrowser.ViewModel
                 OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("OwnerIconUrl"));
             }
         }
-        public System.Windows.Documents.Inline PostContentInline
+        public ContentElement PostContentInline
         {
             get { return _postContentInline; }
             set
@@ -99,9 +100,7 @@ namespace GPlusBrowser.ViewModel
             OwnerName = _model.CommentInfo.Owner.Name;
             OwnerIconUrl = await TopLevel.DataCacheDict.DownloadImage(new Uri(_model.CommentInfo.Owner.IconImageUrl
                 .Replace("$SIZE_SEGMENT", "s25-c-k").Replace("$SIZE_NUM", "80")));
-
-            var element = _model.CommentInfo.GetParsedContent();
-            UiThreadDispatcher.Invoke(() => PostContentInline = ActivityViewModel.PrivateConvertInlines(element));
+            PostContentInline = _model.CommentInfo.GetParsedContent();
         }
     }
 }
