@@ -94,9 +94,8 @@ namespace GPlusBrowser.ViewModel
 
         async void model_Refreshed(object sender, EventArgs e)
         {
-            CommentDate = _model.CommentInfo.PostDate >= DateTime.Today
-                ? _model.CommentInfo.PostDate.ToString("HH:mm")
-                : _model.CommentInfo.PostDate.ToString("yyyy/MM/dd");
+            var postDate = TimeZone.CurrentTimeZone.ToLocalTime(_model.CommentInfo.PostDate);
+            CommentDate = postDate >= DateTime.Today ? postDate.ToString("HH:mm") : postDate.ToString("yyyy/MM/dd");
             OwnerName = _model.CommentInfo.Owner.Name;
             OwnerIconUrl = await TopLevel.DataCacheDict.DownloadImage(new Uri(_model.CommentInfo.Owner.IconImageUrl
                 .Replace("$SIZE_SEGMENT", "s25-c-k").Replace("$SIZE_NUM", "80")));

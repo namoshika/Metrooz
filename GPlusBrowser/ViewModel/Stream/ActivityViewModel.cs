@@ -196,10 +196,9 @@ namespace GPlusBrowser.ViewModel
             if (_model.CoreInfo.PostStatus != PostStatusType.Removed)
             {
                 StyleElement content;
+                var postDate = TimeZone.CurrentTimeZone.ToLocalTime(_model.CoreInfo.PostDate);
                 PostUserName = _model.CoreInfo.PostUser.Name;
-                PostDate = _model.CoreInfo.PostDate >= DateTime.Today
-                    ? _model.CoreInfo.PostDate.ToString("HH:mm")
-                    : _model.CoreInfo.PostDate.ToString("yyyy/MM/dd");
+                PostDate = postDate >= DateTime.Today ? postDate.ToString("HH:mm") : postDate.ToString("yyyy/MM/dd");
                 content = _model.CoreInfo.GetParsedContent();
                 ActivityUrl = _model.CoreInfo.PostUrl;
 

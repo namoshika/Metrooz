@@ -21,10 +21,9 @@ namespace GPlusBrowser.Model
         public ActivityInfo CoreInfo { get; private set; }
         public ObservableCollection<Comment> Comments { get; private set; }
 
-        public async void Initialize()
+        public void Initialize()
         {
-            foreach (var item in await CoreInfo.GetComments(false, false).ToArray())
-                RefreshComment(item);
+            CoreInfo.GetComments(false, true).Subscribe(RefreshComment);
         }
         public void Dispose()
         {
