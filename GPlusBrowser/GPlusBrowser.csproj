@@ -149,7 +149,7 @@
     <Compile Include="Model\Stream\CircleManager.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="ViewModel\AccountManagerPanel\AccountSelectorViewModel.cs" />
-    <Compile Include="ViewModel\PageSwitcherViewModel.cs" />
+    <Compile Include="ViewModel\AccountSwitcherViewModel.cs" />
     <Compile Include="ViewModel\Stream\AttachedAlbumViewModel.cs" />
     <Compile Include="ViewModel\Notification\NotificationManagerViewModel.cs" />
     <Compile Include="ViewModel\Stream\AttachedLinkViewModel.cs" />

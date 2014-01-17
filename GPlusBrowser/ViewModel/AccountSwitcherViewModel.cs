@@ -10,9 +10,9 @@ namespace GPlusBrowser.ViewModel
 {
     using Model;
 
-    public class PageSwitcherViewModel : ViewModelBase, IDisposable
+    public class AccountSwitcherViewModel : ViewModelBase, IDisposable
     {
-        public PageSwitcherViewModel(AccountManager accountManagerModel, Dispatcher uiThreadDispatcher)
+        public AccountSwitcherViewModel(AccountManager accountManagerModel, Dispatcher uiThreadDispatcher)
             : base(uiThreadDispatcher, null)
         {
             _accountManagerModel = accountManagerModel;

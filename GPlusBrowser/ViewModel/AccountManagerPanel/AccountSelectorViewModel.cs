@@ -14,14 +14,14 @@ namespace GPlusBrowser.ViewModel
 
     public class AccountSelectorViewModel : ViewModelBase
     {
-        public AccountSelectorViewModel(AccountManager accountManagerModel, PageSwitcherViewModel accountManagerVM, Dispatcher uiThreadDispatcher)
+        public AccountSelectorViewModel(AccountManager accountManagerModel, AccountSwitcherViewModel accountManagerVM, Dispatcher uiThreadDispatcher)
             : base(uiThreadDispatcher, null)
         {
             _accountManagerModel = accountManagerModel;
             _accountManagerVM = accountManagerVM;
         }
         AccountManager _accountManagerModel;
-        PageSwitcherViewModel _accountManagerVM;
+        AccountSwitcherViewModel _accountManagerVM;
         bool _isShowStatusText;
         string _statusText;
 

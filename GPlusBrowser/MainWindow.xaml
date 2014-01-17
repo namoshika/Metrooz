@@ -7,7 +7,7 @@
         xmlns:localVm="clr-namespace:GPlusBrowser.ViewModel"
         xmlns:localCtrl="clr-namespace:GPlusBrowser.Controls"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" x:Class="GPlusBrowser.MainWindow"
-        Title="GPlusBrowser" Height="700" Width="500" x:Name="mainWindow">
+        Title="GPlusBrowser" Height="650" Width="500" x:Name="mainWindow">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="booleanToVisibilityConverter" />
         <Style x:Key="PageSwitcherStyle" TargetType="{x:Type TabControl}">
@@ -79,14 +79,16 @@
                                 <GradientStop Offset="1" Color="#00000000" />
                             </RadialGradientBrush>
                         </Grid.OpacityMask>
-                        <Image Width="200" Height="55" VerticalAlignment="Top" HorizontalAlignment="Left" Stretch="UniformToFill" Source="{Binding UserIconUrl}" />
+                        <Grid.Background>
+                            <VisualBrush Visual="{Binding ElementName=accountIcon}" Stretch="UniformToFill" />
+                        </Grid.Background>
                     </Grid>
                     <Button Grid.Row="0" Grid.Column="0" Width="30" Height="30" Margin="10" Style="{StaticResource iconButtonTemplate}" Command="{Binding BackToAccountManagerCommand}">
                         <Image Source="/Resources/back.png" />
                     </Button>
                     <Grid Grid.Row="0" Grid.Column="1">
                         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Left" Orientation="Horizontal">
-                            <Image Width="35" Height="35" Margin="0,0,10,0" VerticalAlignment="Center" Source="{Binding UserIconUrl}" />
+                            <Image Name="accountIcon" Width="35" Height="35" Margin="0,0,10,0" VerticalAlignment="Center" Source="{Binding UserIconUrl}" />
                             <TextBlock FontSize="21" Margin="0,0,10,0" VerticalAlignment="Center"><Run Text="Stream/"/></TextBlock>
                             <ComboBox MinWidth="150" VerticalAlignment="Center" FontSize="16" SelectedIndex="{Binding Stream.SelectedCircleIndex}" DisplayMemberPath="CircleName" ItemsSource="{Binding Stream.DisplayStreams}" />
                         </StackPanel>
@@ -159,8 +161,8 @@
                 <localCtrl:IsExpandCommentCountToStringConverter x:Key="commentExpanderHeaderConverter" />
             </DataTemplate.Resources>
             <Border BorderBrush="LightGray" BorderThickness="0,1,0,0" Padding="5">
-                <DockPanel Margin="0" Focusable="False">
-                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0">
+                <StackPanel Margin="0" Focusable="False">
+                    <StackPanel Orientation="Horizontal" Margin="0">
                         <Image Width="25" Height="25" SnapsToDevicePixels="True" Source="{Binding PostUserIconUrl}" />
                         <TextBlock Margin="5,0,0,0" VerticalAlignment="Center">
                             <Run Text="{Binding PostUserName}" />
@@ -185,17 +187,69 @@
                                 </Span>
                         </TextBlock>
                     </StackPanel>
-                    <TextBlock DockPanel.Dock="Top" Margin="0,3,0,3" local:InlineBehavior.Inline="{Binding PostContentInline}" TextWrapping="Wrap" />
-                    <ContentPresenter DockPanel.Dock="Top" Content="{Binding AttachedContent}" />
-                    <localCtrl:ExpandableListView ItemsSource="{Binding Comments}" Margin="15,10,0,10" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
-                        <localCtrl:ExpandableListView.Header>
-                            <MultiBinding Converter="{StaticResource commentExpanderHeaderConverter}">
-                                <Binding RelativeSource="{RelativeSource Self}" Path="IsExpand" />
-                                <Binding RelativeSource="{RelativeSource Self}" Path="Items.Count" />
-                            </MultiBinding>
-                        </localCtrl:ExpandableListView.Header>
-                    </localCtrl:ExpandableListView>
-                </DockPanel>
+                    <TextBlock Margin="0,3,0,3" local:InlineBehavior.Inline="{Binding PostContentInline}" TextWrapping="Wrap" />
+                    <ContentPresenter Content="{Binding AttachedContent}" />
+                    <StackPanel Margin="15,10,0,10">
+                        <localCtrl:ExpandableListView ItemsSource="{Binding Comments}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                            <localCtrl:ExpandableListView.Header>
+                                <MultiBinding Converter="{StaticResource commentExpanderHeaderConverter}">
+                                    <Binding RelativeSource="{RelativeSource Self}" Path="IsExpand" />
+                                    <Binding RelativeSource="{RelativeSource Self}" Path="Items.Count" />
+                                </MultiBinding>
+                            </localCtrl:ExpandableListView.Header>
+                        </localCtrl:ExpandableListView>
+                        <TextBox Margin="0,0,0,8" BorderBrush="LightGray" BorderThickness="1" AcceptsReturn="True"
+                                 Text="{Binding PostCommentText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap"
+                                 localCtrl:PlaceHolderBehavior.Text="コメントを追加..."
+                                 localCtrl:PlaceHolderBehavior.VerticalAlignment="Top">
+                            <i:Interaction.Triggers>
+                                <i:EventTrigger EventName="PreviewMouseDown">
+                                    <ei:ChangePropertyAction TargetObject="{Binding}" PropertyName="ShareBoxStatus" Value="Writing" />
+                                </i:EventTrigger>
+                                <ei:DataTrigger Binding="{Binding ShareBoxStatus}" Value="Deactive">
+                                    <ei:ChangePropertyAction PropertyName="Padding" Value="0" />
+                                </ei:DataTrigger>
+                                <ei:DataTrigger Binding="{Binding ShareBoxStatus}" Value="Writing">
+                                    <ei:ChangePropertyAction PropertyName="Padding" Value="0,0,0,15" />
+                                </ei:DataTrigger>
+                                <ei:DataTrigger Binding="{Binding ShareBoxStatus}" Value="Sending">
+                                    <ei:ChangePropertyAction PropertyName="Padding" Value="0,0,0,15" />
+                                </ei:DataTrigger>
+                            </i:Interaction.Triggers>
+                            <TextBox.InputBindings>
+                                <KeyBinding Key="Enter" Modifiers="Shift" Command="{Binding PostCommentCommand}" />
+                            </TextBox.InputBindings>
+                        </TextBox>
+                        <StackPanel Visibility="Collapsed" Orientation="Horizontal">
+                            <i:Interaction.Triggers>
+                                <ei:DataTrigger Binding="{Binding ShareBoxStatus}" Value="Deactive">
+                                    <ei:ChangePropertyAction PropertyName="Visibility" Value="Collapsed" />
+                                </ei:DataTrigger>
+                                <ei:DataTrigger Binding="{Binding ShareBoxStatus}" Value="Writing">
+                                    <ei:ChangePropertyAction PropertyName="Visibility" Value="Visible" />
+                                </ei:DataTrigger>
+                                <ei:DataTrigger Binding="{Binding ShareBoxStatus}" Value="Sending">
+                                    <ei:ChangePropertyAction PropertyName="Visibility" Value="Visible" />
+                                </ei:DataTrigger>
+                            </i:Interaction.Triggers>
+                            <Button Padding="10,3,10,3" Margin="0,0,8,0" Content="コメントを投稿">
+                                <i:Interaction.Triggers>
+                                    <i:EventTrigger EventName="Click">
+                                        <i:InvokeCommandAction Command="{Binding PostCommentCommand}" />
+                                        <ei:ChangePropertyAction TargetObject="{Binding}" PropertyName="ShareBoxStatus" Value="Deactive" />
+                                    </i:EventTrigger>
+                                </i:Interaction.Triggers>
+                            </Button>
+                            <Button Padding="10,3,10,3" Margin="0,0,8,0" Content="キャンセル">
+                                <i:Interaction.Triggers>
+                                    <i:EventTrigger EventName="Click">
+                                        <ei:ChangePropertyAction TargetObject="{Binding}" PropertyName="ShareBoxStatus" Value="Deactive" />
+                                    </i:EventTrigger>
+                                </i:Interaction.Triggers>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
             </Border>
         </DataTemplate>
         <DataTemplate DataType="{x:Type localVm:StreamViewModel}">

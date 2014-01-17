@@ -19,7 +19,6 @@ namespace GPlusBrowser.ViewModel
         public ActivityViewModel(Activity activity, AccountViewModel topLevel, Dispatcher uiThreadDispatcher)
             : base(uiThreadDispatcher, topLevel)
         {
-            _isWritableA = true;
             _model = activity;
             _comments = new ObservableCollection<CommentViewModel>();
             _activity_Refreshed(null, null);
@@ -33,11 +32,11 @@ namespace GPlusBrowser.ViewModel
             _model.Updated += _activity_Refreshed;
             PostCommentCommand = new RelayCommand(PostCommentCommand_Executed);
         }
+        CommentPostBoxState _shareBoxStatus;
         Activity _model;
         ImageSource _iconUrl;
         Uri _activityUrl;
         int _isDisposed;
-        bool _isExpandComment, _isWritableA, _isWriteModeA;
         string _postUserName;
         string _postContent;
         string _postDate;
@@ -62,33 +61,6 @@ namespace GPlusBrowser.ViewModel
             {
                 _activityUrl = value;
                 OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("ActivityUrl"));
-            }
-        }
-        public bool IsExpandComment
-        {
-            get { return _isExpandComment; }
-            set
-            {
-                _isExpandComment = value;
-                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("IsExpandComment"));
-            }
-        }
-        public bool IsWritableA
-        {
-            get { return _isWritableA; }
-            set
-            {
-                _isWritableA = value;
-                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("IsWritableA"));
-            }
-        }
-        public bool IsWriteModeA
-        {
-            get { return _isWriteModeA; }
-            set
-            {
-                _isWriteModeA = value;
-                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("IsWriteModeA"));
             }
         }
         public string PostUserName
@@ -118,13 +90,13 @@ namespace GPlusBrowser.ViewModel
                 OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("PostDate"));
             }
         }
-        public string PostCommentTextA
+        public string PostCommentText
         {
             get { return _postCommentText; }
             set
             {
                 _postCommentText = value;
-                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("PostCommentTextA"));
+                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("PostCommentText"));
             }
         }
         public object AttachedContent
@@ -154,6 +126,15 @@ namespace GPlusBrowser.ViewModel
                 OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("PostContentInline"));
             }
         }
+        public CommentPostBoxState ShareBoxStatus
+        {
+            get { return _shareBoxStatus; }
+            set
+            {
+                _shareBoxStatus = value;
+                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("ShareBoxStatus"));
+            }
+        }
         public ICommand PostCommentCommand { get; private set; }
         public void Dispose()
         {
@@ -179,17 +160,16 @@ namespace GPlusBrowser.ViewModel
 
         async void PostCommentCommand_Executed(object arg)
         {
-            if (string.IsNullOrEmpty(PostCommentTextA) || IsWritableA == false)
+            if (string.IsNullOrEmpty(PostCommentText) || ShareBoxStatus != CommentPostBoxState.Writing)
                 return;
-            IsWritableA = false;
             try
-            { await _model.CommentPost(PostCommentTextA).ConfigureAwait(false); }
-            finally
             {
-                PostCommentTextA = null;
-                IsWritableA = true;
-                IsWriteModeA = false;
+                ShareBoxStatus = CommentPostBoxState.Sending;
+                await _model.CommentPost(PostCommentText).ConfigureAwait(false);
+                ShareBoxStatus = CommentPostBoxState.Deactive;
             }
+            finally
+            { PostCommentText = null; }
         }
         async void _activity_Refreshed(object sender, EventArgs e)
         {
@@ -312,4 +292,6 @@ namespace GPlusBrowser.ViewModel
             return inline;
         }
     }
+    public enum CommentPostBoxState
+    { Deactive, Writing, Sending }
 }
