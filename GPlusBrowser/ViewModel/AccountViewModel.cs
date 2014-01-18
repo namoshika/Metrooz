@@ -1,4 +1,6 @@
-﻿using System;
+﻿using GalaSoft.MvvmLight;
+using GalaSoft.MvvmLight.Command;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -12,10 +14,9 @@ namespace GPlusBrowser.ViewModel
 {
     using Model;
 
-    public class AccountViewModel : ViewModelBase, IDisposable
+    public class AccountViewModel : ViewModelBase
     {
-        public AccountViewModel(Account model, Dispatcher uiThreadDispatcher)
-            : base(uiThreadDispatcher, null)
+        public AccountViewModel(Account model)
         {
             _accountModel = model;
             _accountModel.Initialized += _accountModel_Initialized;
@@ -30,7 +31,6 @@ namespace GPlusBrowser.ViewModel
             ConnectStreamCommand = new RelayCommand(ConnectStreamCommand_Execute);
         }
         Account _accountModel;
-        //NotificationManagerViewModel _notification;
         StreamManagerViewModel _stream;
         ImageSource _userIconUrl;
         bool _isShowStatusText;
@@ -41,66 +41,39 @@ namespace GPlusBrowser.ViewModel
         public bool IsShowStatusText
         {
             get { return _isShowStatusText; }
-            set
-            {
-                _isShowStatusText = value;
-                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("IsShowStatusText"));
-            }
+            set { Set(() => IsShowStatusText, ref _isShowStatusText, value); }
         }
         public string StatusText
         {
             get { return _statusText; }
-            set
-            {
-                _statusText = value;
-                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("StatusText"));
-            }
+            set { Set(() => StatusText, ref _statusText, value); }
         }
         public string UserName
         {
             get { return _userName; }
-            set
-            {
-                _userName = value;
-                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("UserName"));
-            }
+            set { Set(() => UserName, ref _userName, value); }
         }
         public ImageSource UserIconUrl
         {
             get { return _userIconUrl; }
-            set
-            {
-                _userIconUrl = value;
-                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("UserIconUrl"));
-            }
+            set { Set(() => UserIconUrl, ref _userIconUrl, value); }
         }
         public StreamManagerViewModel Stream
         {
             get { return _stream; }
-            set
-            {
-                _stream = value;
-                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("Stream"));
-            }
+            set { Set(() => Stream, ref _stream, value); }
         }
-        //public NotificationManagerViewModel Notification
-        //{
-        //    get { return _notification; }
-        //    set
-        //    {
-        //        _notification = value;
-        //        OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("Notification"));
-        //    }
-        //}
         public ICommand OpenStreamPanelCommand { get; private set; }
         public ICommand BackToAccountManagerCommand { get; private set; }
         public ICommand ConnectStreamCommand { get; private set; }
-        public void Dispose()
+        public override void Cleanup()
         {
+            base.Cleanup();
+
             _accountModel.Initialized -= _accountModel_Initialized;
             _accountModel = null;
             if (_stream != null)
-                _stream.Dispose();
+                _stream.Cleanup();
             _stream = null;
         }
 
@@ -111,7 +84,7 @@ namespace GPlusBrowser.ViewModel
             else
             {
                 DataCacheDict = new DataCacheDictionary(_accountModel.PlusClient.NormalHttpClient);
-                Stream = new StreamManagerViewModel(_accountModel.Stream, this, UiThreadDispatcher);
+                Stream = new StreamManagerViewModel(_accountModel.Stream);
                 //Notification = new NotificationManagerViewModel(_accountModel.Notification, this, UiThreadDispatcher);
                 UserName = _accountModel.MyProfile.Name;
                 UserIconUrl = await DataCacheDict.DownloadImage(
@@ -130,14 +103,14 @@ namespace GPlusBrowser.ViewModel
                 StatusText = "ストリームへの接続が切断されました。";
             }
         }
-        async void OpenStreamPanelCommand_Execute(object arg)
+        async void OpenStreamPanelCommand_Execute()
         {
             OnOpenedStreamPanel(new EventArgs());
             await _accountModel.Initialize(false);
         }
-        void BackToAccountManagerCommand_Execute(object arg)
+        void BackToAccountManagerCommand_Execute()
         { OnBackedToAccountManager(new EventArgs()); }
-        void ConnectStreamCommand_Execute(object arg)
+        void ConnectStreamCommand_Execute()
         { _accountModel.Connect(); }
 
         public event EventHandler OpenedStreamPanel;

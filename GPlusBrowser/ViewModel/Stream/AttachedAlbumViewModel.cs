@@ -1,4 +1,6 @@
-﻿using System;
+﻿using GalaSoft.MvvmLight;
+using GalaSoft.MvvmLight.Command;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -14,27 +16,15 @@ namespace GPlusBrowser.ViewModel
 
     public class AttachedAlbumViewModel : ViewModelBase
     {
-        public AttachedAlbumViewModel(AttachedAlbum attachedAlbumModel, AccountViewModel topLevel, Dispatcher uiThreadDispatcher)
-            : base(uiThreadDispatcher, topLevel)
+        public AttachedAlbumViewModel(AttachedAlbum attachedAlbumModel)
         {
-            _selectedImageIndex = 0;
+            _selectedImageIndex = -1;
             _attachedAlbumModel = attachedAlbumModel;
-
-            _thumbnailImages = new BitmapImage[_attachedAlbumModel.Pictures.Length];
-            _mainImages = new BitmapImage[_attachedAlbumModel.Pictures.Length];
-            System.Threading.Tasks.Parallel
-                .ForEach(
-                _attachedAlbumModel.Pictures.Select((info, idx) => new { Info = info, Index = idx }),
-                async pair =>
-                {
-                    _thumbnailImages[pair.Index] = await topLevel.DataCacheDict.DownloadImage(new Uri(pair.Info.ThumbnailUrl.Replace("$SIZE_SEGMENT", "s50-c-k"))).ConfigureAwait(false);
-                    _mainImages[pair.Index] = await topLevel.DataCacheDict.DownloadImage(new Uri(pair.Info.ThumbnailUrl.Replace("$SIZE_SEGMENT", "w640-h480"))).ConfigureAwait(false);
-                    if(pair.Index == _selectedImageIndex)
-                        OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("SelectedImage"));
-                });
+            Initialize();
         }
         int _selectedImageIndex;
-        BitmapImage[] _thumbnailImages, _mainImages;
+        BitmapImage _selectedImage;
+        BitmapImage[] _thumbnailImages, _largeImages;
         AttachedAlbum _attachedAlbumModel;
 
         public int SelectedImageIndex
@@ -42,15 +32,47 @@ namespace GPlusBrowser.ViewModel
             get { return _selectedImageIndex; }
             set
             {
-                _selectedImageIndex = value;
-                OnPropertyChanged(new System.ComponentModel
-                    .PropertyChangedEventArgs("SelectedImageIndex"));
-                OnPropertyChanged(new System.ComponentModel
-                    .PropertyChangedEventArgs("SelectedImage"));
+                Set(() => SelectedImageIndex, ref _selectedImageIndex, value);
+                SelectedImage = _selectedImageIndex > -1 ? _largeImages[value] : null;
             }
         }
         public BitmapImage SelectedImage
-        { get { return _mainImages[_selectedImageIndex]; } }
-        public BitmapImage[] ThumbnailImages { get { return _thumbnailImages; } }
+        {
+            get { return _selectedImage; }
+            set { Set(() => SelectedImage, ref _selectedImage, value); }
+        }
+        public BitmapImage[] ThumbnailImages
+        {
+            get { return _thumbnailImages; }
+            set { Set(() => ThumbnailImages, ref _thumbnailImages, value); }
+        }
+        public async void Initialize()
+        {
+            var thumbImgs = new List<BitmapImage>();
+            var largeImgs = new List<BitmapImage>();
+            var downDatas = await Task.Factory.ContinueWhenAll(_attachedAlbumModel.Pictures
+                .SelectMany(imgInf =>
+                    new[]{
+                        new { IsThumbnail = true, Url = new Uri(imgInf.ThumbnailUrl.Replace("$SIZE_SEGMENT", "s50-c-k")) },
+                        new { IsThumbnail = false, Url = new Uri(imgInf.ThumbnailUrl.Replace("$SIZE_SEGMENT", "w640-h480")) }
+                    })
+                .Select(async jobInf =>
+                    new
+                    {
+                        IsThumbnail = jobInf.IsThumbnail,
+                        Data = await DataCacheDictionary.Default.DownloadImage(jobInf.Url).ConfigureAwait(false)
+                    })
+                .ToArray(), tsks => tsks.Select(tsk => tsk.Result));
+            foreach (var jobInf in downDatas)
+            {
+                if (jobInf.IsThumbnail)
+                    thumbImgs.Add(jobInf.Data);
+                else
+                    largeImgs.Add(jobInf.Data);
+            }
+            _largeImages = largeImgs.ToArray();
+            ThumbnailImages = thumbImgs.ToArray();
+            SelectedImageIndex = 0;
+        }
     }
 }

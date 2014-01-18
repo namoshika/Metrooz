@@ -73,7 +73,7 @@ namespace GPlusBrowser.Model
             {
                 IsSaved = SettingStatus.Error;
 
-                var ex = new AppException("設定の保存に失敗しました。", e);
+                var ex = new Exception("設定の保存に失敗しました。", e);
                 ex.Data.Add("MailAddress", MailAddress);
                 ex.Data.Add("SettingDirectory", _settingDirectory);
                 throw ex;
@@ -90,7 +90,7 @@ namespace GPlusBrowser.Model
             {
                 IsSaved = SettingStatus.Error;
 
-                var ex = new AppException("設定の読み込みに失敗しました。", e);
+                var ex = new Exception("設定の読み込みに失敗しました。", e);
                 ex.Data.Add("MailAddress", MailAddress);
                 ex.Data.Add("SettingDirectory", _settingDirectory);
                 throw ex;

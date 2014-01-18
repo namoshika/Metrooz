@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GalaSoft.MvvmLight;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -10,17 +11,30 @@ namespace GPlusBrowser.ViewModel
 {
     using Model;
 
-    public class AccountSwitcherViewModel : ViewModelBase, IDisposable
+    /// <summary>
+    /// This class contains properties that the main View can data bind to.
+    /// <para>
+    /// Use the <strong>mvvminpc</strong> snippet to add bindable properties to this ViewModel.
+    /// </para>
+    /// <para>
+    /// You can also use Blend to data bind with the tool's support.
+    /// </para>
+    /// <para>
+    /// See http://www.galasoft.ch/mvvm
+    /// </para>
+    /// </summary>
+    public class MainViewModel : ViewModelBase
     {
-        public AccountSwitcherViewModel(AccountManager accountManagerModel, Dispatcher uiThreadDispatcher)
-            : base(uiThreadDispatcher, null)
+        /// <summary>
+        /// Initializes a new instance of the MainViewModel class.
+        /// </summary>
+        public MainViewModel(AccountManager accountManagerModel)
         {
-            _accountManagerModel = accountManagerModel;
-            ((INotifyCollectionChanged)_accountManagerModel.Accounts).CollectionChanged += PageSwitcherViewModel_CollectionChanged;
             _selectedMainPageIndex = -1;
             IsAccountSelectorMode = true;
-            AccountSelector = new AccountSelectorViewModel(accountManagerModel, this, uiThreadDispatcher);
             Pages = new ObservableCollection<AccountViewModel>();
+
+            Initialize(accountManagerModel);
         }
         AccountManager _accountManagerModel;
         bool _isAccountSelectorMode;
@@ -31,31 +45,37 @@ namespace GPlusBrowser.ViewModel
             get { return _selectedMainPageIndex; }
             set
             {
-                if (_selectedMainPageIndex == value)
-                    return;
                 IsAccountSelectorMode = value < 0;
-                _selectedMainPageIndex = value;
-                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("SelectedPageIndex"));
+                Set(() => SelectedPageIndex, ref _selectedMainPageIndex, value);
             }
         }
         public bool IsAccountSelectorMode
         {
             get { return _isAccountSelectorMode; }
-            set
-            {
-                if (_isAccountSelectorMode == value)
-                    return;
-                _isAccountSelectorMode = value;
-                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("IsAccountSelectorMode"));
-            }
+            set { Set(() => IsAccountSelectorMode, ref _isAccountSelectorMode, value); }
         }
-        public AccountSelectorViewModel AccountSelector { get; set; }
         public ObservableCollection<AccountViewModel> Pages { get; set; }
 
-        public void Dispose()
+        public async void Initialize(AccountManager accountManagerModel)
         {
+            if (IsInDesignMode)
+            {
+                // Code runs in Blend --> create design time data.
+            }
+            else
+            {
+                _accountManagerModel = accountManagerModel;
+                ((INotifyCollectionChanged)_accountManagerModel.Accounts)
+                    .CollectionChanged += PageSwitcherViewModel_CollectionChanged;
+                await _accountManagerModel.Initialize();
+            }
+        }
+        public override void Cleanup()
+        {
+            base.Cleanup();
+            DataCacheDictionary.Clear();
             foreach (AccountViewModel item in Pages.Skip(1))
-                item.Dispose();
+                item.Cleanup();
         }
         void PageSwitcherViewModel_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
@@ -65,10 +85,10 @@ namespace GPlusBrowser.ViewModel
                     for (var i = 0; i < e.NewItems.Count; i++)
                     {
                         var accountModel = (Account)e.NewItems[i];
-                        var account = new AccountViewModel(accountModel, UiThreadDispatcher);
+                        var account = new AccountViewModel(accountModel);
                         account.OpenedStreamPanel += account_OpenedStreamPanel;
                         account.BackedToAccountManager += account_BackedToAccountManager;
-                        Pages.InsertAsync(e.NewStartingIndex + i, account, UiThreadDispatcher);
+                        Pages.InsertAsync(e.NewStartingIndex + i, account, App.Current.Dispatcher);
                     }
                     break;
                 case NotifyCollectionChangedAction.Remove:
@@ -77,7 +97,7 @@ namespace GPlusBrowser.ViewModel
                         var account = Pages[e.OldStartingIndex];
                         account.OpenedStreamPanel -= account_OpenedStreamPanel;
                         account.BackedToAccountManager -= account_BackedToAccountManager;
-                        Pages.RemoveAtAsync(e.OldStartingIndex, UiThreadDispatcher);
+                        Pages.RemoveAtAsync(e.OldStartingIndex, App.Current.Dispatcher);
                     }
                     break;
                 case NotifyCollectionChangedAction.Reset:
@@ -90,7 +110,7 @@ namespace GPlusBrowser.ViewModel
                             item.BackedToAccountManager -= account_BackedToAccountManager;
                         }
                         Pages.Clear();
-                        Pages.AddAsync(accountManager, UiThreadDispatcher);
+                        Pages.AddAsync(accountManager, App.Current.Dispatcher);
                         SelectedPageIndex = -1;
                     }
                     break;

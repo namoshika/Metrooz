@@ -1,4 +1,6 @@
-﻿using System;
+﻿using GalaSoft.MvvmLight;
+using GalaSoft.MvvmLight.Command;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -14,17 +16,16 @@ namespace GPlusBrowser.ViewModel
 {
     using GPlusBrowser.Model;
 
-    public class ActivityViewModel : ViewModelBase, IDisposable
+    public class ActivityViewModel : ViewModelBase
     {
-        public ActivityViewModel(Activity activity, AccountViewModel topLevel, Dispatcher uiThreadDispatcher)
-            : base(uiThreadDispatcher, topLevel)
+        public ActivityViewModel(Activity activity)
         {
             _model = activity;
             _comments = new ObservableCollection<CommentViewModel>();
             Refresh().Wait();
             lock (_model.Comments)
                 foreach (var item in _model.Comments.Select(
-                    comment => (CommentViewModel)new CommentViewModel(comment, topLevel, uiThreadDispatcher)))
+                    comment => (CommentViewModel)new CommentViewModel(comment)))
                     Comments.Add(item);
 
             _model.Comments.CollectionChanged += _activity_Comments_CollectionChanged;
@@ -47,92 +48,52 @@ namespace GPlusBrowser.ViewModel
         public ImageSource PostUserIconUrl
         {
             get { return _iconUrl; }
-            set
-            {
-                _iconUrl = value;
-                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("PostUserIconUrl"));
-            }
+            set { Set(() => PostUserIconUrl, ref _iconUrl, value); }
         }
         public Uri ActivityUrl
         {
             get { return _activityUrl; }
-            set
-            {
-                _activityUrl = value;
-                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("ActivityUrl"));
-            }
+            set { Set(() => ActivityUrl, ref _activityUrl, value); }
         }
         public string PostUserName
         {
             get { return _postUserName; }
-            set
-            {
-                _postUserName = value;
-                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("PostUserName"));
-            }
+            set { Set(() => PostUserName, ref _postUserName, value); }
         }
         public string PostDate
         {
             get { return _postDate; }
-            set
-            {
-                _postDate = value;
-                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("PostDate"));
-            }
+            set { Set(() => PostDate, ref _postDate, value); }
         }
         public string PostText
         {
             get { return _postText; }
-            set
-            {
-                _postText = value;
-                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("PostText"));
-            }
+            set { Set(() => PostText, ref _postText, value); }
         }
         public string PostCommentText
         {
             get { return _postCommentText; }
-            set
-            {
-                _postCommentText = value;
-                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("PostCommentText"));
-            }
+            set { Set(() => PostCommentText, ref _postCommentText, value); }
         }
         public object AttachedContent
         {
             get { return _attachedContent; }
-            set
-            {
-                _attachedContent = value;
-                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("AttachedContent"));
-            }
+            set { Set(() => AttachedContent, ref _attachedContent, value); }
         }
         public ObservableCollection<CommentViewModel> Comments
         {
             get { return _comments; }
-            set
-            {
-                _comments = value;
-                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("Comments"));
-            }
+            set { Set(() => Comments, ref _comments, value); }
         }
         public ContentElement PostContentInline
         {
             get { return _postContentInline; }
-            set
-            {
-                _postContentInline = value;
-                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("PostContentInline"));
-            }
+            set { Set(() => PostContentInline, ref _postContentInline, value); }
         }
         public CommentPostBoxState ShareBoxStatus
         {
             get { return _shareBoxStatus; }
-            set
-            {
-                _shareBoxStatus = value;
-                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("ShareBoxStatus"));
-            }
+            set { Set(() => ShareBoxStatus, ref _shareBoxStatus, value); }
         }
         public ICommand PostCommentCommand { get; private set; }
         public async Task Refresh()
@@ -150,7 +111,7 @@ namespace GPlusBrowser.ViewModel
                     if (_model.CoreInfo.AttachedContent.Type == ContentType.Album)
                     {
                         var attachedAlbum = (AttachedAlbum)_model.CoreInfo.AttachedContent;
-                        AttachedContent = new AttachedAlbumViewModel(attachedAlbum, TopLevel, UiThreadDispatcher);
+                        AttachedContent = new AttachedAlbumViewModel(attachedAlbum);
                     }
                     else if (_model.CoreInfo.AttachedContent.Type == ContentType.Link)
                     {
@@ -159,27 +120,27 @@ namespace GPlusBrowser.ViewModel
                             attachedLink.Title,
                             string.IsNullOrEmpty(attachedLink.Summary)
                                 ? null : attachedLink.Summary.Trim('\n', '\r', ' '),
-                            attachedLink.FaviconUrl, attachedLink.LinkUrl, attachedLink.OriginalThumbnailUrl,
-                            TopLevel, UiThreadDispatcher);
+                            attachedLink.FaviconUrl, attachedLink.LinkUrl, attachedLink.OriginalThumbnailUrl);
                     }
                 PostText = _model.CoreInfo.Text;
                 PostContentInline = content;
-                PostUserIconUrl = await TopLevel.DataCacheDict.DownloadImage(
+                PostUserIconUrl = await DataCacheDictionary.Default.DownloadImage(
                     new Uri(_model.CoreInfo.PostUser.IconImageUrl
                         .Replace("$SIZE_SEGMENT", "s25-c-k")
                         .Replace("$SIZE_NUM", "80")));
             }
         }
-        public void Dispose()
+        public override void Cleanup()
         {
+            base.Cleanup();
             if (System.Threading.Interlocked.CompareExchange(ref _isDisposed, 1, 0) == 1)
                 return;
 
             _model.Updated -= _activity_Refreshed;
             _model.Comments.CollectionChanged -= _activity_Comments_CollectionChanged;
             foreach (var item in _comments)
-                item.Dispose();
-            _comments.ClearAsync(UiThreadDispatcher);
+                item.Cleanup();
+            _comments.ClearAsync(App.Current.Dispatcher);
             _model = null;
             _iconUrl = null;
             _activityUrl = null;
@@ -191,7 +152,7 @@ namespace GPlusBrowser.ViewModel
             _postContentInline = null;
         }
 
-        async void PostCommentCommand_Executed(object arg)
+        async void PostCommentCommand_Executed()
         {
             if (string.IsNullOrEmpty(PostCommentText) || ShareBoxStatus != CommentPostBoxState.Writing)
                 return;
@@ -211,17 +172,17 @@ namespace GPlusBrowser.ViewModel
             {
                 case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
                     foreach (var item in e.NewItems)
-                        Comments.AddAsync(new CommentViewModel((Comment)item, TopLevel, UiThreadDispatcher), UiThreadDispatcher);
+                        Comments.AddAsync(new CommentViewModel((Comment)item), App.Current.Dispatcher);
                     break;
                 case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
                     for (var i = 0; i < e.OldItems.Count; i++)
                     {
                         var tmp = Comments.First(vm => vm.Id == ((Comment)e.OldItems[i]).CommentInfo.Id);
-                        Comments.RemoveAsync(tmp, UiThreadDispatcher);
+                        Comments.RemoveAsync(tmp, App.Current.Dispatcher);
                     }
                     break;
                 case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:
-                    Comments.ClearAsync(UiThreadDispatcher);
+                    Comments.ClearAsync(App.Current.Dispatcher);
                     break;
             }
         }

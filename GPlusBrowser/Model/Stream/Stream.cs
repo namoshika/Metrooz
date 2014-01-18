@@ -19,6 +19,7 @@ namespace GPlusBrowser.Model
             Activities = new ReadOnlyObservableCollection<Activity>(_activities);
         }
         System.Threading.SemaphoreSlim _syncer;
+        int _maxActivityCount = 20;
         CircleInfo _circle;
         IDisposable _streamObj;
         StreamManager _manager;
@@ -69,17 +70,15 @@ namespace GPlusBrowser.Model
                                     {
                                         item = new Activity(newInfo);
                                         _activities.Insert(0, item);
-                                        if (_activities.Count > 50)
+                                        if (_activities.Count > _maxActivityCount)
                                         {
-                                            _activities[0].Dispose();
-                                            _activities.RemoveAt(0);
+                                            _activities[_maxActivityCount].Dispose();
+                                            _activities.RemoveAt(_maxActivityCount);
                                         }
                                     }
                                     break;
                                 case PostStatusType.Removed:
-                                    var idx = Activities.IndexOf(item);
-                                    if (idx >= 0)
-                                        _activities.Remove(item);
+                                    _activities.Remove(item);
                                     break;
                             }
                         }

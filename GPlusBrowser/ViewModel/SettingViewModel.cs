@@ -1,4 +1,6 @@
-﻿using System;
+﻿using GalaSoft.MvvmLight;
+using GalaSoft.MvvmLight.Command;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,14 +14,13 @@ namespace GPlusBrowser.ViewModel
 
     public class SettingViewModel : ViewModelBase
     {
-        public SettingViewModel(SettingModel setting, Account mainWinModel, AccountViewModel topLevel, Dispatcher uiThreadDispatcher)
-            : base(uiThreadDispatcher, topLevel)
+        public SettingViewModel(SettingModel setting, Account mainWinModel)
         {
             NotificationText = string.Empty;
 
             PropertyChanged += SettingViewModel_PropertyChanged;
             SaveConfigCommand = new RelayCommand(
-                obj =>
+                () =>
                 {
                     NotificationText = string.Empty;
                     Status = SettingStatusType.Checking;
@@ -38,7 +39,7 @@ namespace GPlusBrowser.ViewModel
                     //}
                 });
             CancelConfigCommand = new RelayCommand(
-                obj =>
+                () =>
                 {
                     EmailAddress = string.Empty;
                     Password = string.Empty;
@@ -58,61 +59,32 @@ namespace GPlusBrowser.ViewModel
         public SettingStatusType Status
         {
             get { return _status; }
-            set
-            {
-                _status = value;
-                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("Status"));
-            }
+            set { Set(() => Status, ref _status, value); }
         }
         public bool IsModified
         {
             get { return _isModified; }
-            set
-            {
-                _isModified = value;
-                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("IsModified"));
-            }
+            set { Set(() => IsModified, ref _isModified, value); }
         }
         public bool IsExpanded
         {
             get { return _isExpanded; }
-            set
-            {
-                if (_isExpanded == value)
-                    return;
-                _isExpanded = value;
-                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("IsExpanded"));
-            }
+            set { Set(() => IsExpanded, ref _isExpanded, value); }
         }
         public string EmailAddress
         {
             get { return _emailAddress; }
-            set
-            {
-                _emailAddress = value;
-                OnPropertyChanged(
-                    new System.ComponentModel.PropertyChangedEventArgs("EmailAddress"));
-            }
+            set { Set(() => EmailAddress, ref _emailAddress, value); }
         }
         public string Password
         {
             get { return _password; }
-            set
-            {
-                _password = value;
-                OnPropertyChanged(
-                    new System.ComponentModel.PropertyChangedEventArgs("Password"));
-            }
+            set { Set(() => Password, ref _password, value); }
         }
         public string NotificationText
         {
             get { return _notificationText; }
-            set
-            {
-                _notificationText = value;
-                OnPropertyChanged(
-                    new System.ComponentModel.PropertyChangedEventArgs("NotificationText"));
-            }
+            set { Set(() => NotificationText, ref _notificationText, value); }
         }
         public ICommand SaveConfigCommand { get; set; }
         public ICommand CancelConfigCommand { get; set; }

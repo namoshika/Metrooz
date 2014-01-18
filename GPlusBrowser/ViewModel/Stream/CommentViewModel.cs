@@ -1,4 +1,6 @@
-﻿using System;
+﻿using GalaSoft.MvvmLight;
+using GalaSoft.MvvmLight.Command;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,10 +12,9 @@ namespace GPlusBrowser.ViewModel
 {
     using Model;
 
-    public class CommentViewModel : ViewModelBase, IDisposable
+    public class CommentViewModel : ViewModelBase
     {
-        public CommentViewModel(Comment model, AccountViewModel topLevel, Dispatcher uiThreadDispatcher)
-            : base(uiThreadDispatcher, topLevel)
+        public CommentViewModel(Comment model)
         {
             _model = model;
             Id = model.CommentInfo.Id;
@@ -31,59 +32,37 @@ namespace GPlusBrowser.ViewModel
         public string Id
         {
             get { return _id; }
-            set
-            {
-                _id = value;
-                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("Id"));
-            }
+            set { Set(() => Id, ref _id, value); }
         }
         public string CommentContent
         {
             get { return _commentContent; }
-            set
-            {
-                _commentContent = value;
-                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("CommentContent"));
-            }
+            set { Set(() => CommentContent, ref _commentContent, value); }
         }
         public string OwnerName
         {
             get { return _ownerName; }
-            set
-            {
-                _ownerName = value;
-                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("OwnerName"));
-            }
+            set { Set(() => OwnerName, ref _ownerName, value); }
         }
         public string CommentDate
         {
             get { return _commentDate; }
-            set
-            {
-                _commentDate = value;
-                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("CommentDate"));
-            }
+            set { Set(() => CommentDate, ref _commentDate, value); }
         }
         public ImageSource OwnerIconUrl
         {
             get { return _ownerIconUrl; }
-            set
-            {
-                _ownerIconUrl = value;
-                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("OwnerIconUrl"));
-            }
+            set { Set(() => OwnerIconUrl, ref _ownerIconUrl, value); }
         }
         public ContentElement PostContentInline
         {
             get { return _postContentInline; }
-            set
-            {
-                _postContentInline = value;
-                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("PostContentInline"));
-            }
+            set { Set(() => PostContentInline, ref _postContentInline, value); }
         }
-        public void Dispose()
+        public override void Cleanup()
         {
+            base.Cleanup();
+
             if (_model != null)
                 _model.Refreshed -= model_Refreshed;
             _id = null;
@@ -98,7 +77,7 @@ namespace GPlusBrowser.ViewModel
             var postDate = TimeZone.CurrentTimeZone.ToLocalTime(_model.CommentInfo.PostDate);
             CommentDate = postDate >= DateTime.Today ? postDate.ToString("HH:mm") : postDate.ToString("yyyy/MM/dd");
             OwnerName = _model.CommentInfo.Owner.Name;
-            OwnerIconUrl = await TopLevel.DataCacheDict.DownloadImage(new Uri(_model.CommentInfo.Owner.IconImageUrl
+            OwnerIconUrl = await DataCacheDictionary.Default.DownloadImage(new Uri(_model.CommentInfo.Owner.IconImageUrl
                 .Replace("$SIZE_SEGMENT", "s25-c-k").Replace("$SIZE_NUM", "80")));
             PostContentInline = _model.CommentInfo.GetParsedContent();
         }

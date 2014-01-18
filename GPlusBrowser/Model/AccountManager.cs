@@ -16,11 +16,9 @@ namespace GPlusBrowser.Model
         {
             _accounts = new ObservableCollection<Account>();
             _readonlyAccounts = new ReadOnlyObservableCollection<Account>(_accounts);
-            SettingManager = new SettingModelManager();
         }
         ObservableCollection<Account> _accounts;
         ReadOnlyObservableCollection<Account> _readonlyAccounts;
-        public SettingModelManager SettingManager { get; private set; }
         public ReadOnlyCollection<Account> Accounts { get { return _readonlyAccounts; } }
 
         public async Task Initialize()
@@ -30,7 +28,6 @@ namespace GPlusBrowser.Model
                 foreach (var item in _accounts)
                     item.Dispose();
                 _accounts.Clear();
-                SettingManager.Reload();
                 foreach (var item in await PlatformClient.Factory.ImportFromChrome())
                 {
                     var account = new Account(item);
@@ -41,6 +38,9 @@ namespace GPlusBrowser.Model
             { throw new ApplicationException("AccountManagerの初期化に失敗しました。", e); }
         }
         public void Dispose()
-        { SettingManager.Save(); }
+        {
+            foreach (var item in Accounts)
+                item.Dispose();
+        }
     }
 }

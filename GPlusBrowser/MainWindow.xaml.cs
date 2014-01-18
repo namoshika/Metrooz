@@ -24,39 +24,12 @@ namespace GPlusBrowser
         public MainWindow()
         {
             InitializeComponent();
-            _sizeChangedTrigger = new System.Reactive.Subjects.Subject<EventPattern<SizeChangedEventArgs>>();
-            _settingManager = new Model.SettingModelManager();
-            _accountManager = new Model.AccountManager();
-            _accountSwitcherVM = new ViewModel.AccountSwitcherViewModel(_accountManager, Dispatcher);
-            Loaded += MainWindow_Loaded;
-            //Observable.FromEventPattern<SizeChangedEventHandler, SizeChangedEventArgs>(
-            //    conversion: args => new SizeChangedEventHandler(args),
-            //    addHandler: handler => SizeChanged += handler,
-            //    removeHandler: handler => SizeChanged -= handler)
-            //    .Merge(_sizeChangedTrigger)
-            //    .Throttle(TimeSpan.FromMilliseconds(250))
-            //    .ObserveOn(Dispatcher)
-            //    .Subscribe(MainWindow_SizeChanged);
         }
-        System.Reactive.Subjects.Subject<EventPattern<SizeChangedEventArgs>> _sizeChangedTrigger;
-        Model.SettingModelManager _settingManager;
-        Model.AccountManager _accountManager;
-        ViewModel.AccountSwitcherViewModel _accountSwitcherVM;
 
         protected override void OnClosed(EventArgs e)
         {
-            _accountSwitcherVM.Dispose();
-            _accountManager.Dispose();
-            DataCacheDictionary.Clear();
+            ViewModel.ViewModelLocator.Cleanup();
             base.OnClosed(e);
-        }
-        async void MainWindow_Loaded(object sender, RoutedEventArgs e)
-        {
-            _settingManager = new Model.SettingModelManager();
-            _accountManager = new Model.AccountManager();
-            _accountSwitcherVM = new ViewModel.AccountSwitcherViewModel(_accountManager, Dispatcher);
-            DataContext = _accountSwitcherVM;
-            await _accountManager.Initialize();
         }
     }
 

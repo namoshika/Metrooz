@@ -1,4 +1,6 @@
-﻿using System;
+﻿using GalaSoft.MvvmLight;
+using GalaSoft.MvvmLight.Command;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -10,16 +12,15 @@ namespace GPlusBrowser.ViewModel
 {
     using Model;
 
-    public class StreamManagerViewModel : ViewModelBase, IDisposable
+    public class StreamManagerViewModel : ViewModelBase
     {
-        public StreamManagerViewModel(StreamManager streamManager, AccountViewModel topLevel, Dispatcher uiThreadDispatcher)
-            : base(uiThreadDispatcher, topLevel)
+        public StreamManagerViewModel(StreamManager streamManager)
         {
             _selectedCircleIndex = -1;
             _streamManagerModel = streamManager;
             ((INotifyCollectionChanged)_streamManagerModel.CircleStreams).CollectionChanged += _stream_ChangedDisplayStreams;
             _displayStreams = new ObservableCollection<StreamViewModel>(
-                _streamManagerModel.CircleStreams.Select(vm => new StreamViewModel(vm, topLevel, uiThreadDispatcher))); ;
+                _streamManagerModel.CircleStreams.Select(vm => new StreamViewModel(vm))); ;
 
             if (_displayStreams.Count > 0)
                 SelectedCircleIndex = 0;
@@ -32,38 +33,26 @@ namespace GPlusBrowser.ViewModel
         public bool IsError
         {
             get { return _isError; }
-            set
-            {
-                if (_isError == value)
-                    return;
-                _isError = value;
-                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("IsError"));
-            }
+            set { Set(() => IsError, ref _isError, value); }
         }
         public int SelectedCircleIndex
         {
             get { return _selectedCircleIndex; }
             set
             {
-                if (_selectedCircleIndex == value)
-                    return;
                 if (value > -1)
                     _displayStreams[value].Connect();
-                _selectedCircleIndex = value;
-                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("SelectedCircleIndex"));
+                Set(() => SelectedCircleIndex, ref _selectedCircleIndex, value);
             }
         }
         public ObservableCollection<StreamViewModel> DisplayStreams
         {
             get { return _displayStreams; }
-            set
-            {
-                _displayStreams = value;
-                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("DisplayStreams"));
-            }
+            set { Set(() => DisplayStreams, ref _displayStreams, value); }
         }
-        public void Dispose()
+        public override void Cleanup()
         {
+            base.Cleanup();
             if (_streamManagerModel == null)
                 return;
 
@@ -72,7 +61,7 @@ namespace GPlusBrowser.ViewModel
             _streamManagerModel = null;
 
             foreach (var item in DisplayStreams)
-                item.Dispose();
+                item.Cleanup();
             DisplayStreams = null;
         }
 
@@ -85,19 +74,19 @@ namespace GPlusBrowser.ViewModel
                         for (var i = 0; i < e.NewItems.Count; i++)
                         {
                             var circle = (Stream)e.NewItems[i];
-                            var circleVm = new StreamViewModel(circle, TopLevel, UiThreadDispatcher);
-                            DisplayStreams.InsertAsync(e.NewStartingIndex + i, circleVm, UiThreadDispatcher);
+                            var circleVm = new StreamViewModel(circle);
+                            DisplayStreams.InsertAsync(e.NewStartingIndex + i, circleVm, App.Current.Dispatcher);
                         }
                         break;
                     case System.Collections.Specialized.NotifyCollectionChangedAction.Move:
-                        DisplayStreams.MoveAsync(e.OldStartingIndex, e.NewStartingIndex, UiThreadDispatcher);
+                        DisplayStreams.MoveAsync(e.OldStartingIndex, e.NewStartingIndex, App.Current.Dispatcher);
                         break;
                     case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
                         for (var i = 0; i < e.OldItems.Count; i++)
-                            DisplayStreams.RemoveAtAsync(e.OldStartingIndex, UiThreadDispatcher);
+                            DisplayStreams.RemoveAtAsync(e.OldStartingIndex, App.Current.Dispatcher);
                         break;
                     case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:
-                        DisplayStreams.ClearAsync(UiThreadDispatcher);
+                        DisplayStreams.ClearAsync(App.Current.Dispatcher);
                         break;
                 }
         }

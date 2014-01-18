@@ -7,10 +7,11 @@
         xmlns:localVm="clr-namespace:GPlusBrowser.ViewModel"
         xmlns:localCtrl="clr-namespace:GPlusBrowser.Controls"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" x:Class="GPlusBrowser.MainWindow"
-        Title="GPlusBrowser" Height="650" Width="500" x:Name="mainWindow">
+        Title="GPlusBrowser" Height="650" Width="500" x:Name="mainWindow"
+        DataContext="{Binding Main, Source={StaticResource Locator}}">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="booleanToVisibilityConverter" />
-        <Style x:Key="PageSwitcherStyle" TargetType="{x:Type TabControl}">
+        <Style x:Key="pageSwitcherStyle" TargetType="{x:Type TabControl}">
             <Setter Property="Padding" Value="0"/>
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
@@ -93,12 +94,12 @@
                             <ComboBox MinWidth="150" VerticalAlignment="Center" FontSize="16" SelectedIndex="{Binding Stream.SelectedCircleIndex}" DisplayMemberPath="CircleName" ItemsSource="{Binding Stream.DisplayStreams}" />
                         </StackPanel>
                     </Grid>
-                    <TabControl Grid.Row="1" Grid.Column="1" ItemsSource="{Binding Stream.DisplayStreams, Mode=OneWay}" SelectedIndex="{Binding Stream.SelectedCircleIndex}" Style="{StaticResource PageSwitcherStyle}" />
+                    <TabControl Grid.Row="1" Grid.Column="1" ItemsSource="{Binding Stream.DisplayStreams, Mode=OneWay}" SelectedIndex="{Binding Stream.SelectedCircleIndex}" Style="{StaticResource pageSwitcherStyle}" />
                 </Grid>
                 <!--<ContentPresenter Grid.Column="1" Content="{Binding Notification}" />-->
             </Grid>
         </DataTemplate>
-        <DataTemplate DataType="{x:Type localVm:AccountSelectorViewModel}">
+        <DataTemplate x:Key="accountSelectorTemplate">
             <Grid Grid.ColumnSpan="2" Background="White">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="55" />
@@ -106,7 +107,7 @@
                 </Grid.RowDefinitions>
                 <TextBlock Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="20,5,5,0" FontSize="21"><Run Text="Account"/></TextBlock>
                 <StackPanel Grid.Row="1">
-                    <ItemsControl ItemsSource="{Binding Accounts}">
+                    <ItemsControl ItemsSource="{Binding Pages}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <StackPanel IsItemsHost="True" />
@@ -263,8 +264,9 @@
     </Window.Resources>
 	<Grid>
 		<!--各アカウントの画面-->
-        <TabControl ItemsSource="{Binding Pages}" SelectedIndex="{Binding SelectedPageIndex, Mode=OneWay}" Style="{StaticResource PageSwitcherStyle}" ContentTemplate="{StaticResource accountTemplate}" />
+        <TabControl ItemsSource="{Binding Pages}" SelectedIndex="{Binding SelectedPageIndex, Mode=OneWay}" Style="{StaticResource pageSwitcherStyle}" ContentTemplate="{StaticResource accountTemplate}" />
         <!--アカウント選択画面-->
-		<ContentPresenter Visibility="{Binding DataContext.IsAccountSelectorMode, Converter={StaticResource booleanToVisibilityConverter}, RelativeSource={RelativeSource AncestorType={x:Type Window}, Mode=FindAncestor}}" Content="{Binding AccountSelector}" />
+        <ContentPresenter Visibility="{Binding DataContext.IsAccountSelectorMode, Converter={StaticResource booleanToVisibilityConverter}, RelativeSource={RelativeSource AncestorType={x:Type Window}, Mode=FindAncestor}}"
+                          Content="{Binding}" ContentTemplate="{StaticResource accountSelectorTemplate}" />
 	</Grid>
 </Window>
