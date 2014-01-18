@@ -18,9 +18,9 @@ namespace GPlusBrowser.ViewModel
         {
             _selectedCircleIndex = -1;
             _streamManagerModel = streamManager;
-            ((INotifyCollectionChanged)_streamManagerModel.CircleStreams).CollectionChanged += _stream_ChangedDisplayStreams;
+            ((INotifyCollectionChanged)_streamManagerModel.Streams).CollectionChanged += _stream_ChangedDisplayStreams;
             _displayStreams = new ObservableCollection<StreamViewModel>(
-                _streamManagerModel.CircleStreams.Select(vm => new StreamViewModel(vm))); ;
+                _streamManagerModel.Streams.Select(vm => new StreamViewModel(vm))); ;
 
             if (_displayStreams.Count > 0)
                 SelectedCircleIndex = 0;
@@ -57,7 +57,7 @@ namespace GPlusBrowser.ViewModel
                 return;
 
             SelectedCircleIndex = -1;
-            ((INotifyCollectionChanged)_streamManagerModel.CircleStreams).CollectionChanged -= _stream_ChangedDisplayStreams;
+            ((INotifyCollectionChanged)_streamManagerModel.Streams).CollectionChanged -= _stream_ChangedDisplayStreams;
             _streamManagerModel = null;
 
             foreach (var item in DisplayStreams)

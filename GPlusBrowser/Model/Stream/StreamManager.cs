@@ -13,53 +13,62 @@ namespace GPlusBrowser.Model
     {
         public StreamManager(Account account)
         {
-            _account = account;
-            _account.Circles.Items.CollectionChanged += StreamManager_CollectionChanged;
-            CircleStreams = new ObservableCollection<Stream>();
+            _accountModel = account;
+            Streams = new ObservableCollection<Stream>();
+            UpdateStatus = CircleUpdateLevel.Unloaded;
         }
-        Account _account;
+        bool _isAddedYourCircle;
+        Account _accountModel;
 
-        public ObservableCollection<Stream> CircleStreams { get; private set; }
-        public async Task Initialize()
+        public CircleUpdateLevel UpdateStatus { get; private set; }
+        public ObservableCollection<Stream> Streams { get; private set; }
+        public async Task Initialize(CircleUpdateLevel loadMode)
         {
-            await _account.PlusClient.Relation.UpdateCirclesAndBlockAsync(false, CircleUpdateLevel.Loaded);
-            CircleStreams.Add(new Stream(this) { Circle = _account.PlusClient.Relation.YourCircle });
+            await _accountModel.PlusClient.Relation.UpdateCirclesAndBlockAsync(false, loadMode);
+            if (_isAddedYourCircle == false)
+            {
+                _isAddedYourCircle = true;
+                Streams.Add(new Stream(this) { Circle = _accountModel.PlusClient.Relation.YourCircle });
+            }
+            lock (Streams)
+            {
+                var i = 0;
+                for (; i < _accountModel.PlusClient.Relation.Circles.Count; i++)
+                {
+                    //PlatformClientはサークル情報更新時にCircles.CircleInfoの同一性を保持しない
+                    //そのため、ストリームの遅延読み込みでCircleInfoの新旧の扱いに面倒な部分がある。
+                    //ここの処理でストリームの遅延読み込みに必要なCircleInfoの新旧の追跡を実現する
+                    var circleInf = _accountModel.PlusClient.Relation.Circles[i];
+                    var item = Streams.FirstOrDefault(info => info.Circle.Id == circleInf.Id);
+                    if (item != null)
+                    {
+                        item.Circle = circleInf;
+                        Streams.Move(Streams.IndexOf(item), i + 1);
+                    }
+                    else
+                        Streams.Insert(i + 1, new Stream(this) { Circle = circleInf });
+                }
+                for (i += 1; i < Streams.Count; i++)
+                {
+                    var rmItem = Streams[i];
+                    Streams.RemoveAt(i);
+                    rmItem.Dispose();
+                }
+                UpdateStatus = _accountModel.PlusClient.Relation.CirclesAndBlockStatus;
+            }
+            OnUpdated(new EventArgs());
         }
         public void Connect()
         {
-            foreach (var item in CircleStreams)
+            foreach (var item in Streams)
                 item.Connect();
         }
-        void StreamManager_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+
+        public event EventHandler Updated;
+        protected virtual void OnUpdated(EventArgs e)
         {
-            switch(e.Action)
-            {
-                case NotifyCollectionChangedAction.Reset:
-                    foreach (var item in CircleStreams)
-                        item.Dispose();
-                    CircleStreams.Clear();
-                    break;
-                case NotifyCollectionChangedAction.Add:
-                    foreach (CircleInfo item in e.NewItems)
-                        CircleStreams.Insert(e.NewStartingIndex + 1, new Stream(this) { Circle = item });
-                    break;
-                case NotifyCollectionChangedAction.Remove:
-                    foreach (CircleInfo item in e.OldItems)
-                    {
-                        var target = CircleStreams.First(strm => strm.Circle == item);
-                        CircleStreams.Remove(target);
-                        target.Dispose();
-                    }
-                    break;
-                case NotifyCollectionChangedAction.Replace:
-                    var newItem = (CircleInfo)e.NewItems[0];
-                    CircleStreams[e.NewStartingIndex + 1].Circle = newItem;
-                    break;
-                case NotifyCollectionChangedAction.Move:
-                    CircleStreams.Move(e.OldStartingIndex + 1, e.NewStartingIndex + 1);
-                    break;
-            }
-            
+            if (Updated != null)
+                Updated(this, e);
         }
     }
     public enum StreamUpdateSeqState

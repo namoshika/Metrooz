@@ -146,7 +146,6 @@
     <Compile Include="Model\Stream\Activity.cs" />
     <Compile Include="Model\Account.cs" />
     <Compile Include="Model\SettingModel.cs" />
-    <Compile Include="Model\Stream\CircleManager.cs" />
     <Compile Include="ViewModel\MainViewModel.cs" />
     <Compile Include="ViewModel\Stream\AttachedAlbumViewModel.cs" />
     <Compile Include="ViewModel\Notification\NotificationManagerViewModel.cs" />

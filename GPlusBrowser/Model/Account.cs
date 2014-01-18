@@ -16,16 +16,15 @@ namespace GPlusBrowser.Model
             Builder = setting;
             IsConnected = false;
             IsInitialized = false;
+            Stream = new StreamManager(this);
         }
-
         public bool IsConnected { get; private set; }
         public bool IsInitialized { get; private set; }
-        public PlatformClient PlusClient { get; private set; }
         public IPlatformClientBuilder Builder { get; private set; }
-        public CircleManager Circles { get; private set; }
+        public PlatformClient PlusClient { get; private set; }
+        public ProfileInfo MyProfile { get; private set; }
         public StreamManager Stream { get; private set; }
         //public NotificationManager Notification { get; private set; }
-        public ProfileInfo MyProfile { get; private set; }
         readonly AsyncLocker _initSyncer = new AsyncLocker();
 
         public async Task Initialize(bool isForced)
@@ -45,12 +44,10 @@ namespace GPlusBrowser.Model
                         MyProfile = await PlusClient.Relation.GetProfileOfMeAsync(false).ConfigureAwait(false);
 
                         //各モジュールの初期化を行う
-                        Circles = new CircleManager(this);
                         Stream = new StreamManager(this);
                         //Notification = new NotificationManager(this);
                         //Notification.Initialize();
-                        await Stream.Initialize();
-                        await Circles.Initialize(CircleUpdateLevel.Loaded);
+                        await Stream.Initialize(CircleUpdateLevel.Loaded);
                         Connect();
                         PlusClient.Activity.ChangedIsConnected += ActivityManager_ChangedIsConnected;
 

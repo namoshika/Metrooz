@@ -22,9 +22,9 @@ namespace GPlusBrowser.ViewModel
             _accountModel.Initialized += _accountModel_Initialized;
             _accountModel.ChangedConnectStatus += _accountModel_ChangedConnectStatus;
             _userName = _accountModel.Builder.Name;
-            //DataCacheDictionary.Default
-            //    .DownloadImage(new Uri(_accountModel.Builder.IconUrl.Replace("$SIZE_SEGMENT", "s35-c-k")))
-            //    .ContinueWith(tsk => UserIconUrl = tsk.Result);
+            DataCacheDictionary.Default
+                .DownloadImage(new Uri(_accountModel.Builder.IconUrl.Replace("$SIZE_SEGMENT", "s35-c-k")))
+                .ContinueWith(tsk => UserIconUrl = tsk.Result);
 
             OpenStreamPanelCommand = new RelayCommand(OpenStreamPanelCommand_Execute);
             BackToAccountManagerCommand = new RelayCommand(BackToAccountManagerCommand_Execute);
