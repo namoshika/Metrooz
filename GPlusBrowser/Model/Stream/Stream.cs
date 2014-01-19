@@ -91,13 +91,20 @@ namespace GPlusBrowser.Model
                         _streamObj = null;
                     });
         }
-        public void Dispose()
+        public async void Dispose()
         {
-            lock (_activities)
+            try
+            {
+                await _syncer.WaitAsync();
+                if (_streamObj != null)
+                    _streamObj.Dispose();
+                _streamObj = null;
                 foreach (var item in _activities)
                     item.Dispose();
-            _streamObj.Dispose();
-            _streamObj = null;
+                _activities.Clear();
+            }
+            finally
+            { _syncer.Release(); }
         }
     }
 }

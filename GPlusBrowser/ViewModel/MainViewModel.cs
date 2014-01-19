@@ -74,7 +74,7 @@ namespace GPlusBrowser.ViewModel
         {
             base.Cleanup();
             DataCacheDictionary.Clear();
-            foreach (AccountViewModel item in Pages.Skip(1))
+            foreach (AccountViewModel item in Pages)
                 item.Cleanup();
         }
         void PageSwitcherViewModel_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)

@@ -108,19 +108,24 @@ namespace GPlusBrowser.ViewModel
                 ActivityUrl = _model.CoreInfo.PostUrl;
 
                 if (_model.CoreInfo.AttachedContent != null)
-                    if (_model.CoreInfo.AttachedContent.Type == ContentType.Album)
+                    switch (_model.CoreInfo.AttachedContent.Type)
                     {
-                        var attachedAlbum = (AttachedAlbum)_model.CoreInfo.AttachedContent;
-                        AttachedContent = new AttachedAlbumViewModel(attachedAlbum);
-                    }
-                    else if (_model.CoreInfo.AttachedContent.Type == ContentType.Link)
-                    {
-                        var attachedLink = (AttachedLink)_model.CoreInfo.AttachedContent;
-                        AttachedContent = new AttachedLinkViewModel(
-                            attachedLink.Title,
-                            string.IsNullOrEmpty(attachedLink.Summary)
-                                ? null : attachedLink.Summary.Trim('\n', '\r', ' '),
-                            attachedLink.FaviconUrl, attachedLink.LinkUrl, attachedLink.OriginalThumbnailUrl);
+                        case ContentType.Album:
+                            var attachedAlbum = (AttachedAlbum)_model.CoreInfo.AttachedContent;
+                            AttachedContent = new AttachedAlbumViewModel(attachedAlbum);
+                            break;
+                        case ContentType.Image:
+                            var attachedImage = (AttachedImage)_model.CoreInfo.AttachedContent;
+                            AttachedContent = new AttachedImageViewModel(attachedImage);
+                            break;
+                        case ContentType.Link:
+                            var attachedLink = (AttachedLink)_model.CoreInfo.AttachedContent;
+                            AttachedContent = new AttachedLinkViewModel(
+                                attachedLink.Title,
+                                string.IsNullOrEmpty(attachedLink.Summary)
+                                    ? null : attachedLink.Summary.Trim('\n', '\r', ' '),
+                                attachedLink.FaviconUrl, attachedLink.LinkUrl, attachedLink.OriginalThumbnailUrl);
+                            break;
                     }
                 PostText = _model.CoreInfo.Text;
                 PostContentInline = content;

@@ -3,9 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
         xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions"
-        xmlns:local="clr-namespace:GPlusBrowser"
-        xmlns:localVm="clr-namespace:GPlusBrowser.ViewModel"
-        xmlns:localCtrl="clr-namespace:GPlusBrowser.Controls"
+        xmlns:vm="clr-namespace:GPlusBrowser.ViewModel"
+        xmlns:ctl="clr-namespace:GPlusBrowser.Controls"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" x:Class="GPlusBrowser.MainWindow"
         Title="GPlusBrowser" Height="650" Width="500" x:Name="mainWindow"
         DataContext="{Binding Main, Source={StaticResource Locator}}">
@@ -94,7 +93,7 @@
                             <ComboBox MinWidth="150" VerticalAlignment="Center" FontSize="16" SelectedIndex="{Binding Stream.SelectedCircleIndex}" DisplayMemberPath="CircleName" ItemsSource="{Binding Stream.DisplayStreams}" />
                         </StackPanel>
                     </Grid>
-                    <TabControl Grid.Row="1" Grid.Column="1" ItemsSource="{Binding Stream.DisplayStreams, Mode=OneWay}" SelectedIndex="{Binding Stream.SelectedCircleIndex}" Style="{StaticResource pageSwitcherStyle}" />
+                    <TabControl Grid.Row="1" Grid.Column="1" ItemsSource="{Binding Stream.DisplayStreams, Mode=OneWay}" SelectedIndex="{Binding Stream.SelectedCircleIndex, Mode=OneWay}" Style="{StaticResource pageSwitcherStyle}" />
                 </Grid>
                 <!--<ContentPresenter Grid.Column="1" Content="{Binding Notification}" />-->
             </Grid>
@@ -114,7 +113,7 @@
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
-                            <DataTemplate DataType="{x:Type localVm:AccountViewModel}">
+                            <DataTemplate DataType="{x:Type vm:AccountViewModel}">
                                 <DockPanel Margin="20,0,15,15">
                                     <WrapPanel DockPanel.Dock="Bottom" Margin="15,10,0,0">
                                         <Button Padding="8,5,8,5" Command="{Binding OpenStreamPanelCommand}" Content="ストリームを開く"/>
@@ -128,7 +127,7 @@
                 </StackPanel>
             </Grid>
         </DataTemplate>
-        <DataTemplate DataType="{x:Type localVm:AttachedLinkViewModel}">
+        <DataTemplate DataType="{x:Type vm:AttachedLinkViewModel}">
             <Border BorderBrush="LightGray" BorderThickness="0,1,0,0" Margin="0,8,0,8">
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -144,21 +143,24 @@
                 </Grid>
             </Border>
         </DataTemplate>
-        <DataTemplate DataType="{x:Type localVm:AttachedAlbumViewModel}">
-            <localCtrl:ImageBox Height="300" ItemsSource="{Binding ThumbnailImages}" Content="{Binding SelectedImage}" />
+        <DataTemplate DataType="{x:Type vm:AttachedAlbumViewModel}">
+            <ctl:ImageBox Height="300" ItemsSource="{Binding ThumbnailImages}" Content="{Binding SelectedImage}" />
         </DataTemplate>
-        <DataTemplate DataType="{x:Type localVm:CommentViewModel}">
+        <DataTemplate DataType="{x:Type vm:AttachedImageViewModel}">
+            <Image Height="300" Source="{Binding Image}" />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:CommentViewModel}">
             <Border BorderBrush="LightGray" BorderThickness="0,1,0,0" Padding="5">
                 <DockPanel Margin="0" Focusable="False">
-                    <TextBlock DockPanel.Dock="Bottom" Margin="0,3,0,3" local:InlineBehavior.Inline="{Binding PostContentInline}" TextWrapping="Wrap" />
+                    <TextBlock DockPanel.Dock="Bottom" Margin="0,3,0,3" ctl:InlineBehavior.Inline="{Binding PostContentInline}" TextWrapping="Wrap" />
                     <Image DockPanel.Dock="Left" Width="25" Height="25" SnapsToDevicePixels="True" Source="{Binding OwnerIconUrl}" />
                     <TextBlock DockPanel.Dock="Left" Margin="5,0,0,0" VerticalAlignment="Center"><Run Text="{Binding OwnerName}" /><Run Text=" "/><Run Foreground="Gray" Text="{Binding CommentDate, StringFormat=- \{0\} -}" /></TextBlock>
                 </DockPanel>
             </Border>
         </DataTemplate>
-        <DataTemplate DataType="{x:Type localVm:ActivityViewModel}">
+        <DataTemplate DataType="{x:Type vm:ActivityViewModel}">
             <DataTemplate.Resources>
-                <localCtrl:IsExpandCommentCountToStringConverter x:Key="commentExpanderHeaderConverter" />
+                <ctl:IsExpandCommentCountToStringConverter x:Key="commentExpanderHeaderConverter" />
             </DataTemplate.Resources>
             <Border BorderBrush="LightGray" BorderThickness="0,1,0,0" Padding="5">
                 <StackPanel Margin="0" Focusable="False">
@@ -187,21 +189,21 @@
                                 </Span>
                         </TextBlock>
                     </StackPanel>
-                    <TextBlock Margin="0,3,0,3" local:InlineBehavior.Inline="{Binding PostContentInline}" TextWrapping="Wrap" />
+                    <TextBlock Margin="0,3,0,3" ctl:InlineBehavior.Inline="{Binding PostContentInline}" TextWrapping="Wrap" />
                     <ContentPresenter Content="{Binding AttachedContent}" />
                     <StackPanel Margin="15,10,0,10">
-                        <localCtrl:ExpandableListView ItemsSource="{Binding Comments}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
-                            <localCtrl:ExpandableListView.Header>
+                        <ctl:ExpandableListView ItemsSource="{Binding Comments}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                            <ctl:ExpandableListView.Header>
                                 <MultiBinding Converter="{StaticResource commentExpanderHeaderConverter}">
                                     <Binding RelativeSource="{RelativeSource Self}" Path="IsExpand" />
                                     <Binding RelativeSource="{RelativeSource Self}" Path="Items.Count" />
                                 </MultiBinding>
-                            </localCtrl:ExpandableListView.Header>
-                        </localCtrl:ExpandableListView>
+                            </ctl:ExpandableListView.Header>
+                        </ctl:ExpandableListView>
                         <TextBox Margin="0,0,0,8" BorderBrush="LightGray" BorderThickness="1" AcceptsReturn="True"
                                  Text="{Binding PostCommentText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap"
-                                 localCtrl:PlaceHolderBehavior.Text="コメントを追加..."
-                                 localCtrl:PlaceHolderBehavior.VerticalAlignment="Top">
+                                 ctl:PlaceHolderBehavior.PlaceHolderText="コメントを追加..."
+                                 ctl:PlaceHolderBehavior.VerticalAlignment="Top">
                             <i:Interaction.Triggers>
                                 <i:EventTrigger EventName="PreviewMouseDown">
                                     <ei:ChangePropertyAction TargetObject="{Binding}" PropertyName="ShareBoxStatus" Value="Writing" />
@@ -252,7 +254,7 @@
                 </StackPanel>
             </Border>
         </DataTemplate>
-        <DataTemplate DataType="{x:Type localVm:StreamViewModel}">
+        <DataTemplate DataType="{x:Type vm:StreamViewModel}">
             <TreeView
                 Focusable="False" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                 VirtualizingPanel.IsVirtualizing="True"

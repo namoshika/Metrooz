@@ -56,12 +56,12 @@ namespace GPlusBrowser.ViewModel
             if (_streamManagerModel == null)
                 return;
 
-            SelectedCircleIndex = -1;
             ((INotifyCollectionChanged)_streamManagerModel.Streams).CollectionChanged -= _stream_ChangedDisplayStreams;
             _streamManagerModel = null;
 
             foreach (var item in DisplayStreams)
                 item.Cleanup();
+            SelectedCircleIndex = -1;
             DisplayStreams = null;
         }
 

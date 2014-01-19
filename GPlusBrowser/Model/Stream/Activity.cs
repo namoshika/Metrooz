@@ -18,19 +18,41 @@ namespace GPlusBrowser.Model
             CoreInfo = target;
             Initialize();
         }
+        IDisposable _commReciever;
+
         public ActivityInfo CoreInfo { get; private set; }
         public ObservableCollection<Comment> Comments { get; private set; }
-
         public void Initialize()
         {
-            CoreInfo.GetComments(false, true).Subscribe(RefreshComment);
+            CoreInfo.Refreshed += CoreInfo_Refreshed;
+            _commReciever = CoreInfo.GetComments(false, true).Subscribe(CoreInfo_RefreshComment);
+        }
+        public async Task<bool> CommentPost(string content)
+        {
+            try
+            {
+                await CoreInfo.PostComment(content).ConfigureAwait(false);
+                return true;
+            }
+            catch (FailToOperationException)
+            {
+                if (System.Diagnostics.Debugger.IsAttached)
+                    System.Diagnostics.Debugger.Break();
+                return false;
+            }
         }
         public void Dispose()
         {
-            if (Comments != null)
-                Comments.Clear();
+            CoreInfo.Refreshed -= CoreInfo_Refreshed;
+            if (_commReciever != null)
+                _commReciever.Dispose();
         }
-        public void RefreshComment(CommentInfo comment)
+        async void CoreInfo_Refreshed(object sender, EventArgs e)
+        {
+            await CoreInfo.UpdateGetActivityAsync(false, ActivityUpdateApiFlag.GetActivities);
+            OnUpdated(new EventArgs());
+        }
+        void CoreInfo_RefreshComment(CommentInfo comment)
         {
             lock (Comments)
             {
@@ -53,25 +75,6 @@ namespace GPlusBrowser.Model
                         }
                         break;
                 }
-            }
-        }
-        public async Task RefreshActivity()
-        {
-            await CoreInfo.UpdateGetActivityAsync(false, ActivityUpdateApiFlag.GetActivities);
-            OnUpdated(new EventArgs());
-        }
-        public async Task<bool> CommentPost(string content)
-        {
-            try
-            {
-                await CoreInfo.PostComment(content).ConfigureAwait(false);
-                return true;
-            }
-            catch (FailToOperationException)
-            {
-                if (System.Diagnostics.Debugger.IsAttached)
-                    System.Diagnostics.Debugger.Break();
-                return false;
             }
         }
 

@@ -133,6 +133,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Controls\Behaviors.cs" />
     <Compile Include="Controls\NotificationControl.cs" />
     <Compile Include="Controls\NotificationWindow.cs" />
     <Compile Include="DataCacheDictionary.cs" />
@@ -149,6 +150,7 @@
     <Compile Include="ViewModel\MainViewModel.cs" />
     <Compile Include="ViewModel\Stream\AttachedAlbumViewModel.cs" />
     <Compile Include="ViewModel\Notification\NotificationManagerViewModel.cs" />
+    <Compile Include="ViewModel\Stream\AttachedImageViewModel.cs" />
     <Compile Include="ViewModel\Stream\AttachedLinkViewModel.cs" />
     <Compile Include="Model\Stream\Comment.cs" />
     <Compile Include="Model\Stream\Stream.cs" />
@@ -207,11 +209,11 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\snklib.web.googleplus-2.0\SnkLib.MainLibrary\SnkLib.MainLibrary.csproj">
-      <Project>{a19c98e5-7048-43e2-98f0-689a3ffe2a82}</Project>
+      <Project>{A19C98E5-7048-43E2-98F0-689A3FFE2A82}</Project>
       <Name>SnkLib.MainLibrary</Name>
     </ProjectReference>
     <ProjectReference Include="..\snklib.web.googleplus-2.0\SnkLib.Platform\SnkLib.Platform.csproj">
-      <Project>{37846c4e-2f87-46e9-b036-9569f422bf63}</Project>
+      <Project>{37846C4E-2F87-46E9-B036-9569F422BF63}</Project>
       <Name>SnkLib.Platform</Name>
     </ProjectReference>
   </ItemGroup>

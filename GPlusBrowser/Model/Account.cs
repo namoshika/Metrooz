@@ -65,10 +65,13 @@ namespace GPlusBrowser.Model
         }
         public void Dispose()
         {
-            IsInitialized = false;
-            PlusClient.Activity.ChangedIsConnected -= ActivityManager_ChangedIsConnected;
-            PlusClient.Dispose();
-            OnDisposed(new EventArgs());
+            if (IsInitialized)
+            {
+                IsInitialized = false;
+                PlusClient.Activity.ChangedIsConnected -= ActivityManager_ChangedIsConnected;
+                PlusClient.Dispose();
+                Stream.Dispose();
+            }
         }
         void ActivityManager_ChangedIsConnected(object sender, EventArgs e)
         {
@@ -81,12 +84,6 @@ namespace GPlusBrowser.Model
         {
             if (Initialized != null)
                 Initialized(this, e);
-        }
-        public event EventHandler Disposed;
-        protected virtual void OnDisposed(EventArgs e)
-        {
-            if (Disposed != null)
-                Disposed(this, e);
         }
         public event EventHandler ChangedConnectStatus;
         protected virtual void OnChangedConnectStatus(EventArgs e)

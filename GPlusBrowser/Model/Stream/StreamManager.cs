@@ -9,7 +9,7 @@ using SunokoLibrary.Web.GooglePlus;
 
 namespace GPlusBrowser.Model
 {
-    public class StreamManager
+    public class StreamManager : IDisposable
     {
         public StreamManager(Account account)
         {
@@ -60,8 +60,18 @@ namespace GPlusBrowser.Model
         }
         public void Connect()
         {
-            foreach (var item in Streams)
-                item.Connect();
+            lock (Streams)
+                foreach (var item in Streams)
+                    item.Connect();
+        }
+        public void Dispose()
+        {
+            lock (Streams)
+            {
+                foreach (var item in Streams)
+                    item.Dispose();
+                Streams.Clear();
+            }
         }
 
         public event EventHandler Updated;

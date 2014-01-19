@@ -1,8 +1,9 @@
-<Application x:Class="GPlusBrowser.App"
+﻿<Application
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    d1p1:Ignorable="d" xmlns:d1p1="http://schemas.openxmlformats.org/markup-compatibility/2006" StartupUri="MainWindow.xaml">
-  <Application.Resources>
-    <vm:ViewModelLocator x:Key="Locator" d:IsDataSource="True" xmlns:vm="clr-namespace:GPlusBrowser.ViewModel" />
-  </Application.Resources>
+    xmlns:d1p1="http://schemas.openxmlformats.org/markup-compatibility/2006" x:Class="GPlusBrowser.App"
+    d1p1:Ignorable="d" StartupUri="MainWindow.xaml">
+    <Application.Resources>
+        <vm:ViewModelLocator xmlns:vm="clr-namespace:GPlusBrowser.ViewModel" x:Key="Locator" d:IsDataSource="True" />
+    </Application.Resources>
 </Application>
