@@ -131,7 +131,7 @@ namespace GPlusBrowser.ViewModel
                     }
                 PostText = _model.CoreInfo.Text;
                 PostContentInline = content;
-                PostUserIconUrl = await DataCacheDictionary.Default.DownloadImage(
+                PostUserIconUrl = await DataCacheDictionary.DownloadImage(
                     new Uri(_model.CoreInfo.PostUser.IconImageUrl
                         .Replace("$SIZE_SEGMENT", "s40-c-k")
                         .Replace("$SIZE_NUM", "80")));

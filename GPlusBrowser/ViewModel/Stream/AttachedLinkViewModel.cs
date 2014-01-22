@@ -16,8 +16,8 @@ namespace GPlusBrowser.ViewModel
             AncourTitle = ancourTitle;
             AncourUrl = ancourUrl;
             AncourIntroductionText = ancourIntroductionText;
-            DataCacheDictionary.Default.DownloadImage(thumnailUrl).ContinueWith(tsk => ThumnailUrl = tsk.Result);
-            DataCacheDictionary.Default.DownloadImage(ancourFaviconUrl).ContinueWith(tsk => AncourFaviconUrl = tsk.Result);
+            DataCacheDictionary.DownloadImage(thumnailUrl).ContinueWith(tsk => ThumnailUrl = tsk.Result);
+            DataCacheDictionary.DownloadImage(ancourFaviconUrl).ContinueWith(tsk => AncourFaviconUrl = tsk.Result);
         }
         string _ancourTitle;
         Uri _ancourUrl;

@@ -30,7 +30,7 @@ namespace GPlusBrowser.ViewModel
         }
         public async void Initialize()
         {
-            Image = await DataCacheDictionary.Default.DownloadImage(
+            Image = await DataCacheDictionary.DownloadImage(
                 new Uri(_attachedAlbumModel.Image.ImageUrl.Replace("$SIZE_SEGMENT", "w640-h480")));
         }
     }

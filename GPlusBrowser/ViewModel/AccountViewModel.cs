@@ -22,8 +22,7 @@ namespace GPlusBrowser.ViewModel
             _accountModel.Initialized += _accountModel_Initialized;
             _accountModel.ChangedConnectStatus += _accountModel_ChangedConnectStatus;
             _userName = _accountModel.Builder.Name;
-            DataCacheDictionary.Default
-                .DownloadImage(new Uri(_accountModel.Builder.IconUrl.Replace("$SIZE_SEGMENT", "s35-c-k")))
+            DataCacheDictionary.DownloadImage(new Uri(_accountModel.Builder.IconUrl.Replace("$SIZE_SEGMENT", "s35-c-k")))
                 .ContinueWith(tsk => UserIconUrl = tsk.Result);
 
             OpenStreamPanelCommand = new RelayCommand(OpenStreamPanelCommand_Execute);
@@ -37,7 +36,6 @@ namespace GPlusBrowser.ViewModel
         string _statusText;
         string _userName;
 
-        public DataCacheDictionary DataCacheDict { get; private set; }
         public bool IsShowStatusText
         {
             get { return _isShowStatusText; }
@@ -83,11 +81,10 @@ namespace GPlusBrowser.ViewModel
                 Stream.SelectedCircleIndex = -1;
             else
             {
-                DataCacheDict = new DataCacheDictionary(_accountModel.PlusClient.NormalHttpClient);
                 Stream = new StreamManagerViewModel(_accountModel.Stream);
                 //Notification = new NotificationManagerViewModel(_accountModel.Notification, this, UiThreadDispatcher);
                 UserName = _accountModel.MyProfile.Name;
-                UserIconUrl = await DataCacheDict.DownloadImage(
+                UserIconUrl = await DataCacheDictionary.DownloadImage(
                     new Uri(_accountModel.Builder.IconUrl
                         .Replace("$SIZE_SEGMENT", "s35-c-k")
                         .Replace("$SIZE_NUM", "80")));

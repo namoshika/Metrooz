@@ -60,7 +60,7 @@ namespace GPlusBrowser.ViewModel
                     new
                     {
                         IsThumbnail = jobInf.IsThumbnail,
-                        Data = await DataCacheDictionary.Default.DownloadImage(jobInf.Url).ConfigureAwait(false)
+                        Data = await DataCacheDictionary.DownloadImage(jobInf.Url).ConfigureAwait(false)
                     })
                 .ToArray(), tsks => tsks.Select(tsk => tsk.Result));
             foreach (var jobInf in downDatas)
