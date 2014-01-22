@@ -41,7 +41,7 @@ namespace GPlusBrowser.Model
                     {
                         //G+APIライブラリの初期化を行う
                         PlusClient = await Builder.Build();
-                        MyProfile = await PlusClient.Relation.GetProfileOfMeAsync(false).ConfigureAwait(false);
+                        MyProfile = await PlusClient.People.GetProfileOfMeAsync(false).ConfigureAwait(false);
 
                         //各モジュールの初期化を行う
                         Stream = new StreamManager(this);

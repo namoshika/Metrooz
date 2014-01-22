@@ -19,7 +19,7 @@ namespace GPlusBrowser.Model
             Activities = new ReadOnlyObservableCollection<Activity>(_activities);
         }
         System.Threading.SemaphoreSlim _syncer;
-        int _maxActivityCount = 20;
+        int _maxActivityCount = 30;
         CircleInfo _circle;
         IDisposable _streamObj;
         StreamManager _manager;

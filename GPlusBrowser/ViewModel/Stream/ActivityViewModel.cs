@@ -22,7 +22,7 @@ namespace GPlusBrowser.ViewModel
         {
             _model = activity;
             _comments = new ObservableCollection<CommentViewModel>();
-            Refresh().Wait();
+            Refresh();
             lock (_model.Comments)
                 foreach (var item in _model.Comments.Select(
                     comment => (CommentViewModel)new CommentViewModel(comment)))
@@ -30,7 +30,8 @@ namespace GPlusBrowser.ViewModel
 
             _model.Comments.CollectionChanged += _activity_Comments_CollectionChanged;
             _model.Updated += _activity_Refreshed;
-            PostCommentCommand = new RelayCommand(PostCommentCommand_Executed);
+            SendCommentCommand = new RelayCommand(SendCommentCommand_Executed);
+            CancelCommentCommand = new RelayCommand(CancelCommentCommand_Executed);
         }
         CommentPostBoxState _shareBoxStatus;
         Activity _model;
@@ -95,8 +96,9 @@ namespace GPlusBrowser.ViewModel
             get { return _shareBoxStatus; }
             set { Set(() => ShareBoxStatus, ref _shareBoxStatus, value); }
         }
-        public ICommand PostCommentCommand { get; private set; }
-        public async Task Refresh()
+        public ICommand SendCommentCommand { get; private set; }
+        public ICommand CancelCommentCommand { get; private set; }
+        public async void Refresh()
         {
             if (_model.CoreInfo.PostStatus != PostStatusType.Removed)
             {
@@ -131,7 +133,7 @@ namespace GPlusBrowser.ViewModel
                 PostContentInline = content;
                 PostUserIconUrl = await DataCacheDictionary.Default.DownloadImage(
                     new Uri(_model.CoreInfo.PostUser.IconImageUrl
-                        .Replace("$SIZE_SEGMENT", "s25-c-k")
+                        .Replace("$SIZE_SEGMENT", "s40-c-k")
                         .Replace("$SIZE_NUM", "80")));
             }
         }
@@ -157,7 +159,7 @@ namespace GPlusBrowser.ViewModel
             _postContentInline = null;
         }
 
-        async void PostCommentCommand_Executed()
+        async void SendCommentCommand_Executed()
         {
             if (string.IsNullOrEmpty(PostCommentText) || ShareBoxStatus != CommentPostBoxState.Writing)
                 return;
@@ -165,12 +167,19 @@ namespace GPlusBrowser.ViewModel
             {
                 ShareBoxStatus = CommentPostBoxState.Sending;
                 await _model.CommentPost(PostCommentText).ConfigureAwait(false);
-                ShareBoxStatus = CommentPostBoxState.Deactive;
             }
             finally
-            { PostCommentText = null; }
+            {
+                PostCommentText = null;
+                ShareBoxStatus = CommentPostBoxState.Deactive;
+            }
         }
-        async void _activity_Refreshed(object sender, EventArgs e) { await Refresh(); }
+        void CancelCommentCommand_Executed()
+        {
+            PostCommentText = null;
+            ShareBoxStatus = CommentPostBoxState.Deactive;
+        }
+        void _activity_Refreshed(object sender, EventArgs e) { Refresh(); }
         void _activity_Comments_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
             switch (e.Action)

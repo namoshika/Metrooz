@@ -24,21 +24,21 @@ namespace GPlusBrowser.Model
         public ObservableCollection<Stream> Streams { get; private set; }
         public async Task Initialize(CircleUpdateLevel loadMode)
         {
-            await _accountModel.PlusClient.Relation.UpdateCirclesAndBlockAsync(false, loadMode);
+            await _accountModel.PlusClient.People.UpdateCirclesAndBlockAsync(false, loadMode);
             if (_isAddedYourCircle == false)
             {
                 _isAddedYourCircle = true;
-                Streams.Add(new Stream(this) { Circle = _accountModel.PlusClient.Relation.YourCircle });
+                Streams.Add(new Stream(this) { Circle = _accountModel.PlusClient.People.YourCircle });
             }
             lock (Streams)
             {
                 var i = 0;
-                for (; i < _accountModel.PlusClient.Relation.Circles.Count; i++)
+                for (; i < _accountModel.PlusClient.People.Circles.Count; i++)
                 {
                     //PlatformClientはサークル情報更新時にCircles.CircleInfoの同一性を保持しない
                     //そのため、ストリームの遅延読み込みでCircleInfoの新旧の扱いに面倒な部分がある。
                     //ここの処理でストリームの遅延読み込みに必要なCircleInfoの新旧の追跡を実現する
-                    var circleInf = _accountModel.PlusClient.Relation.Circles[i];
+                    var circleInf = _accountModel.PlusClient.People.Circles[i];
                     var item = Streams.FirstOrDefault(info => info.Circle.Id == circleInf.Id);
                     if (item != null)
                     {
@@ -54,7 +54,7 @@ namespace GPlusBrowser.Model
                     Streams.RemoveAt(i);
                     rmItem.Dispose();
                 }
-                UpdateStatus = _accountModel.PlusClient.Relation.CirclesAndBlockStatus;
+                UpdateStatus = _accountModel.PlusClient.People.CirclesAndBlockStatus;
             }
             OnUpdated(new EventArgs());
         }
