@@ -6,7 +6,7 @@
         xmlns:vm="clr-namespace:GPlusBrowser.ViewModel"
         xmlns:ctl="clr-namespace:GPlusBrowser.Controls"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" x:Class="GPlusBrowser.MainWindow"
-        Title="GPlusBrowser" Height="700" Width="550" x:Name="mainWindow"
+        Title="GPlusBrowser" Height="700" Width="530" x:Name="mainWindow"
         DataContext="{Binding Main, Source={StaticResource Locator}}">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="booleanToVisibilityConverter" />
@@ -101,7 +101,7 @@
                             <ComboBox MinWidth="150" VerticalAlignment="Center" FontSize="16" SelectedIndex="{Binding Stream.SelectedCircleIndex}" DisplayMemberPath="CircleName" ItemsSource="{Binding Stream.DisplayStreams}" />
                         </StackPanel>
                     </Grid>
-                    <TabControl Grid.Row="1" Grid.Column="1" ItemsSource="{Binding Stream.DisplayStreams, Mode=OneWay}" SelectedIndex="{Binding Stream.SelectedCircleIndex, Mode=OneWay}" Style="{StaticResource pageSwitcherStyle}" />
+                    <TabControl Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Margin="12,0,0,0" ItemsSource="{Binding Stream.DisplayStreams, Mode=OneWay}" SelectedIndex="{Binding Stream.SelectedCircleIndex, Mode=OneWay}" Style="{StaticResource pageSwitcherStyle}" />
                 </Grid>
                 <!--<ContentPresenter Grid.Column="1" Content="{Binding Notification}" />-->
             </Grid>
@@ -159,10 +159,10 @@
             </Border>
         </DataTemplate>
         <DataTemplate DataType="{x:Type vm:AttachedAlbumViewModel}">
-            <ctl:ImageBox Height="300" Margin="0,0,0,5" ItemsSource="{Binding ThumbnailImages}" Content="{Binding SelectedImage}" />
+            <ctl:ImageBox MaxHeight="500" Margin="0,0,0,5" ItemsSource="{Binding ThumbnailImages}" Content="{Binding SelectedImage}" />
         </DataTemplate>
         <DataTemplate DataType="{x:Type vm:AttachedImageViewModel}">
-            <Border Height="300" Background="Black" Margin="0,0,0,5">
+            <Border MaxHeight="500" Background="Black" Margin="0,0,0,5">
                 <Image Source="{Binding Image}" />
             </Border>
         </DataTemplate>
@@ -185,7 +185,7 @@
             <DataTemplate.Resources>
                 <ctl:IsExpandCommentCountToStringConverter x:Key="commentExpanderHeaderConverter" />
             </DataTemplate.Resources>
-            <Border BorderBrush="LightGray" BorderThickness="0,1,0,0" Padding="0,12,5,12">
+            <Border BorderBrush="LightGray" BorderThickness="0,1,0,0" Padding="0,15,5,12">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="45" />
