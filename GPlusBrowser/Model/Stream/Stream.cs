@@ -16,7 +16,6 @@ namespace GPlusBrowser.Model
             _manager = manager;
             _activities = new ObservableCollection<Activity>();
             _syncer = new System.Threading.SemaphoreSlim(1, 1);
-            Activities = new ReadOnlyObservableCollection<Activity>(_activities);
         }
         System.Threading.SemaphoreSlim _syncer;
         int _maxActivityCount = 30;
@@ -28,7 +27,7 @@ namespace GPlusBrowser.Model
         bool _isUpdated;
 
         public string Name { get { return Circle.Name; } }
-        public ReadOnlyObservableCollection<Activity> Activities { get; private set; }
+        public ObservableCollection<Activity> Activities { get { return _activities; } }
         public CircleInfo Circle
         {
             get { return _circle; }
@@ -41,55 +40,56 @@ namespace GPlusBrowser.Model
 
         public async void Connect()
         {
-            if (_isUpdated == false)
-                try
+            try
+            {
+                await _syncer.WaitAsync();
+                if (_isUpdated == false)
                 {
-                    await _syncer.WaitAsync();
                     _isUpdated = true;
                     _activities.Clear();
-
                     foreach (var item in await _activityGetter.TakeAsync(20).ConfigureAwait(false))
                         _activities.Add(new Activity(item));
                 }
-                finally
-                { _syncer.Release(); }
-            if (_streamObj == null && _isUpdated)
-                _streamObj = Circle.GetStream().Subscribe(async newInfo =>
-                    {
-                        try
+                if (_streamObj == null && _isUpdated)
+                    _streamObj = Circle.GetStream().Subscribe(async newInfo =>
                         {
-                            await _syncer.WaitAsync();
-                            var item = Activities.FirstOrDefault(activity => activity.CoreInfo.Id == newInfo.Id);
-                            switch (newInfo.PostStatus)
+                            try
                             {
-                                case PostStatusType.First:
-                                case PostStatusType.Edited:
-                                    //itemがnullの場合は更新する。nullでない場合はすでにある値を更新する。
-                                    //しかし更新はActivityオブジェクト自体が行うため、Streamでは行わない
-                                    if (item == null)
-                                    {
-                                        item = new Activity(newInfo);
-                                        _activities.Insert(0, item);
-                                        if (_activities.Count > _maxActivityCount)
+                                await _syncer.WaitAsync();
+                                var item = Activities.FirstOrDefault(activity => activity.CoreInfo.Id == newInfo.Id);
+                                switch (newInfo.PostStatus)
+                                {
+                                    case PostStatusType.First:
+                                    case PostStatusType.Edited:
+                                        //itemがnullの場合は更新する。nullでない場合はすでにある値を更新する。
+                                        //しかし更新はActivityオブジェクト自体が行うため、Streamでは行わない
+                                        if (item == null)
                                         {
-                                            _activities[_maxActivityCount].Dispose();
-                                            _activities.RemoveAt(_maxActivityCount);
+                                            item = new Activity(newInfo);
+                                            _activities.Insert(0, item);
+                                            if (_activities.Count > _maxActivityCount)
+                                            {
+                                                _activities[_maxActivityCount].Dispose();
+                                                _activities.RemoveAt(_maxActivityCount);
+                                            }
                                         }
-                                    }
-                                    break;
-                                case PostStatusType.Removed:
-                                    _activities.Remove(item);
-                                    break;
+                                        break;
+                                    case PostStatusType.Removed:
+                                        _activities.Remove(item);
+                                        break;
+                                }
                             }
-                        }
-                        finally
-                        { _syncer.Release(); }
-                    },
-                    ex =>
-                    {
-                        _streamObj.Dispose();
-                        _streamObj = null;
-                    });
+                            finally
+                            { _syncer.Release(); }
+                        },
+                        ex =>
+                        {
+                            _streamObj.Dispose();
+                            _streamObj = null;
+                        });
+            }
+            finally
+            { _syncer.Release(); }
         }
         public async void Dispose()
         {

@@ -18,54 +18,54 @@ namespace GPlusBrowser.ViewModel
     {
         public StreamViewModel(Stream circle)
         {
-            Activities = new ObservableCollection<ActivityViewModel>();
-            Circle = circle;
+            _activities = new ObservableCollection<ActivityViewModel>();
+            _circle = circle;
+            _circleName = circle.Name;
         }
-        string _name;
+        bool _isActive;
+        string _circleName;
         Stream _circle;
         ObservableCollection<ActivityViewModel> _activities;
 
-        public string CircleName
+        public bool IsActive
         {
-            get { return _name; }
-            set { Set(() => CircleName, ref _name, value); }
-        }
-        public Stream Circle
-        {
-            get { return _circle; }
+            get { return _isActive; }
             set
             {
-                if (_circle != null)
+                Set(() => IsActive, ref _isActive, value);
+                if (value)
                 {
-                    Activities.Clear();
-                    ((INotifyCollectionChanged)_circle.Activities).CollectionChanged -= OnActivitiesCollectionChanged;
-                }
-                if (value != null)
-                {
-                    ((INotifyCollectionChanged)value.Activities).CollectionChanged += OnActivitiesCollectionChanged;
-                    Set(() => Circle, ref _circle, value);
-                    CircleName = _circle.Name;
-
                     foreach (var item in _circle.Activities.ToArray())
                     {
                         var viewModel = new ActivityViewModel(item);
-                        Activities.Add(viewModel);
+                        _activities.Add(viewModel);
                     }
+                    _circle.Activities.CollectionChanged += OnActivitiesCollectionChanged;
+                    _circle.Connect();
+                }
+                else
+                {
+                    _circle.Activities.CollectionChanged -= OnActivitiesCollectionChanged;
+                    foreach (var item in _activities)
+                        item.Cleanup();
+                    _activities.Clear();
                 }
             }
+        }
+        public string CircleName
+        {
+            get { return _circleName; }
+            set { Set(() => CircleName, ref _circleName, value); }
         }
         public ObservableCollection<ActivityViewModel> Activities
         {
             get { return _activities; }
             set { Set(() => Activities, ref _activities, value); }
         }
-        public void Connect()
-        { _circle.Connect(); }
+
         public override void Cleanup()
         {
             base.Cleanup();
-
-            Circle = null;
             foreach (var item in _activities)
                 item.Cleanup();
             _activities.ClearAsync(App.Current.Dispatcher);

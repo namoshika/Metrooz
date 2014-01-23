@@ -59,10 +59,9 @@ namespace GPlusBrowser.Controls
                 case ElementType.Hyperlink:
                     var hyperEle = (HyperlinkElement)tree;
                     var target = hyperEle.Target;
-                    inline = new System.Windows.Documents.Hyperlink(
-                        new System.Windows.Documents.Run(hyperEle.Text));
-                    ((System.Windows.Documents.Hyperlink)inline).Click += (sender, e) =>
-                    { System.Diagnostics.Process.Start(target.AbsoluteUri); };
+                    var hyperLink = new System.Windows.Documents.Hyperlink(new System.Windows.Documents.Run(hyperEle.Text)) { Focusable = false };
+                    hyperLink.Click += (sender, e) => { System.Diagnostics.Process.Start(target.AbsoluteUri); };
+                    inline = hyperLink;
                     break;
                 case ElementType.Mension:
                     var spanInline = new System.Windows.Documents.Span();
@@ -72,7 +71,7 @@ namespace GPlusBrowser.Controls
                             new System.Windows.Documents.Run("+"),
                             new System.Windows.Documents.Hyperlink(
                                 new System.Windows.Documents.Run(((MensionElement)tree).Text.Substring(1)))
-                                { TextDecorations = null }
+                                { TextDecorations = null, Focusable = false }
                         });
                     inline = spanInline;
                     break;

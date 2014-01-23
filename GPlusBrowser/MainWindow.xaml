@@ -10,6 +10,23 @@
         DataContext="{Binding Main, Source={StaticResource Locator}}">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="booleanToVisibilityConverter" />
+        <Style x:Key="iconButtonStyle" TargetType="{x:Type Button}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <ContentPresenter />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="userNameTextStyle" TargetType="{x:Type Run}">
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+        <Style x:Key="postTextStyle" TargetType="{x:Type TextBlock}">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="LineHeight" Value="18.2" />
+        </Style>
+        
         <Style x:Key="pageSwitcherStyle" TargetType="{x:Type TabControl}">
             <Setter Property="Padding" Value="0"/>
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
@@ -29,7 +46,42 @@
                 </Setter.Value>
             </Setter>
         </Style>
-        <Style x:Key="postItemTemplate" TargetType="{x:Type TreeViewItem}">
+        <Style x:Key="accountSelectorStyle" TargetType="{x:Type ContentPresenter}">
+            <Setter Property="ContentTemplate">
+                <Setter.Value>
+                    <DataTemplate DataType="{x:Type vm:AccountViewModel}">
+                        <Grid Grid.ColumnSpan="2" Background="White">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="55" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <TextBlock Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="20,5,5,0" FontSize="21"><Run Text="Account"/></TextBlock>
+                            <StackPanel Grid.Row="1">
+                                <ItemsControl ItemsSource="{Binding Pages}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel IsItemsHost="True" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type vm:AccountViewModel}">
+                                            <DockPanel Margin="20,0,15,15">
+                                                <WrapPanel DockPanel.Dock="Bottom" Margin="15,10,0,0">
+                                                    <Button Padding="8,5,8,5" Command="{Binding OpenStreamPanelCommand}" Content="ストリームを開く"/>
+                                                </WrapPanel>
+                                                <Image DockPanel.Dock="Left" Width="35" Height="35" Margin="0" HorizontalAlignment="Left" Source="{Binding UserIconUrl}" />
+                                                <TextBlock Padding="0" Margin="10,0,0,0" VerticalAlignment="Center" Text="{Binding UserName}" FontSize="18" />
+                                            </DockPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Grid>
+                    </DataTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="activityItemStyle" TargetType="{x:Type TreeViewItem}">
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
             <Setter Property="Template">
                 <Setter.Value>
@@ -46,95 +98,70 @@
                 </Setter.Value>
             </Setter>
         </Style>
-        <Style x:Key="iconButtonTemplate" TargetType="{x:Type Button}">
-            <Setter Property="Template">
+        <Style x:Key="streamItemStyle" TargetType="{x:Type TabItem}">
+            <Setter Property="IsSelected" Value="{Binding IsActive, Mode=OneWayToSource}" />
+            <Setter Property="ContentTemplate">
                 <Setter.Value>
-                    <ControlTemplate TargetType="{x:Type Button}">
-                        <ContentPresenter />
-                    </ControlTemplate>
+                    <DataTemplate DataType="{x:Type vm:StreamViewModel}">
+                        <TreeView Focusable="False" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                              VirtualizingPanel.IsVirtualizing="True"
+                              VirtualizingPanel.VirtualizationMode="Recycling"
+                              VirtualizingPanel.ScrollUnit="Pixel"
+                              BorderThickness="0" ItemsSource="{Binding Activities}"
+                              ItemContainerStyle="{StaticResource activityItemStyle}" />
+                    </DataTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
-        <Style x:Key="userNameTextStyle" TargetType="{x:Type Run}">
-            <Setter Property="FontSize" Value="13" />
-            <!--<Setter Property="FontWeight" Value="Bold" />-->
-        </Style>
-        <Style x:Key="postTextStyle" TargetType="{x:Type TextBlock}">
-            <Setter Property="FontSize" Value="13" />
-            <Setter Property="LineHeight" Value="18.2" />
+        <Style x:Key="accountStyle" TargetType="{x:Type TabItem}">
+            <Setter Property="ContentTemplate">
+                <Setter.Value>
+                    <DataTemplate DataType="{x:Type vm:AccountViewModel}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <!--<ColumnDefinition Width="*" />-->
+                                <!--通知類パネル-->
+                            </Grid.ColumnDefinitions>
+                            <Grid Grid.Column="0">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="50" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="50" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Rectangle Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Grid.ColumnSpan="2" Width="200" Height="55" VerticalAlignment="Top" HorizontalAlignment="Left">
+                                    <Rectangle.OpacityMask>
+                                        <RadialGradientBrush Center="0,0" RadiusX="1" RadiusY="1" GradientOrigin="0,0">
+                                            <GradientStop Offset="0" Color="#a0000000" />
+                                            <GradientStop Offset="1" Color="#00000000" />
+                                        </RadialGradientBrush>
+                                    </Rectangle.OpacityMask>
+                                    <Rectangle.Fill>
+                                        <VisualBrush Visual="{Binding ElementName=accountIcon}" Stretch="UniformToFill" />
+                                    </Rectangle.Fill>
+                                </Rectangle>
+                                <Button Focusable="False" Grid.Row="0" Grid.Column="0" Width="30" Height="30" Margin="10" Style="{StaticResource iconButtonStyle}" Command="{Binding BackToAccountManagerCommand}">
+                                    <Image Source="/Resources/back.png" />
+                                </Button>
+                                <Grid Grid.Row="0" Grid.Column="1">
+                                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Left" Orientation="Horizontal">
+                                        <Image Name="accountIcon" Width="30" Height="30" Margin="0,0,5,0" VerticalAlignment="Center" Source="{Binding UserIconUrl}" />
+                                        <TextBlock FontSize="21" Margin="0,0,10,0" VerticalAlignment="Center"><Run Text="Stream/"/></TextBlock>
+                                        <ComboBox Focusable="False" MinWidth="150" VerticalAlignment="Center" FontSize="16" SelectedIndex="{Binding Stream.SelectedCircleIndex}" DisplayMemberPath="CircleName" ItemsSource="{Binding Stream.DisplayStreams}" />
+                                    </StackPanel>
+                                </Grid>
+                                <TabControl Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Margin="12,0,0,0" ItemsSource="{Binding Stream.DisplayStreams, Mode=OneWay}" SelectedIndex="{Binding Stream.SelectedCircleIndex, Mode=OneWay}" Style="{StaticResource pageSwitcherStyle}" ItemContainerStyle="{StaticResource streamItemStyle}" />
+                            </Grid>
+                            <!--<ContentPresenter Grid.Column="1" Content="{Binding Notification}" />-->
+                        </Grid>
+                    </DataTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
         
-        <DataTemplate x:Key="accountTemplate">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <!--<ColumnDefinition Width="*" />-->
-                    <!--通知類パネル-->
-                </Grid.ColumnDefinitions>
-                <Grid Grid.Column="0">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="50" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="50" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <Grid Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Grid.ColumnSpan="2" Width="200" Height="55" VerticalAlignment="Top" HorizontalAlignment="Left">
-                        <Grid.OpacityMask>
-                            <RadialGradientBrush Center="0,0" RadiusX="1" RadiusY="1" GradientOrigin="0,0">
-                                <GradientStop Offset="0" Color="#a0000000" />
-                                <GradientStop Offset="1" Color="#00000000" />
-                            </RadialGradientBrush>
-                        </Grid.OpacityMask>
-                        <Grid.Background>
-                            <VisualBrush Visual="{Binding ElementName=accountIcon}" Stretch="UniformToFill" />
-                        </Grid.Background>
-                    </Grid>
-                    <Button Grid.Row="0" Grid.Column="0" Width="30" Height="30" Margin="10" Style="{StaticResource iconButtonTemplate}" Command="{Binding BackToAccountManagerCommand}">
-                        <Image Source="/Resources/back.png" />
-                    </Button>
-                    <Grid Grid.Row="0" Grid.Column="1">
-                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Left" Orientation="Horizontal">
-                            <Image Name="accountIcon" Width="30" Height="30" Margin="0,0,5,0" VerticalAlignment="Center" Source="{Binding UserIconUrl}" />
-                            <TextBlock FontSize="21" Margin="0,0,10,0" VerticalAlignment="Center"><Run Text="Stream/"/></TextBlock>
-                            <ComboBox MinWidth="150" VerticalAlignment="Center" FontSize="16" SelectedIndex="{Binding Stream.SelectedCircleIndex}" DisplayMemberPath="CircleName" ItemsSource="{Binding Stream.DisplayStreams}" />
-                        </StackPanel>
-                    </Grid>
-                    <TabControl Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Margin="12,0,0,0" ItemsSource="{Binding Stream.DisplayStreams, Mode=OneWay}" SelectedIndex="{Binding Stream.SelectedCircleIndex, Mode=OneWay}" Style="{StaticResource pageSwitcherStyle}" />
-                </Grid>
-                <!--<ContentPresenter Grid.Column="1" Content="{Binding Notification}" />-->
-            </Grid>
-        </DataTemplate>
-        <DataTemplate x:Key="accountSelectorTemplate">
-            <Grid Grid.ColumnSpan="2" Background="White">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="55" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
-                <TextBlock Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="20,5,5,0" FontSize="21"><Run Text="Account"/></TextBlock>
-                <StackPanel Grid.Row="1">
-                    <ItemsControl ItemsSource="{Binding Pages}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <StackPanel IsItemsHost="True" />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate DataType="{x:Type vm:AccountViewModel}">
-                                <DockPanel Margin="20,0,15,15">
-                                    <WrapPanel DockPanel.Dock="Bottom" Margin="15,10,0,0">
-                                        <Button Padding="8,5,8,5" Command="{Binding OpenStreamPanelCommand}" Content="ストリームを開く"/>
-                                    </WrapPanel>
-                                    <Image DockPanel.Dock="Left" Width="35" Height="35" Margin="0" HorizontalAlignment="Left" Source="{Binding UserIconUrl}" />
-                                    <TextBlock Padding="0" Margin="10,0,0,0" VerticalAlignment="Center" Text="{Binding UserName}" FontSize="18" />
-                                </DockPanel>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </StackPanel>
-            </Grid>
-        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:AttachedLinkViewModel}">
             <Border BorderBrush="LightGray" BorderThickness="0,1,0,0" Margin="0,0,0,5">
                 <Grid>
@@ -144,7 +171,7 @@
                     </Grid.ColumnDefinitions>
                     <!--<Image Grid.Column="0" Source="{Binding ThumnailUrl}" MaxWidth="150" MaxHeight="150" Stretch="Uniform" VerticalAlignment="Top" Margin="0,8,8,0" Visibility="{Binding ExistThumnailUrl, Converter={StaticResource booleanToVisibilityConverter}}" />-->
                     <TextBlock Grid.Column="1" Margin="0,8,0,0" TextWrapping="Wrap" Style="{StaticResource postTextStyle}">
-                        <Hyperlink>
+                        <Hyperlink Focusable="False">
                             <i:Interaction.Triggers>
                                 <i:EventTrigger EventName="Click">
                                     <ei:LaunchUriOrFileAction Path="{Binding AncourUrl}" />
@@ -171,10 +198,10 @@
                 <StackPanel>
                     <StackPanel Orientation="Horizontal">
                         <Image Width="25" Height="25" SnapsToDevicePixels="True" Source="{Binding OwnerIconUrl}" />
-                        <TextBlock Margin="5,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Margin="5,0,0,0" VerticalAlignment="Center" Style="{StaticResource postTextStyle}">
                             <Run Text="{Binding OwnerName}" Style="{StaticResource userNameTextStyle}" />
                             <Run Text=" "/>
-                            <Run Foreground="Gray" Text="{Binding CommentDate, StringFormat=- \{0\} -}" />
+                            <Run Foreground="Gray" Text="{Binding CommentDate, StringFormat=-\{0\}-}" />
                         </TextBlock>
                     </StackPanel>
                     <TextBlock Margin="0,3,0,0" ctl:InlineBehavior.Inline="{Binding PostContentInline}" TextWrapping="Wrap" Style="{StaticResource postTextStyle}" />
@@ -193,12 +220,12 @@
                     </Grid.ColumnDefinitions>
                     <Image Grid.Column="0" Width="40" Height="40" Margin="0,0,5,0" VerticalAlignment="Top" Source="{Binding PostUserIconUrl}" />
                     <StackPanel Grid.Column="1">
-                        <TextBlock Margin="0,0,5,5" VerticalAlignment="Center">
+                        <TextBlock Margin="0,0,5,5" VerticalAlignment="Center" Style="{StaticResource postTextStyle}">
                             <Run Text="{Binding PostUserName}" Style="{StaticResource userNameTextStyle}" />
                             <Run Text=" "/>
                             <Span Foreground="Gray">
-                                <Run Text="- "/>
-                                    <Hyperlink TextDecorations="None" Foreground="Gray">
+                                <Run Text="-"/>
+                                    <Hyperlink TextDecorations="None" Foreground="Gray" Focusable="False">
                                         <i:Interaction.Triggers>
                                             <i:EventTrigger EventName="Click">
                                                 <ei:LaunchUriOrFileAction Path="{Binding ActivityUrl}" />
@@ -212,44 +239,64 @@
                                         </i:Interaction.Triggers>
                                         <Run Text="{Binding PostDate}" />
                                     </Hyperlink>
-                                <Run Text=" -"/>
+                                <Run Text="-"/>
                             </Span>
                         </TextBlock>
                         <TextBlock Margin="0,0,0,5" ctl:InlineBehavior.Inline="{Binding PostContentInline}" TextWrapping="Wrap" Style="{StaticResource postTextStyle}" />
                         <ContentPresenter Content="{Binding AttachedContent}" />
-                        <StackPanel>
-                            <ctl:ExpandableListView ItemsSource="{Binding Comments}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
-                                <ctl:ExpandableListView.Header>
-                                    <MultiBinding Converter="{StaticResource commentExpanderHeaderConverter}">
-                                        <Binding RelativeSource="{RelativeSource Self}" Path="IsExpand" />
-                                        <Binding RelativeSource="{RelativeSource Self}" Path="Items.Count" />
-                                    </MultiBinding>
-                                </ctl:ExpandableListView.Header>
-                            </ctl:ExpandableListView>
-                            <TextBox BorderBrush="LightGray" BorderThickness="1" AcceptsReturn="True"
-                                     Text="{Binding PostCommentText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap"
-                                     ctl:PlaceHolderBehavior.PlaceHolderText="コメントを追加..." ctl:PlaceHolderBehavior.VerticalAlignment="Top">
-                                <i:Interaction.Triggers>
-                                    <i:EventTrigger EventName="PreviewMouseDown">
-                                        <ei:ChangePropertyAction TargetObject="{Binding}" PropertyName="ShareBoxStatus" Value="Writing" />
-                                    </i:EventTrigger>
-                                    <ei:DataTrigger Binding="{Binding ShareBoxStatus}" Value="Deactive">
-                                        <ei:ChangePropertyAction PropertyName="Padding" Value="0" />
-                                        <ei:ChangePropertyAction PropertyName="IsEnabled" Value="True" />
-                                    </ei:DataTrigger>
-                                    <ei:DataTrigger Binding="{Binding ShareBoxStatus}" Value="Writing">
-                                        <ei:ChangePropertyAction PropertyName="Padding" Value="0,0,0,15" />
-                                        <ei:ChangePropertyAction PropertyName="IsEnabled" Value="True" />
-                                    </ei:DataTrigger>
-                                    <ei:DataTrigger Binding="{Binding ShareBoxStatus}" Value="Sending">
-                                        <ei:ChangePropertyAction PropertyName="Padding" Value="0,0,0,15" />
-                                        <ei:ChangePropertyAction PropertyName="IsEnabled" Value="False" />
-                                    </ei:DataTrigger>
-                                </i:Interaction.Triggers>
-                                <TextBox.InputBindings>
-                                    <KeyBinding Key="Enter" Modifiers="Shift" Command="{Binding SendCommentCommand}" />
-                                </TextBox.InputBindings>
-                            </TextBox>
+                        <ctl:ExpandableListView ItemsSource="{Binding Comments}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                            <ctl:ExpandableListView.Header>
+                                <MultiBinding Converter="{StaticResource commentExpanderHeaderConverter}">
+                                    <Binding RelativeSource="{RelativeSource Self}" Path="IsExpand" />
+                                    <Binding RelativeSource="{RelativeSource Self}" Path="Items.Count" />
+                                </MultiBinding>
+                            </ctl:ExpandableListView.Header>
+                        </ctl:ExpandableListView>
+                        <StackPanel FocusManager.IsFocusScope="True" KeyboardNavigation.TabNavigation="Local" FocusVisualStyle="{x:Null}">
+                            <Border BorderBrush="LightGray" BorderThickness="1">
+                                <Grid Margin="2,1,2,1">
+                                    <TextBlock FontSize="13" Foreground="LightGray" Text="コメントを追加...">
+                                        <i:Interaction.Triggers>
+                                            <ei:DataTrigger Binding="{Binding ShareBoxStatus}" Value="Deactive">
+                                                <ei:ChangePropertyAction PropertyName="Opacity" Value="1.0" />
+                                            </ei:DataTrigger>
+                                            <ei:DataTrigger Binding="{Binding ShareBoxStatus}" Value="Writing">
+                                                <ei:ChangePropertyAction PropertyName="Opacity" Value="0.0" />
+                                            </ei:DataTrigger>
+                                            <ei:DataTrigger Binding="{Binding ShareBoxStatus}" Value="Sending">
+                                                <ei:ChangePropertyAction PropertyName="Opacity" Value="0.0" />
+                                            </ei:DataTrigger>
+                                        </i:Interaction.Triggers>
+                                    </TextBlock>
+                                    <TextBox AcceptsReturn="True" BorderThickness="0" Focusable="True" FontSize="13" KeyboardNavigation.IsTabStop="True"
+                                             Text="{Binding PostCommentText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap" Opacity="0.0">
+                                        <i:Interaction.Triggers>
+                                            <i:EventTrigger EventName="PreviewMouseDown">
+                                                <ei:ChangePropertyAction TargetObject="{Binding}" PropertyName="ShareBoxStatus" Value="Writing" />
+                                            </i:EventTrigger>
+                                            <ei:DataTrigger Binding="{Binding ShareBoxStatus}" Value="Deactive">
+                                                <ei:ChangePropertyAction PropertyName="Padding" Value="0" />
+                                                <ei:ChangePropertyAction PropertyName="IsEnabled" Value="True" />
+                                                <ei:ChangePropertyAction PropertyName="Opacity" Value="0.0" />
+                                            </ei:DataTrigger>
+                                            <ei:DataTrigger Binding="{Binding ShareBoxStatus}" Value="Writing">
+                                                <ei:ChangePropertyAction PropertyName="Padding" Value="0,0,0,20" />
+                                                <ei:ChangePropertyAction PropertyName="IsEnabled" Value="True" />
+                                                <ei:ChangePropertyAction PropertyName="Opacity" Value="1.0" />
+                                            </ei:DataTrigger>
+                                            <ei:DataTrigger Binding="{Binding ShareBoxStatus}" Value="Sending">
+                                                <ei:ChangePropertyAction PropertyName="Padding" Value="0,0,0,20" />
+                                                <ei:ChangePropertyAction PropertyName="IsEnabled" Value="False" />
+                                                <ei:ChangePropertyAction PropertyName="Opacity" Value="1.0" />
+                                            </ei:DataTrigger>
+                                        </i:Interaction.Triggers>
+                                        <TextBox.InputBindings>
+                                            <KeyBinding Key="Enter" Modifiers="Shift" Command="{Binding SendCommentCommand}" />
+                                            <KeyBinding Key="Escape" Command="{Binding CancelCommentCommand}" />
+                                        </TextBox.InputBindings>
+                                    </TextBox>
+                                </Grid>
+                            </Border>
                             <StackPanel Margin="0,5,0,0" Visibility="Collapsed" Orientation="Horizontal">
                                 <i:Interaction.Triggers>
                                     <ei:DataTrigger Binding="{Binding ShareBoxStatus}" Value="Deactive">
@@ -262,7 +309,7 @@
                                         <ei:ChangePropertyAction PropertyName="Visibility" Value="Visible" />
                                     </ei:DataTrigger>
                                 </i:Interaction.Triggers>
-                                <Button Padding="10,3,10,3" Margin="0,0,8,0" Content="コメントを投稿" Command="{Binding SendCommentCommand}">
+                                <Button Padding="10,3,10,3" Margin="0,0,8,0" Content="コメントを投稿" Focusable="True" KeyboardNavigation.IsTabStop="True" Command="{Binding SendCommentCommand}">
                                     <i:Interaction.Triggers>
                                         <ei:DataTrigger Binding="{Binding ShareBoxStatus}" Value="Deactive">
                                             <ei:ChangePropertyAction PropertyName="IsEnabled" Value="True" />
@@ -274,8 +321,11 @@
                                             <ei:ChangePropertyAction PropertyName="IsEnabled" Value="False" />
                                         </ei:DataTrigger>
                                     </i:Interaction.Triggers>
+                                    <Button.InputBindings>
+                                        <KeyBinding Key="Escape" Command="{Binding CancelCommentCommand}" />
+                                    </Button.InputBindings>
                                 </Button>
-                                <Button Padding="10,3,10,3" Margin="0,0,8,0" Content="キャンセル" Command="{Binding CancelCommentCommand}">
+                                <Button Padding="10,3,10,3" Margin="0,0,8,0" Content="キャンセル" Focusable="True" KeyboardNavigation.IsTabStop="True" Command="{Binding CancelCommentCommand}">
                                     <i:Interaction.Triggers>
                                         <ei:DataTrigger Binding="{Binding ShareBoxStatus}" Value="Deactive">
                                             <ei:ChangePropertyAction PropertyName="IsEnabled" Value="True" />
@@ -287,6 +337,9 @@
                                             <ei:ChangePropertyAction PropertyName="IsEnabled" Value="False" />
                                         </ei:DataTrigger>
                                     </i:Interaction.Triggers>
+                                    <Button.InputBindings>
+                                        <KeyBinding Key="Escape" Command="{Binding CancelCommentCommand}" />
+                                    </Button.InputBindings>
                                 </Button>
                             </StackPanel>
                         </StackPanel>
@@ -294,21 +347,12 @@
                 </Grid>
             </Border>
         </DataTemplate>
-        <DataTemplate DataType="{x:Type vm:StreamViewModel}">
-            <TreeView
-                Focusable="False" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                VirtualizingPanel.IsVirtualizing="True"
-                VirtualizingPanel.VirtualizationMode="Recycling"
-                VirtualizingPanel.ScrollUnit="Pixel"
-                BorderThickness="0" ItemsSource="{Binding Activities}"
-                ItemContainerStyle="{StaticResource postItemTemplate}" />
-        </DataTemplate>
     </Window.Resources>
 	<Grid>
 		<!--各アカウントの画面-->
-        <TabControl ItemsSource="{Binding Pages}" SelectedIndex="{Binding SelectedPageIndex, Mode=OneWay}" Style="{StaticResource pageSwitcherStyle}" ContentTemplate="{StaticResource accountTemplate}" />
+        <TabControl ItemsSource="{Binding Pages}" SelectedIndex="{Binding SelectedPageIndex, Mode=OneWay}" Style="{StaticResource pageSwitcherStyle}" ItemContainerStyle="{StaticResource accountStyle}" />
         <!--アカウント選択画面-->
         <ContentPresenter Visibility="{Binding DataContext.IsAccountSelectorMode, Converter={StaticResource booleanToVisibilityConverter}, RelativeSource={RelativeSource AncestorType={x:Type Window}, Mode=FindAncestor}}"
-                          Content="{Binding}" ContentTemplate="{StaticResource accountSelectorTemplate}" />
+                          Content="{Binding}" Style="{StaticResource accountSelectorStyle}" />
 	</Grid>
 </Window>

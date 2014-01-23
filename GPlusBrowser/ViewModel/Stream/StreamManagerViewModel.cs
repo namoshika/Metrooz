@@ -38,12 +38,7 @@ namespace GPlusBrowser.ViewModel
         public int SelectedCircleIndex
         {
             get { return _selectedCircleIndex; }
-            set
-            {
-                if (value > -1)
-                    _displayStreams[value].Connect();
-                Set(() => SelectedCircleIndex, ref _selectedCircleIndex, value);
-            }
+            set { Set(() => SelectedCircleIndex, ref _selectedCircleIndex, value); }
         }
         public ObservableCollection<StreamViewModel> DisplayStreams
         {
