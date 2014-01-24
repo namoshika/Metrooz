@@ -62,14 +62,7 @@ namespace GPlusBrowser.ViewModel
         public override void Cleanup()
         {
             base.Cleanup();
-
-            if (_model != null)
-                _model.Refreshed -= model_Refreshed;
-            _id = null;
-            _ownerName = null;
-            _commentContent = null;
-            _commentDate = null;
-            _postContentInline = null;
+            _model.Refreshed -= model_Refreshed;
         }
 
         async void model_Refreshed(object sender, EventArgs e)

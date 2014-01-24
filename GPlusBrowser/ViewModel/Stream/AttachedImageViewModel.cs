@@ -15,10 +15,10 @@ namespace GPlusBrowser.ViewModel
 
     public class AttachedImageViewModel : ViewModelBase
     {
-        public AttachedImageViewModel(AttachedImage attachedAlbumModel)
+        public AttachedImageViewModel(AttachedImage attachedAlbumModel, BitmapImage image)
         {
             _attachedAlbumModel = attachedAlbumModel;
-            Initialize();
+            _image = image;
         }
         BitmapImage _image;
         AttachedImage _attachedAlbumModel;
@@ -28,10 +28,11 @@ namespace GPlusBrowser.ViewModel
             get { return _image; }
             set { Set(() => Image, ref _image, value); }
         }
-        public async void Initialize()
+        public static async Task<AttachedImageViewModel> Create(AttachedImage attachedAlbumModel)
         {
-            Image = await DataCacheDictionary.DownloadImage(
-                new Uri(_attachedAlbumModel.Image.ImageUrl.Replace("$SIZE_SEGMENT", "w640-h480")));
+            var img = await DataCacheDictionary.DownloadImage(
+                new Uri(attachedAlbumModel.Image.ImageUrl.Replace("$SIZE_SEGMENT", "w640-h480")));
+            return new AttachedImageViewModel(attachedAlbumModel, img);
         }
     }
 }

@@ -15,36 +15,25 @@ namespace GPlusBrowser.Model
         {
             _accountModel = account;
             Streams = new ObservableCollection<Stream>();
-            UpdateStatus = CircleUpdateLevel.Unloaded;
         }
-        bool _isAddedYourCircle;
         Account _accountModel;
 
-        public CircleUpdateLevel UpdateStatus { get; private set; }
+        public bool IsInitialized { get; private set; }
         public ObservableCollection<Stream> Streams { get; private set; }
-        public async Task Initialize(CircleUpdateLevel loadMode)
+        public async Task Initialize()
         {
-            await _accountModel.PlusClient.People.UpdateCirclesAndBlockAsync(false, loadMode);
-            if (_isAddedYourCircle == false)
-            {
-                _isAddedYourCircle = true;
-                Streams.Add(new Stream(this) { Circle = _accountModel.PlusClient.People.YourCircle });
-            }
+            await _accountModel.PlusClient.People.UpdateCirclesAndBlockAsync(false, CircleUpdateLevel.Loaded);
             lock (Streams)
             {
+                Streams.Add(new Stream(this) { Circle = _accountModel.PlusClient.People.YourCircle });
+
                 var i = 0;
                 for (; i < _accountModel.PlusClient.People.Circles.Count; i++)
                 {
-                    //PlatformClientはサークル情報更新時にCircles.CircleInfoの同一性を保持しない
-                    //そのため、ストリームの遅延読み込みでCircleInfoの新旧の扱いに面倒な部分がある。
-                    //ここの処理でストリームの遅延読み込みに必要なCircleInfoの新旧の追跡を実現する
                     var circleInf = _accountModel.PlusClient.People.Circles[i];
                     var item = Streams.FirstOrDefault(info => info.Circle.Id == circleInf.Id);
                     if (item != null)
-                    {
-                        item.Circle = circleInf;
                         Streams.Move(Streams.IndexOf(item), i + 1);
-                    }
                     else
                         Streams.Insert(i + 1, new Stream(this) { Circle = circleInf });
                 }
@@ -54,16 +43,16 @@ namespace GPlusBrowser.Model
                     Streams.RemoveAt(i);
                     rmItem.Dispose();
                 }
-                UpdateStatus = _accountModel.PlusClient.People.CirclesAndBlockStatus;
+                IsInitialized = _accountModel.PlusClient.People.CirclesAndBlockStatus > CircleUpdateLevel.Unloaded;
             }
-            OnUpdated(new EventArgs());
         }
-        public void Connect()
+        public void Reconnect()
         {
-            lock (Streams)
-                foreach (var item in Streams)
+            foreach (var item in Streams)
+                if (item.IsConnected)
                     item.Connect();
         }
+
         public void Dispose()
         {
             lock (Streams)
@@ -73,14 +62,5 @@ namespace GPlusBrowser.Model
                 Streams.Clear();
             }
         }
-
-        public event EventHandler Updated;
-        protected virtual void OnUpdated(EventArgs e)
-        {
-            if (Updated != null)
-                Updated(this, e);
-        }
     }
-    public enum StreamUpdateSeqState
-    { Unloaded, Loaded, Fail }
 }

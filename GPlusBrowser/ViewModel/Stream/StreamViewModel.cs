@@ -7,6 +7,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using System.Windows.Threading;
 using SunokoLibrary.Web.GooglePlus;
 
@@ -18,14 +19,14 @@ namespace GPlusBrowser.ViewModel
     {
         public StreamViewModel(Stream circle)
         {
-            _activities = new ObservableCollection<ActivityViewModel>();
-            _circle = circle;
+            _activities = new ObservableCollection<ViewModelBase>();
+            _circleModel = circle;
             _circleName = circle.Name;
         }
         bool _isActive;
         string _circleName;
-        Stream _circle;
-        ObservableCollection<ActivityViewModel> _activities;
+        Stream _circleModel;
+        ObservableCollection<ViewModelBase> _activities;
 
         public bool IsActive
         {
@@ -35,20 +36,24 @@ namespace GPlusBrowser.ViewModel
                 Set(() => IsActive, ref _isActive, value);
                 if (value)
                 {
-                    foreach (var item in _circle.Activities.ToArray())
-                    {
-                        var viewModel = new ActivityViewModel(item);
-                        _activities.Add(viewModel);
-                    }
-                    _circle.Activities.CollectionChanged += OnActivitiesCollectionChanged;
-                    _circle.Connect();
+                    if (_activities != null)
+                        foreach (var item in _circleModel.Activities.ToArray())
+                        {
+                            var viewModel = new ActivityViewModel(item);
+                            _activities.Add(viewModel);
+                        }
+                    _circleModel.Activities.CollectionChanged += OnActivitiesCollectionChanged;
+                    _circleModel.Connect();
                 }
                 else
                 {
-                    _circle.Activities.CollectionChanged -= OnActivitiesCollectionChanged;
-                    foreach (var item in _activities)
-                        item.Cleanup();
-                    _activities.Clear();
+                    _circleModel.Activities.CollectionChanged -= OnActivitiesCollectionChanged;
+                    if (_activities != null)
+                    {
+                        foreach (var item in _activities)
+                            item.Cleanup();
+                        _activities.Clear();
+                    }
                 }
             }
         }
@@ -57,7 +62,7 @@ namespace GPlusBrowser.ViewModel
             get { return _circleName; }
             set { Set(() => CircleName, ref _circleName, value); }
         }
-        public ObservableCollection<ActivityViewModel> Activities
+        public ObservableCollection<ViewModelBase> Activities
         {
             get { return _activities; }
             set { Set(() => Activities, ref _activities, value); }
@@ -68,7 +73,6 @@ namespace GPlusBrowser.ViewModel
             base.Cleanup();
             foreach (var item in _activities)
                 item.Cleanup();
-            _activities.ClearAsync(App.Current.Dispatcher);
         }
         protected void OnActivitiesCollectionChanged(
             object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
@@ -82,23 +86,23 @@ namespace GPlusBrowser.ViewModel
                         {
                             var idx = e.NewStartingIndex + i;
                             var viewModel = new ActivityViewModel((Activity)e.NewItems[i]);
-                            if (Activities.Any(vm => vm.ActivityUrl == viewModel.ActivityUrl))
+                            if (Activities.Any(vm => vm is ActivityViewModel ? ((ActivityViewModel)vm).ActivityUrl == viewModel.ActivityUrl : false))
                                 continue;
-                            Activities.InsertAsync(idx, viewModel, App.Current.Dispatcher);
+                            Activities.InsertOnDispatcher(idx, viewModel);
                         }
                         break;
                     case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
                         for (var i = 0; i < e.OldItems.Count; i++)
                         {
                             var viewModel = Activities[Math.Min(e.OldStartingIndex + i, Activities.Count - 1)];
-                            Activities.RemoveAtAsync(e.OldStartingIndex + i, App.Current.Dispatcher);
+                            Activities.RemoveAtOnDispatcher(e.OldStartingIndex + i);
                             viewModel.Cleanup();
                         }
                         break;
                     case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:
                         for (var i = 0; i < Activities.Count; i++)
                             Activities[i].Cleanup();
-                        Activities.ClearAsync(App.Current.Dispatcher);
+                        Activities.ClearOnDispatcher();
                         break;
                 }
             }

@@ -13,7 +13,6 @@ namespace GPlusBrowser.Model
     {
         public Stream(StreamManager manager)
         {
-            _manager = manager;
             _activities = new ObservableCollection<Activity>();
             _syncer = new System.Threading.SemaphoreSlim(1, 1);
         }
@@ -21,11 +20,11 @@ namespace GPlusBrowser.Model
         int _maxActivityCount = 30;
         CircleInfo _circle;
         IDisposable _streamObj;
-        StreamManager _manager;
         IInfoList<ActivityInfo> _activityGetter;
         ObservableCollection<Activity> _activities;
         bool _isUpdated;
 
+        public bool IsConnected { get { return _isUpdated; } }
         public string Name { get { return Circle.Name; } }
         public ObservableCollection<Activity> Activities { get { return _activities; } }
         public CircleInfo Circle
@@ -50,7 +49,7 @@ namespace GPlusBrowser.Model
                     foreach (var item in await _activityGetter.TakeAsync(20).ConfigureAwait(false))
                         _activities.Add(new Activity(item));
                 }
-                if (_streamObj == null && _isUpdated)
+                if (_streamObj == null)
                     _streamObj = Circle.GetStream().Subscribe(async newInfo =>
                         {
                             try

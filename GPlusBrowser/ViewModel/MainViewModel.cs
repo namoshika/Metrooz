@@ -73,7 +73,6 @@ namespace GPlusBrowser.ViewModel
         public override void Cleanup()
         {
             base.Cleanup();
-            DataCacheDictionary.Clear();
             foreach (AccountViewModel item in Pages)
                 item.Cleanup();
         }
@@ -88,7 +87,7 @@ namespace GPlusBrowser.ViewModel
                         var account = new AccountViewModel(accountModel);
                         account.OpenedStreamPanel += account_OpenedStreamPanel;
                         account.BackedToAccountManager += account_BackedToAccountManager;
-                        Pages.InsertAsync(e.NewStartingIndex + i, account, App.Current.Dispatcher);
+                        Pages.InsertOnDispatcher(e.NewStartingIndex + i, account);
                     }
                     break;
                 case NotifyCollectionChangedAction.Remove:
@@ -97,7 +96,7 @@ namespace GPlusBrowser.ViewModel
                         var account = Pages[e.OldStartingIndex];
                         account.OpenedStreamPanel -= account_OpenedStreamPanel;
                         account.BackedToAccountManager -= account_BackedToAccountManager;
-                        Pages.RemoveAtAsync(e.OldStartingIndex, App.Current.Dispatcher);
+                        Pages.RemoveAtOnDispatcher(e.OldStartingIndex);
                     }
                     break;
                 case NotifyCollectionChangedAction.Reset:
@@ -110,7 +109,7 @@ namespace GPlusBrowser.ViewModel
                             item.BackedToAccountManager -= account_BackedToAccountManager;
                         }
                         Pages.Clear();
-                        Pages.AddAsync(accountManager, App.Current.Dispatcher);
+                        Pages.AddOnDispatcher(accountManager);
                         SelectedPageIndex = -1;
                     }
                     break;

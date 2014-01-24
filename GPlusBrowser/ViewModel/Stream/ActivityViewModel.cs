@@ -37,7 +37,6 @@ namespace GPlusBrowser.ViewModel
         Activity _model;
         ImageSource _iconUrl;
         Uri _activityUrl;
-        int _isDisposed;
         string _postUserName;
         string _postDate;
         string _postText;
@@ -108,55 +107,39 @@ namespace GPlusBrowser.ViewModel
                 PostDate = postDate >= DateTime.Today ? postDate.ToString("HH:mm") : postDate.ToString("yyyy/MM/dd");
                 content = _model.CoreInfo.GetParsedContent();
                 ActivityUrl = _model.CoreInfo.PostUrl;
+                PostText = _model.CoreInfo.Text;
+                PostContentInline = content;
 
                 if (_model.CoreInfo.AttachedContent != null)
                     switch (_model.CoreInfo.AttachedContent.Type)
                     {
                         case ContentType.Album:
                             var attachedAlbum = (AttachedAlbum)_model.CoreInfo.AttachedContent;
-                            AttachedContent = new AttachedAlbumViewModel(attachedAlbum);
+                            AttachedContent = await AttachedAlbumViewModel.Create(attachedAlbum);
                             break;
                         case ContentType.Image:
                             var attachedImage = (AttachedImage)_model.CoreInfo.AttachedContent;
-                            AttachedContent = new AttachedImageViewModel(attachedImage);
+                            AttachedContent = await AttachedImageViewModel.Create(attachedImage);
                             break;
                         case ContentType.Link:
                             var attachedLink = (AttachedLink)_model.CoreInfo.AttachedContent;
-                            AttachedContent = new AttachedLinkViewModel(
+                            AttachedContent = await AttachedLinkViewModel.Create(
                                 attachedLink.Title,
-                                string.IsNullOrEmpty(attachedLink.Summary)
-                                    ? null : attachedLink.Summary.Trim('\n', '\r', ' '),
-                                attachedLink.FaviconUrl, attachedLink.LinkUrl, attachedLink.OriginalThumbnailUrl);
+                                string.IsNullOrEmpty(attachedLink.Summary) ? null : attachedLink.Summary.Trim('\n', '\r', ' '),
+                                attachedLink.LinkUrl, attachedLink.FaviconUrl, attachedLink.OriginalThumbnailUrl);
                             break;
                     }
-                PostText = _model.CoreInfo.Text;
-                PostContentInline = content;
                 PostUserIconUrl = await DataCacheDictionary.DownloadImage(
-                    new Uri(_model.CoreInfo.PostUser.IconImageUrl
-                        .Replace("$SIZE_SEGMENT", "s40-c-k")
-                        .Replace("$SIZE_NUM", "80")));
+                    new Uri(_model.CoreInfo.PostUser.IconImageUrl.Replace("$SIZE_SEGMENT", "s40-c-k").Replace("$SIZE_NUM", "80")));
             }
         }
         public override void Cleanup()
         {
             base.Cleanup();
-            if (System.Threading.Interlocked.CompareExchange(ref _isDisposed, 1, 0) == 1)
-                return;
-
             _model.Updated -= _activity_Refreshed;
             _model.Comments.CollectionChanged -= _activity_Comments_CollectionChanged;
             foreach (var item in _comments)
                 item.Cleanup();
-            _comments.ClearAsync(App.Current.Dispatcher);
-            _model = null;
-            _iconUrl = null;
-            _activityUrl = null;
-            _postUserName = null;
-            _postDate = null;
-            _postCommentText = null;
-            _attachedContent = null;
-            _comments = null;
-            _postContentInline = null;
         }
 
         async void SendCommentCommand_Executed()
@@ -186,17 +169,17 @@ namespace GPlusBrowser.ViewModel
             {
                 case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
                     foreach (var item in e.NewItems)
-                        Comments.AddAsync(new CommentViewModel((Comment)item), App.Current.Dispatcher);
+                        Comments.AddOnDispatcher(new CommentViewModel((Comment)item));
                     break;
                 case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
                     for (var i = 0; i < e.OldItems.Count; i++)
                     {
                         var tmp = Comments.First(vm => vm.Id == ((Comment)e.OldItems[i]).CommentInfo.Id);
-                        Comments.RemoveAsync(tmp, App.Current.Dispatcher);
+                        Comments.RemoveOnDispatcher(tmp);
                     }
                     break;
                 case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:
-                    Comments.ClearAsync(App.Current.Dispatcher);
+                    Comments.ClearOnDispatcher();
                     break;
             }
         }

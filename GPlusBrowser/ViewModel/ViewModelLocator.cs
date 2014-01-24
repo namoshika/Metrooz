@@ -57,11 +57,11 @@ namespace GPlusBrowser.ViewModel
         public static void Cleanup()
         {
             // TODO Clear the ViewModels
-            SimpleIoc.Default.GetInstance<AccountManager>().Dispose();
-            SimpleIoc.Default.Unregister<AccountManager>();
-
             SimpleIoc.Default.GetInstance<MainViewModel>().Cleanup();
             SimpleIoc.Default.Unregister<MainViewModel>();
+
+            SimpleIoc.Default.GetInstance<AccountManager>().Dispose();
+            SimpleIoc.Default.Unregister<AccountManager>();
         }
     }
 }

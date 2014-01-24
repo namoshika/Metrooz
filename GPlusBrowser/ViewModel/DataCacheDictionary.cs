@@ -66,17 +66,18 @@ namespace GPlusBrowser
                             if (DateTime.UtcNow - _lastCleanupTime > TimeSpan.FromMinutes(30))
                             {
                                 _lastCleanupTime = DateTime.UtcNow;
-                                Cleanup();
+                                GC();
                             }
                             return img;
                         }
                         catch (System.Net.Http.HttpRequestException) { return null; }
+                        catch (NotSupportedException) { return null; }
                     });
             }
             finally
             { _syncer.Release(); }
         }
-        public static void Cleanup()
+        public static void GC()
         {
             BitmapImage tmp;
             foreach (var item in _imgCacheDictionary.ToArray())
@@ -84,11 +85,6 @@ namespace GPlusBrowser
                 if (item.Value.TryGetTarget(out tmp) == false)
                     _imgCacheDictionary.Remove(item.Key);
             }
-        }
-        public static void Clear()
-        {
-            _imgCacheDictionary.Clear();
-            _defaultHttpClient.Dispose();
         }
     }
 }

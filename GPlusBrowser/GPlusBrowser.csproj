@@ -157,6 +157,7 @@
     <Compile Include="Model\Stream\StreamManager.cs" />
     <Compile Include="ViewModel\Stream\ActivityViewModel.cs" />
     <Compile Include="ViewModel\AccountViewModel.cs" />
+    <Compile Include="ViewModel\Stream\StreamErrorPanelViewModel.cs" />
     <Compile Include="ViewModel\Stream\StreamViewModel.cs" />
     <Compile Include="ViewModel\Stream\CommentViewModel.cs" />
     <Compile Include="ViewModel\SettingViewModel.cs" />

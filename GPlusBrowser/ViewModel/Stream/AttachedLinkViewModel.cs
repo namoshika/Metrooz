@@ -5,19 +5,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Threading.Tasks;
 
 namespace GPlusBrowser.ViewModel
 {
     public class AttachedLinkViewModel : ViewModelBase
     {
-        public AttachedLinkViewModel(
-            string ancourTitle, string ancourIntroductionText, Uri ancourFaviconUrl, Uri ancourUrl, Uri thumnailUrl)
+        public AttachedLinkViewModel(string ancourTitle, string ancourIntroductionText, Uri ancourUrl, BitmapImage ancourFaviconUrl, BitmapImage thumnailUrl)
         {
             AncourTitle = ancourTitle;
             AncourUrl = ancourUrl;
             AncourIntroductionText = ancourIntroductionText;
-            DataCacheDictionary.DownloadImage(thumnailUrl).ContinueWith(tsk => ThumnailUrl = tsk.Result);
-            DataCacheDictionary.DownloadImage(ancourFaviconUrl).ContinueWith(tsk => AncourFaviconUrl = tsk.Result);
+            ThumnailUrl = thumnailUrl;
+            AncourFaviconUrl = ancourFaviconUrl;
         }
         string _ancourTitle;
         Uri _ancourUrl;
@@ -49,6 +50,13 @@ namespace GPlusBrowser.ViewModel
         {
             get { return _ancourUrl; }
             set { Set(() => AncourUrl, ref _ancourUrl, value); }
+        }
+
+        public static async Task<AttachedLinkViewModel> Create(string ancourTitle, string ancourIntroductionText, Uri ancourUrl, Uri ancourFaviconUrl, Uri thumnailUrl)
+        {
+            var aa = await DataCacheDictionary.DownloadImage(ancourFaviconUrl);
+            var bb = await DataCacheDictionary.DownloadImage(thumnailUrl);
+            return new AttachedLinkViewModel(ancourTitle, ancourIntroductionText, ancourUrl, aa, bb);
         }
     }
 }

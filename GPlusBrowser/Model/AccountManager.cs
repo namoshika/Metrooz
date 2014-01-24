@@ -34,8 +34,8 @@ namespace GPlusBrowser.Model
                     _accounts.Add(account);
                 }
             }
-            catch (Exception e)
-            { throw new ApplicationException("AccountManagerの初期化に失敗しました。", e); }
+            catch (FailToOperationException)
+            { /*初期化失敗*/ }
         }
         public void Dispose()
         {

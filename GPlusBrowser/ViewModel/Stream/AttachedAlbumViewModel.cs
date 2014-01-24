@@ -16,11 +16,12 @@ namespace GPlusBrowser.ViewModel
 
     public class AttachedAlbumViewModel : ViewModelBase
     {
-        public AttachedAlbumViewModel(AttachedAlbum attachedAlbumModel)
+        public AttachedAlbumViewModel(AttachedAlbum attachedAlbumModel, BitmapImage[] thumbnailImages, BitmapImage[] largeImages)
         {
-            _selectedImageIndex = -1;
+            _largeImages = largeImages;
+            _thumbnailImages = thumbnailImages;
             _attachedAlbumModel = attachedAlbumModel;
-            Initialize();
+            SelectedImageIndex = largeImages.Length > 0 ? 0 : -1;
         }
         int _selectedImageIndex;
         BitmapImage _selectedImage;
@@ -46,11 +47,11 @@ namespace GPlusBrowser.ViewModel
             get { return _thumbnailImages; }
             set { Set(() => ThumbnailImages, ref _thumbnailImages, value); }
         }
-        public async void Initialize()
+        public static async Task<AttachedAlbumViewModel> Create(AttachedAlbum attachedAlbumModel)
         {
             var thumbImgs = new List<BitmapImage>();
             var largeImgs = new List<BitmapImage>();
-            var downDatas = await Task.Factory.ContinueWhenAll(_attachedAlbumModel.Pictures
+            var downDatas = await Task.Factory.ContinueWhenAll(attachedAlbumModel.Pictures
                 .SelectMany(imgInf =>
                     new[]{
                         new { IsThumbnail = true, Url = new Uri(imgInf.ThumbnailUrl.Replace("$SIZE_SEGMENT", "s50-c-k")) },
@@ -70,9 +71,7 @@ namespace GPlusBrowser.ViewModel
                 else
                     largeImgs.Add(jobInf.Data);
             }
-            _largeImages = largeImgs.ToArray();
-            ThumbnailImages = thumbImgs.ToArray();
-            SelectedImageIndex = 0;
+            return new AttachedAlbumViewModel(attachedAlbumModel, thumbImgs.ToArray(), largeImgs.ToArray());
         }
     }
 }

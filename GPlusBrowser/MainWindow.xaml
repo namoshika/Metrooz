@@ -11,10 +11,17 @@
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="booleanToVisibilityConverter" />
         <Style x:Key="iconButtonStyle" TargetType="{x:Type Button}">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Padding" Value="1"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type Button}">
-                        <ContentPresenter />
+                        <Border x:Name="border" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" SnapsToDevicePixels="true">
+                            <ContentPresenter x:Name="contentPresenter" Focusable="False" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" Margin="{TemplateBinding Padding}" RecognizesAccessKey="True" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                        </Border>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
@@ -123,16 +130,13 @@
                                 <!--<ColumnDefinition Width="*" />-->
                                 <!--通知類パネル-->
                             </Grid.ColumnDefinitions>
-                            <Grid Grid.Column="0">
+                            <Grid Grid.Row="1" Grid.Column="0">
                                 <Grid.RowDefinitions>
-                                    <RowDefinition Height="50" />
+                                    <RowDefinition Height="auto" />
+                                    <RowDefinition Height="auto" />
                                     <RowDefinition Height="*" />
                                 </Grid.RowDefinitions>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="50" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-                                <Rectangle Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Grid.ColumnSpan="2" Width="200" Height="55" VerticalAlignment="Top" HorizontalAlignment="Left">
+                                <Rectangle Grid.Row="0" Width="200" Height="50" VerticalAlignment="Top" HorizontalAlignment="Left">
                                     <Rectangle.OpacityMask>
                                         <RadialGradientBrush Center="0,0" RadiusX="1" RadiusY="1" GradientOrigin="0,0">
                                             <GradientStop Offset="0" Color="#a0000000" />
@@ -143,17 +147,20 @@
                                         <VisualBrush Visual="{Binding ElementName=accountIcon}" Stretch="UniformToFill" />
                                     </Rectangle.Fill>
                                 </Rectangle>
-                                <Button Focusable="False" Grid.Row="0" Grid.Column="0" Width="30" Height="30" Margin="10" Style="{StaticResource iconButtonStyle}" Command="{Binding BackToAccountManagerCommand}">
-                                    <Image Source="/Resources/back.png" />
-                                </Button>
-                                <Grid Grid.Row="0" Grid.Column="1">
-                                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Left" Orientation="Horizontal">
+                                <DockPanel Grid.Row="0">
+                                    <Button DockPanel.Dock="Left" Width="30" Height="30" Margin="10" Focusable="False" Style="{StaticResource iconButtonStyle}" Command="{Binding BackToAccountManagerCommand}">
+                                        <Image Source="/Resources/back.png" />
+                                    </Button>
+                                    <StackPanel Orientation="Horizontal">
                                         <Image Name="accountIcon" Width="30" Height="30" Margin="0,0,5,0" VerticalAlignment="Center" Source="{Binding UserIconUrl}" />
-                                        <TextBlock FontSize="21" Margin="0,0,10,0" VerticalAlignment="Center"><Run Text="Stream/"/></TextBlock>
+                                        <TextBlock FontSize="21" Margin="0,0,10,0" VerticalAlignment="Center" Text="Stream/" />
                                         <ComboBox Focusable="False" MinWidth="150" VerticalAlignment="Center" FontSize="16" SelectedIndex="{Binding Stream.SelectedCircleIndex}" DisplayMemberPath="CircleName" ItemsSource="{Binding Stream.DisplayStreams}" />
                                     </StackPanel>
-                                </Grid>
-                                <TabControl Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Margin="12,0,0,0" ItemsSource="{Binding Stream.DisplayStreams, Mode=OneWay}" SelectedIndex="{Binding Stream.SelectedCircleIndex, Mode=OneWay}" Style="{StaticResource pageSwitcherStyle}" ItemContainerStyle="{StaticResource streamItemStyle}" />
+                                </DockPanel>
+                                <Border Grid.Row="1" Margin="12,0,0,0" VerticalAlignment="Top" Visibility="{Binding Stream.IsDisconnected, Mode=OneWay, Converter={StaticResource booleanToVisibilityConverter}}">
+                                    <ContentPresenter Content="{Binding Stream.StreamErrorPanel}" />
+                                </Border>
+                                <TabControl Grid.Row="2" Margin="12,0,0,0" ItemsSource="{Binding Stream.DisplayStreams, Mode=OneWay}" SelectedIndex="{Binding Stream.SelectedCircleIndex, Mode=OneWay}" Style="{StaticResource pageSwitcherStyle}" ItemContainerStyle="{StaticResource streamItemStyle}" />
                             </Grid>
                             <!--<ContentPresenter Grid.Column="1" Content="{Binding Notification}" />-->
                         </Grid>
@@ -345,6 +352,13 @@
                         </StackPanel>
                     </StackPanel>
                 </Grid>
+            </Border>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:StreamErrorPanelViewModel}">
+            <Border Margin="0,0,0,8" BorderBrush="Orange" BorderThickness="0,1,0,1">
+                <Button Padding="10,8,10,6" VerticalAlignment="Center" Style="{StaticResource iconButtonStyle}" Command="{Binding ReconnectCommand}">
+                    <TextBlock Foreground="DarkOrange">ストリームの通信が切断されました。再接続する場合はここを押してください。</TextBlock>
+                </Button>
             </Border>
         </DataTemplate>
     </Window.Resources>

@@ -14,11 +14,9 @@ namespace GPlusBrowser.Model
         public Account(IPlatformClientBuilder setting)
         {
             Builder = setting;
-            IsConnected = false;
             IsInitialized = false;
             Stream = new StreamManager(this);
         }
-        public bool IsConnected { get; private set; }
         public bool IsInitialized { get; private set; }
         public IPlatformClientBuilder Builder { get; private set; }
         public PlatformClient PlusClient { get; private set; }
@@ -33,10 +31,7 @@ namespace GPlusBrowser.Model
                 async () =>
                 {
                     if (PlusClient != null)
-                    {
-                        PlusClient.Activity.ChangedIsConnected -= ActivityManager_ChangedIsConnected;
                         PlusClient.Dispose();
-                    }
                     try
                     {
                         //G+APIライブラリの初期化を行う
@@ -47,9 +42,8 @@ namespace GPlusBrowser.Model
                         Stream = new StreamManager(this);
                         //Notification = new NotificationManager(this);
                         //Notification.Initialize();
-                        await Stream.Initialize(CircleUpdateLevel.Loaded);
+                        await Stream.Initialize();
                         Connect();
-                        PlusClient.Activity.ChangedIsConnected += ActivityManager_ChangedIsConnected;
 
                         IsInitialized = true;
                         OnInitialized(new EventArgs());
@@ -68,15 +62,9 @@ namespace GPlusBrowser.Model
             if (IsInitialized)
             {
                 IsInitialized = false;
-                PlusClient.Activity.ChangedIsConnected -= ActivityManager_ChangedIsConnected;
                 PlusClient.Dispose();
                 Stream.Dispose();
             }
-        }
-        void ActivityManager_ChangedIsConnected(object sender, EventArgs e)
-        {
-            IsConnected = PlusClient.Activity.IsConnected;
-            OnChangedConnectStatus(new EventArgs());
         }
 
         public event EventHandler Initialized;
@@ -84,12 +72,6 @@ namespace GPlusBrowser.Model
         {
             if (Initialized != null)
                 Initialized(this, e);
-        }
-        public event EventHandler ChangedConnectStatus;
-        protected virtual void OnChangedConnectStatus(EventArgs e)
-        {
-            if (ChangedConnectStatus != null)
-                ChangedConnectStatus(this, e);
         }
     }
 }
