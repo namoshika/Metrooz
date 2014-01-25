@@ -1,6 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio 2013
+VisualStudioVersion = 12.0.21005.1
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GPlusBrowser", "GPlusBrowser\GPlusBrowser.csproj", "{B8E10142-1522-419C-A8A9-20FBEFCA2382}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ControlDev", "ControlDev\ControlDev.csproj", "{FE2032F9-8991-4629-8F85-16154903D558}"
@@ -10,53 +12,35 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SnkLib.Platform", "snklib.web.googleplus-2.0\SnkLib.Platform\SnkLib.Platform.csproj", "{37846C4E-2F87-46E9-B036-9569F422BF63}"
 EndProject
 Global
-	GlobalSection(TestCaseManagementSettings) = postSolution
-		CategoryFile = GooglePlusAutoImageDownloader.vsmdi
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
-		Debug|Mixed Platforms = Debug|Mixed Platforms
 		Release|Any CPU = Release|Any CPU
-		Release|Mixed Platforms = Release|Mixed Platforms
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{B8E10142-1522-419C-A8A9-20FBEFCA2382}.Debug|Any CPU.ActiveCfg = Debug|x86
 		{B8E10142-1522-419C-A8A9-20FBEFCA2382}.Debug|Any CPU.Build.0 = Debug|x86
-		{B8E10142-1522-419C-A8A9-20FBEFCA2382}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
-		{B8E10142-1522-419C-A8A9-20FBEFCA2382}.Debug|Mixed Platforms.Build.0 = Debug|x86
 		{B8E10142-1522-419C-A8A9-20FBEFCA2382}.Release|Any CPU.ActiveCfg = Release|x64
 		{B8E10142-1522-419C-A8A9-20FBEFCA2382}.Release|Any CPU.Build.0 = Release|x64
-		{B8E10142-1522-419C-A8A9-20FBEFCA2382}.Release|Mixed Platforms.ActiveCfg = Release|x86
-		{B8E10142-1522-419C-A8A9-20FBEFCA2382}.Release|Mixed Platforms.Build.0 = Release|x86
 		{FE2032F9-8991-4629-8F85-16154903D558}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{FE2032F9-8991-4629-8F85-16154903D558}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FE2032F9-8991-4629-8F85-16154903D558}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{FE2032F9-8991-4629-8F85-16154903D558}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
 		{FE2032F9-8991-4629-8F85-16154903D558}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FE2032F9-8991-4629-8F85-16154903D558}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FE2032F9-8991-4629-8F85-16154903D558}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{FE2032F9-8991-4629-8F85-16154903D558}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{A19C98E5-7048-43E2-98F0-689A3FFE2A82}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A19C98E5-7048-43E2-98F0-689A3FFE2A82}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A19C98E5-7048-43E2-98F0-689A3FFE2A82}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{A19C98E5-7048-43E2-98F0-689A3FFE2A82}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
 		{A19C98E5-7048-43E2-98F0-689A3FFE2A82}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A19C98E5-7048-43E2-98F0-689A3FFE2A82}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A19C98E5-7048-43E2-98F0-689A3FFE2A82}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{A19C98E5-7048-43E2-98F0-689A3FFE2A82}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{37846C4E-2F87-46E9-B036-9569F422BF63}.Debug|Any CPU.ActiveCfg = win.Debug|Any CPU
 		{37846C4E-2F87-46E9-B036-9569F422BF63}.Debug|Any CPU.Build.0 = win.Debug|Any CPU
-		{37846C4E-2F87-46E9-B036-9569F422BF63}.Debug|Mixed Platforms.ActiveCfg = win.Debug|Any CPU
-		{37846C4E-2F87-46E9-B036-9569F422BF63}.Debug|Mixed Platforms.Build.0 = win.Debug|Any CPU
 		{37846C4E-2F87-46E9-B036-9569F422BF63}.Release|Any CPU.ActiveCfg = win.Release|Any CPU
 		{37846C4E-2F87-46E9-B036-9569F422BF63}.Release|Any CPU.Build.0 = win.Release|Any CPU
-		{37846C4E-2F87-46E9-B036-9569F422BF63}.Release|Mixed Platforms.ActiveCfg = win.Release|Any CPU
-		{37846C4E-2F87-46E9-B036-9569F422BF63}.Release|Mixed Platforms.Build.0 = win.Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		EnterpriseLibraryConfigurationToolBinariesPath = packages\Unity.2.1.505.2\lib\NET35
+	EndGlobalSection
+	GlobalSection(TestCaseManagementSettings) = postSolution
+		CategoryFile = GooglePlusAutoImageDownloader.vsmdi
 	EndGlobalSection
 EndGlobal

@@ -5,7 +5,7 @@
         xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions"
         xmlns:vm="clr-namespace:GPlusBrowser.ViewModel"
         xmlns:ctl="clr-namespace:GPlusBrowser.Controls"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" x:Class="GPlusBrowser.MainWindow"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" x:Class="GPlusBrowser.MainWindow"
         Title="GPlusBrowser" Height="700" Width="530" x:Name="mainWindow"
         DataContext="{Binding Main, Source={StaticResource Locator}}">
     <Window.Resources>
@@ -362,11 +362,11 @@
             </Border>
         </DataTemplate>
     </Window.Resources>
-	<Grid>
-		<!--各アカウントの画面-->
+    <Grid>
+        <!--各アカウントの画面-->
         <TabControl ItemsSource="{Binding Pages}" SelectedIndex="{Binding SelectedPageIndex, Mode=OneWay}" Style="{StaticResource pageSwitcherStyle}" ItemContainerStyle="{StaticResource accountStyle}" />
         <!--アカウント選択画面-->
         <ContentPresenter Visibility="{Binding DataContext.IsAccountSelectorMode, Converter={StaticResource booleanToVisibilityConverter}, RelativeSource={RelativeSource AncestorType={x:Type Window}, Mode=FindAncestor}}"
                           Content="{Binding}" Style="{StaticResource accountSelectorStyle}" />
-	</Grid>
+    </Grid>
 </Window>

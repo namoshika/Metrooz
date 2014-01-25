@@ -36,6 +36,11 @@ namespace GPlusBrowser.ViewModel
             get { return _ancourIntroductionText; }
             set { Set(() => AncourIntroductionText, ref _ancourIntroductionText, value); }
         }
+        public Uri AncourUrl
+        {
+            get { return _ancourUrl; }
+            set { Set(() => AncourUrl, ref _ancourUrl, value); }
+        }
         public ImageSource AncourFaviconUrl
         {
             get { return _ancourFaviconUrl; }
@@ -45,11 +50,6 @@ namespace GPlusBrowser.ViewModel
         {
             get { return _thumnailUrl; }
             set { Set(() => ThumnailUrl, ref _thumnailUrl, value); }
-        }
-        public Uri AncourUrl
-        {
-            get { return _ancourUrl; }
-            set { Set(() => AncourUrl, ref _ancourUrl, value); }
         }
 
         public static async Task<AttachedLinkViewModel> Create(string ancourTitle, string ancourIntroductionText, Uri ancourUrl, Uri ancourFaviconUrl, Uri thumnailUrl)
