@@ -17,6 +17,8 @@ using SunokoLibrary.Web.GooglePlus;
 
 namespace GPlusBrowser
 {
+    using GPlusBrowser.ViewModel;
+
     /// <summary>
     /// MainWindow.xaml の相互作用ロジック
     /// </summary>

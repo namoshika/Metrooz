@@ -142,6 +142,7 @@
     <Compile Include="Controls\ExTreeView.cs" />
     <Compile Include="Controls\ImageBox.cs" />
     <Compile Include="Model\NotificationManager.cs" />
+    <Compile Include="ViewModel\DialogViewModel.cs" />
     <Compile Include="ViewModel\ObservableCollectionEx.cs" />
     <Compile Include="Model\AccountManager.cs" />
     <Compile Include="Model\Stream\Activity.cs" />

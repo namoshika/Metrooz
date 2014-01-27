@@ -23,34 +23,39 @@ namespace GPlusBrowser.Model
         public ProfileInfo MyProfile { get; private set; }
         public StreamManager Stream { get; private set; }
         //public NotificationManager Notification { get; private set; }
-        readonly AsyncLocker _initSyncer = new AsyncLocker();
+        readonly System.Threading.SemaphoreSlim _initSyncer = new System.Threading.SemaphoreSlim(1, 1);
 
         public async Task Initialize(bool isForced)
         {
-            await _initSyncer.LockAsync(isForced, () => isForced || IsInitialized == false, null,
-                async () =>
-                {
-                    if (PlusClient != null)
-                        PlusClient.Dispose();
-                    try
-                    {
-                        //G+APIライブラリの初期化を行う
-                        PlusClient = await Builder.Build();
-                        MyProfile = await PlusClient.People.GetProfileOfMeAsync(false).ConfigureAwait(false);
+            try
+            {
+                await _initSyncer.WaitAsync();
+                if (IsInitialized && isForced == false)
+                    return;
 
-                        //各モジュールの初期化を行う
-                        Stream = new StreamManager(this);
-                        //Notification = new NotificationManager(this);
-                        //Notification.Initialize();
-                        await Stream.Initialize();
-                        Connect();
+                if (PlusClient != null)
+                    PlusClient.Dispose();
+                //G+APIライブラリの初期化を行う
+                PlusClient = await Builder.Build();
+                MyProfile = await PlusClient.People.GetProfileOfMeAsync(false).ConfigureAwait(false);
 
-                        IsInitialized = true;
-                        OnInitialized(new EventArgs());
-                    }
-                    catch (FailToOperationException)
-                    { IsInitialized = false; }
-                }, null);
+                //各モジュールの初期化を行う
+                Stream = new StreamManager(this);
+                //Notification = new NotificationManager(this);
+                //Notification.Initialize();
+                await Stream.Initialize();
+                Connect();
+
+                IsInitialized = true;
+                OnInitialized(new EventArgs());
+            }
+            catch (FailToOperationException e)
+            {
+                IsInitialized = false;
+                throw e;
+            }
+            finally
+            { _initSyncer.Release(); }
         }
         public void Connect()
         {

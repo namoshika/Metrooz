@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Threading.Tasks;
 using SunokoLibrary.Web.GooglePlus;
 using SunokoLibrary.Web.GooglePlus.Primitive;
 
@@ -24,7 +25,7 @@ namespace GPlusBrowser.Model
         ObservableCollection<Activity> _activities;
         bool _isUpdated;
 
-        public bool IsConnected { get { return _isUpdated; } }
+        public bool IsConnected { get; private set; }
         public string Name { get { return Circle.Name; } }
         public ObservableCollection<Activity> Activities { get { return _activities; } }
         public CircleInfo Circle
@@ -42,12 +43,13 @@ namespace GPlusBrowser.Model
             try
             {
                 await _syncer.WaitAsync();
+                IsConnected = true;
                 if (_isUpdated == false)
                 {
-                    _isUpdated = true;
                     _activities.Clear();
                     foreach (var item in await _activityGetter.TakeAsync(20).ConfigureAwait(false))
                         _activities.Add(new Activity(item));
+                    _isUpdated = true;
                 }
                 if (_streamObj == null)
                     _streamObj = Circle.GetStream().Subscribe(async newInfo =>
@@ -87,8 +89,8 @@ namespace GPlusBrowser.Model
                             _streamObj = null;
                         });
             }
-            finally
-            { _syncer.Release(); }
+            catch (FailToOperationException) { }
+            finally { _syncer.Release(); }
         }
         public async void Dispose()
         {

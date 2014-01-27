@@ -1,4 +1,5 @@
 ﻿using GalaSoft.MvvmLight;
+using GalaSoft.MvvmLight.Messaging;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -6,6 +7,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
 using System.Windows.Threading;
+using SunokoLibrary.Web.GooglePlus;
 
 namespace GPlusBrowser.ViewModel
 {
@@ -33,7 +35,9 @@ namespace GPlusBrowser.ViewModel
             _selectedMainPageIndex = -1;
             IsAccountSelectorMode = true;
             Pages = new ObservableCollection<AccountViewModel>();
+            DialogMessages = new ObservableCollection<DialogViewModel>();
 
+            Messenger.Default.Register<DialogMessage>(this, Recieved_DialogMessage);
             Initialize(accountManagerModel);
         }
         AccountManager _accountManagerModel;
@@ -55,26 +59,50 @@ namespace GPlusBrowser.ViewModel
             set { Set(() => IsAccountSelectorMode, ref _isAccountSelectorMode, value); }
         }
         public ObservableCollection<AccountViewModel> Pages { get; set; }
+        public ObservableCollection<DialogViewModel> DialogMessages { get; set; }
 
         public async void Initialize(AccountManager accountManagerModel)
         {
-            if (IsInDesignMode)
+            try
             {
-                // Code runs in Blend --> create design time data.
+                if (IsInDesignMode)
+                {
+                    // Code runs in Blend --> create design time data.
+                }
+                else
+                {
+                    if (_accountManagerModel != null)
+                        ((INotifyCollectionChanged)_accountManagerModel.Accounts)
+                            .CollectionChanged -= PageSwitcherViewModel_CollectionChanged;
+
+                    _accountManagerModel = accountManagerModel;
+                    ((INotifyCollectionChanged)_accountManagerModel.Accounts)
+                        .CollectionChanged += PageSwitcherViewModel_CollectionChanged;
+                    await _accountManagerModel.Initialize();
+                }
             }
-            else
+            catch (FailToOperationException)
             {
-                _accountManagerModel = accountManagerModel;
-                ((INotifyCollectionChanged)_accountManagerModel.Accounts)
-                    .CollectionChanged += PageSwitcherViewModel_CollectionChanged;
-                await _accountManagerModel.Initialize();
+                Messenger.Default.Send(new DialogMessage(
+                    "アカウント一覧の読み込みに失敗しました。ネットワークの設定を確認して下さい。",
+                    res => Initialize(accountManagerModel)));
             }
         }
         public override void Cleanup()
         {
             base.Cleanup();
+            Messenger.Default.Unregister<DialogMessage>(this, Recieved_DialogMessage);
             foreach (AccountViewModel item in Pages)
                 item.Cleanup();
+        }
+        void Recieved_DialogMessage(DialogMessage message)
+        {
+            lock (DialogMessages)
+                DialogMessages.Add(new DialogViewModel(message, vm =>
+                    {
+                        lock (DialogMessages)
+                            DialogMessages.Remove(vm);
+                    }));
         }
         void PageSwitcherViewModel_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
@@ -122,5 +150,19 @@ namespace GPlusBrowser.ViewModel
         }
         void account_BackedToAccountManager(object sender, EventArgs e)
         { SelectedPageIndex = -1; }
+    }
+    public class IntToVisibilityConverter : System.Windows.Data.IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        { return ((int)value) != 0 ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed; }
+        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        { throw new NotImplementedException(); }
+    }
+    public class IntToIntConverter : System.Windows.Data.IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        { return (int)value - 1; }
+        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        { throw new NotImplementedException(); }
     }
 }

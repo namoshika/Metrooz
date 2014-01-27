@@ -1,5 +1,6 @@
 ﻿using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
+using GalaSoft.MvvmLight.Messaging;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -10,6 +11,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using SunokoLibrary.Web.GooglePlus;
 
 namespace GPlusBrowser.ViewModel
 {
@@ -78,7 +80,14 @@ namespace GPlusBrowser.ViewModel
         async void OpenStreamPanelCommand_Execute()
         {
             OnOpenedStreamPanel(new EventArgs());
-            await _accountModel.Initialize(false);
+
+            try { await _accountModel.Initialize(false); }
+            catch (FailToOperationException)
+            {
+                Messenger.Default.Send(new DialogMessage(
+                    "ストリームの初期化に失敗しました。ネットワークの設定を確認して下さい。",
+                    res => OpenStreamPanelCommand_Execute()));
+            }
         }
         void BackToAccountManagerCommand_Execute()
         { OnBackedToAccountManager(new EventArgs()); }

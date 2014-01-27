@@ -1,15 +1,17 @@
-﻿<Window
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+﻿<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
         xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions"
         xmlns:vm="clr-namespace:GPlusBrowser.ViewModel"
         xmlns:ctl="clr-namespace:GPlusBrowser.Controls"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" x:Class="GPlusBrowser.MainWindow"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        x:Class="GPlusBrowser.MainWindow"
         Title="GPlusBrowser" Height="700" Width="530" x:Name="mainWindow"
         DataContext="{Binding Main, Source={StaticResource Locator}}">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="booleanToVisibilityConverter" />
+        <vm:IntToVisibilityConverter x:Key="intToVisibilityConverter" />
+        <vm:IntToIntConverter x:Key="intToIntConverter" />
         <Style x:Key="iconButtonStyle" TargetType="{x:Type Button}">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0"/>
@@ -39,6 +41,7 @@
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Background" Value="Transparent" />
             <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -90,6 +93,7 @@
         </Style>
         <Style x:Key="activityItemStyle" TargetType="{x:Type TreeViewItem}">
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Background" Value="Transparent" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type TreeViewItem}">
@@ -107,15 +111,17 @@
         </Style>
         <Style x:Key="streamItemStyle" TargetType="{x:Type TabItem}">
             <Setter Property="IsSelected" Value="{Binding IsActive, Mode=OneWayToSource}" />
+            <Setter Property="Background" Value="Transparent" />
             <Setter Property="ContentTemplate">
                 <Setter.Value>
                     <DataTemplate DataType="{x:Type vm:StreamViewModel}">
-                        <TreeView Focusable="False" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                              VirtualizingPanel.IsVirtualizing="True"
-                              VirtualizingPanel.VirtualizationMode="Recycling"
-                              VirtualizingPanel.ScrollUnit="Pixel"
-                              BorderThickness="0" ItemsSource="{Binding Activities}"
-                              ItemContainerStyle="{StaticResource activityItemStyle}" />
+                        <TreeView Focusable="False" Background="Transparent"
+                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                  VirtualizingPanel.IsVirtualizing="True"
+                                  VirtualizingPanel.VirtualizationMode="Recycling"
+                                  VirtualizingPanel.ScrollUnit="Pixel"
+                                  BorderThickness="0" ItemsSource="{Binding Activities}"
+                                  ItemContainerStyle="{StaticResource activityItemStyle}" />
                     </DataTemplate>
                 </Setter.Value>
             </Setter>
@@ -136,17 +142,6 @@
                                     <RowDefinition Height="auto" />
                                     <RowDefinition Height="*" />
                                 </Grid.RowDefinitions>
-                                <Rectangle Grid.Row="0" Width="200" Height="50" VerticalAlignment="Top" HorizontalAlignment="Left">
-                                    <Rectangle.OpacityMask>
-                                        <RadialGradientBrush Center="0,0" RadiusX="1" RadiusY="1" GradientOrigin="0,0">
-                                            <GradientStop Offset="0" Color="#a0000000" />
-                                            <GradientStop Offset="1" Color="#00000000" />
-                                        </RadialGradientBrush>
-                                    </Rectangle.OpacityMask>
-                                    <Rectangle.Fill>
-                                        <VisualBrush Visual="{Binding ElementName=accountIcon}" Stretch="UniformToFill" />
-                                    </Rectangle.Fill>
-                                </Rectangle>
                                 <DockPanel Grid.Row="0">
                                     <Button DockPanel.Dock="Left" Width="30" Height="30" Margin="10" Focusable="False" Style="{StaticResource iconButtonStyle}" Command="{Binding BackToAccountManagerCommand}">
                                         <Image Source="/Resources/back.png" />
@@ -160,10 +155,36 @@
                                 <Border Grid.Row="1" Margin="12,0,0,0" VerticalAlignment="Top" Visibility="{Binding Stream.IsDisconnected, Mode=OneWay, Converter={StaticResource booleanToVisibilityConverter}}">
                                     <ContentPresenter Content="{Binding Stream.StreamErrorPanel}" />
                                 </Border>
-                                <TabControl Grid.Row="2" Margin="12,0,0,0" ItemsSource="{Binding Stream.DisplayStreams, Mode=OneWay}" SelectedIndex="{Binding Stream.SelectedCircleIndex, Mode=OneWay}" Style="{StaticResource pageSwitcherStyle}" ItemContainerStyle="{StaticResource streamItemStyle}" />
+                                <TabControl Grid.Row="2" ItemsSource="{Binding Stream.DisplayStreams, Mode=OneWay}" SelectedIndex="{Binding Stream.SelectedCircleIndex, Mode=OneWay}" Style="{StaticResource pageSwitcherStyle}" ItemContainerStyle="{StaticResource streamItemStyle}" />
                             </Grid>
                             <!--<ContentPresenter Grid.Column="1" Content="{Binding Notification}" />-->
                         </Grid>
+                    </DataTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="dialogStyle" TargetType="{x:Type TabControl}" BasedOn="{StaticResource pageSwitcherStyle}">
+            <Setter Property="ContentTemplate">
+                <Setter.Value>
+                    <DataTemplate DataType="{x:Type vm:DialogViewModel}">
+                        <Border Background="#80000000">
+                            <Border Background="White" VerticalAlignment="Center" HorizontalAlignment="Stretch">
+                                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,15,0,15">
+                                    <TextBlock Text="{Binding Caption}" FontSize="15" />
+                                    <TextBlock Text="{Binding MessageBoxText}" />
+                                    <StackPanel Margin="0,10,0,0" HorizontalAlignment="Right" Orientation="Horizontal">
+                                        <Button Command="{Binding CommitCommand}" Content="OK" MinWidth="80" Padding="10,5,10,5">
+                                            <i:Interaction.Triggers>
+                                                <i:EventTrigger EventName="Click">
+                                                    <ei:ChangePropertyAction PropertyName="Result" TargetObject="{Binding}" Value="OK" />
+                                                    <!--<i:InvokeCommandAction Command="{Binding CommitCommand}" />-->
+                                                </i:EventTrigger>
+                                            </i:Interaction.Triggers>
+                                        </Button>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </Border>
                     </DataTemplate>
                 </Setter.Value>
             </Setter>
@@ -219,7 +240,7 @@
             <DataTemplate.Resources>
                 <ctl:IsExpandCommentCountToStringConverter x:Key="commentExpanderHeaderConverter" />
             </DataTemplate.Resources>
-            <Border BorderBrush="LightGray" BorderThickness="0,1,0,0" Padding="0,15,5,12">
+            <Border BorderBrush="LightGray" BorderThickness="1" Margin="10,8,10,8" Padding="10">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="45" />
@@ -366,7 +387,10 @@
         <!--各アカウントの画面-->
         <TabControl ItemsSource="{Binding Pages}" SelectedIndex="{Binding SelectedPageIndex, Mode=OneWay}" Style="{StaticResource pageSwitcherStyle}" ItemContainerStyle="{StaticResource accountStyle}" />
         <!--アカウント選択画面-->
-        <ContentPresenter Visibility="{Binding DataContext.IsAccountSelectorMode, Converter={StaticResource booleanToVisibilityConverter}, RelativeSource={RelativeSource AncestorType={x:Type Window}, Mode=FindAncestor}}"
+        <ContentPresenter Visibility="{Binding IsAccountSelectorMode, Converter={StaticResource booleanToVisibilityConverter}}"
                           Content="{Binding}" Style="{StaticResource accountSelectorStyle}" />
+        <TabControl Visibility="{Binding DialogMessages.Count, Mode=OneWay, Converter={StaticResource intToVisibilityConverter}}"
+                    SelectedIndex="{Binding DialogMessages.Count, Mode=OneWay, Converter={StaticResource intToIntConverter}}"
+                    ItemsSource="{Binding DialogMessages}" Style="{StaticResource dialogStyle}" />
     </Grid>
 </Window>

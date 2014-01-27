@@ -23,19 +23,14 @@ namespace GPlusBrowser.Model
 
         public async Task Initialize()
         {
-            try
+            foreach (var item in _accounts)
+                item.Dispose();
+            _accounts.Clear();
+            foreach (var item in await PlatformClient.Factory.ImportFromChrome())
             {
-                foreach (var item in _accounts)
-                    item.Dispose();
-                _accounts.Clear();
-                foreach (var item in await PlatformClient.Factory.ImportFromChrome())
-                {
-                    var account = new Account(item);
-                    _accounts.Add(account);
-                }
+                var account = new Account(item);
+                _accounts.Add(account);
             }
-            catch (FailToOperationException)
-            { /*初期化失敗*/ }
         }
         public void Dispose()
         {
