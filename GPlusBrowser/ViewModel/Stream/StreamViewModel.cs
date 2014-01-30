@@ -18,20 +18,31 @@ namespace GPlusBrowser.ViewModel
 
     public class StreamViewModel : ViewModelBase
     {
-        public StreamViewModel(Stream circle)
+        public StreamViewModel(Stream circle, Account account, StreamManager manager)
         {
-            _activities = new ObservableCollection<ViewModelBase>();
+            _activities = new ObservableCollection<ActivityViewModel>();
             _circleModel = circle;
             _circleName = circle.Name;
+            _circleManagerModel = manager;
+            _accountModel = account;
+            _accountModel.PlusClient.Activity.ChangedIsConnected += Activity_ChangedIsConnected;
             PropertyChanged += StreamViewModel_PropertyChanged;
+            ReconnectCommand = new RelayCommand(ReconnectCommand_Executed);
         }
-
+        bool _isDisconnected;
         bool _isActive;
         string _circleName;
         Stream _circleModel;
-        ObservableCollection<ViewModelBase> _activities;
+        Account _accountModel;
+        StreamManager _circleManagerModel;
+        ObservableCollection<ActivityViewModel> _activities;
         readonly System.Threading.SemaphoreSlim _syncerActivities = new System.Threading.SemaphoreSlim(1, 1);
 
+        public bool IsDisconnected
+        {
+            get { return _isDisconnected; }
+            set { Set(() => IsDisconnected, ref _isDisconnected, value); }
+        }
         public bool IsActive
         {
             get { return _isActive; }
@@ -42,11 +53,12 @@ namespace GPlusBrowser.ViewModel
             get { return _circleName; }
             set { Set(() => CircleName, ref _circleName, value); }
         }
-        public ObservableCollection<ViewModelBase> Activities
+        public ObservableCollection<ActivityViewModel> Activities
         {
             get { return _activities; }
             set { Set(() => Activities, ref _activities, value); }
         }
+        public ICommand ReconnectCommand { get; private set; }
 
         public override void Cleanup()
         {
@@ -123,5 +135,10 @@ namespace GPlusBrowser.ViewModel
                     { _syncerActivities.Release(); }
             }
         }
+        void Activity_ChangedIsConnected(object sender, EventArgs e)
+        {
+            IsDisconnected = !_accountModel.PlusClient.Activity.IsConnected;
+        }
+        void ReconnectCommand_Executed() { _circleManagerModel.Reconnect(); }
     }
 }

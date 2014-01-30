@@ -22,8 +22,8 @@ namespace GPlusBrowser.ViewModel
         }
         string _ancourTitle;
         Uri _ancourUrl;
-        ImageSource _ancourFaviconUrl;
-        ImageSource _thumnailUrl;
+        BitmapImage _ancourFaviconUrl;
+        BitmapImage _thumnailUrl;
         string _ancourIntroductionText;
 
         public string AncourTitle
@@ -41,12 +41,12 @@ namespace GPlusBrowser.ViewModel
             get { return _ancourUrl; }
             set { Set(() => AncourUrl, ref _ancourUrl, value); }
         }
-        public ImageSource AncourFaviconUrl
+        public BitmapImage AncourFaviconUrl
         {
             get { return _ancourFaviconUrl; }
             set { Set(() => AncourFaviconUrl, ref _ancourFaviconUrl, value); }
         }
-        public ImageSource ThumnailUrl
+        public BitmapImage ThumnailUrl
         {
             get { return _thumnailUrl; }
             set { Set(() => ThumnailUrl, ref _thumnailUrl, value); }

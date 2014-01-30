@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using SunokoLibrary.Web.GooglePlus;
 
@@ -22,7 +22,7 @@ namespace GPlusBrowser.ViewModel
             model.Refreshed += model_Refreshed;
         }
         Comment _model;
-        ImageSource _ownerIconUrl;
+        BitmapImage _actorIcon;
         string _id;
         string _ownerName;
         string _commentContent;
@@ -49,10 +49,10 @@ namespace GPlusBrowser.ViewModel
             get { return _commentDate; }
             set { Set(() => CommentDate, ref _commentDate, value); }
         }
-        public ImageSource OwnerIconUrl
+        public BitmapImage ActorIcon
         {
-            get { return _ownerIconUrl; }
-            set { Set(() => OwnerIconUrl, ref _ownerIconUrl, value); }
+            get { return _actorIcon; }
+            set { Set(() => ActorIcon, ref _actorIcon, value); }
         }
         public ContentElement PostContentInline
         {
@@ -70,7 +70,7 @@ namespace GPlusBrowser.ViewModel
             var postDate = TimeZone.CurrentTimeZone.ToLocalTime(_model.CommentInfo.PostDate);
             CommentDate = postDate >= DateTime.Today ? postDate.ToString("HH:mm") : postDate.ToString("yyyy/MM/dd");
             OwnerName = _model.CommentInfo.Owner.Name;
-            OwnerIconUrl = await DataCacheDictionary.DownloadImage(new Uri(_model.CommentInfo.Owner.IconImageUrl
+            ActorIcon = await DataCacheDictionary.DownloadImage(new Uri(_model.CommentInfo.Owner.IconImageUrl
                 .Replace("$SIZE_SEGMENT", "s25-c-k").Replace("$SIZE_NUM", "80"))).ConfigureAwait(false);
             PostContentInline = _model.CommentInfo.GetParsedContent();
         }

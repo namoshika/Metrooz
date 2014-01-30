@@ -17,40 +17,25 @@ namespace GPlusBrowser.ViewModel
         public StreamManagerViewModel(StreamManager streamManager, Account account)
         {
             _selectedCircleIndex = -1;
-            _account = account;
+            _accountModel = account;
             _streamManagerModel = streamManager;
-            _streamErrorPanel = new StreamErrorPanelViewModel(streamManager);
             _displayStreams = new ObservableCollection<StreamViewModel>(
-                _streamManagerModel.Streams.Select(vm => new StreamViewModel(vm))); ;
-            IsDisconnected = false;
+                _streamManagerModel.Streams.Select(vm => new StreamViewModel(vm, account, streamManager))); ;
 
-            account.PlusClient.Activity.ChangedIsConnected += Activity_ChangedIsConnected;
             _streamManagerModel.Streams.CollectionChanged += _stream_ChangedDisplayStreams;
 
             if (_displayStreams.Count > 0)
                 SelectedCircleIndex = 0;
         }
-        bool _isDisconnected;
         int _selectedCircleIndex;
-        Account _account;
+        Account _accountModel;
         StreamManager _streamManagerModel;
-        StreamErrorPanelViewModel _streamErrorPanel;
         ObservableCollection<StreamViewModel> _displayStreams;
 
-        public bool IsDisconnected
-        {
-            get { return _isDisconnected; }
-            set { Set(() => IsDisconnected, ref _isDisconnected, value); }
-        }
         public int SelectedCircleIndex
         {
             get { return _selectedCircleIndex; }
             set { Set(() => SelectedCircleIndex, ref _selectedCircleIndex, value); }
-        }
-        public StreamErrorPanelViewModel StreamErrorPanel
-        {
-            get { return _streamErrorPanel; }
-            set { Set(() => StreamErrorPanel, ref _streamErrorPanel, value); }
         }
         public ObservableCollection<StreamViewModel> DisplayStreams
         {
@@ -68,10 +53,6 @@ namespace GPlusBrowser.ViewModel
             }
         }
 
-        void Activity_ChangedIsConnected(object sender, EventArgs e)
-        {
-            IsDisconnected = !_account.PlusClient.Activity.IsConnected;
-        }
         void _stream_ChangedDisplayStreams(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
             lock (_displayStreams)
@@ -81,7 +62,7 @@ namespace GPlusBrowser.ViewModel
                         for (var i = 0; i < e.NewItems.Count; i++)
                         {
                             var circle = (Stream)e.NewItems[i];
-                            var circleVm = new StreamViewModel(circle);
+                            var circleVm = new StreamViewModel(circle, _accountModel, _streamManagerModel);
                             DisplayStreams.InsertOnDispatcher(e.NewStartingIndex + i, circleVm);
                         }
                         break;

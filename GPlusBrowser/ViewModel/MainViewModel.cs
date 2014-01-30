@@ -1,5 +1,6 @@
 ﻿using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Messaging;
+using GalaSoft.MvvmLight.Ioc;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -33,9 +34,8 @@ namespace GPlusBrowser.ViewModel
         public MainViewModel(AccountManager accountManagerModel)
         {
             _selectedMainPageIndex = -1;
-            IsAccountSelectorMode = true;
+            IsAccountSelectorMode = false;
             Pages = new ObservableCollection<AccountViewModel>();
-            DialogMessages = new ObservableCollection<DialogViewModel>();
 
             Messenger.Default.Register<DialogMessage>(this, Recieved_DialogMessage);
             Initialize(accountManagerModel);
@@ -47,11 +47,7 @@ namespace GPlusBrowser.ViewModel
         public int SelectedPageIndex
         {
             get { return _selectedMainPageIndex; }
-            set
-            {
-                IsAccountSelectorMode = value < 0;
-                Set(() => SelectedPageIndex, ref _selectedMainPageIndex, value);
-            }
+            set { Set(() => SelectedPageIndex, ref _selectedMainPageIndex, value); }
         }
         public bool IsAccountSelectorMode
         {
@@ -59,7 +55,6 @@ namespace GPlusBrowser.ViewModel
             set { Set(() => IsAccountSelectorMode, ref _isAccountSelectorMode, value); }
         }
         public ObservableCollection<AccountViewModel> Pages { get; set; }
-        public ObservableCollection<DialogViewModel> DialogMessages { get; set; }
 
         public async void Initialize(AccountManager accountManagerModel)
         {
@@ -100,63 +95,40 @@ namespace GPlusBrowser.ViewModel
         }
         void Recieved_DialogMessage(DialogMessage message)
         {
-            lock (DialogMessages)
-                DialogMessages.Add(new DialogViewModel(message, vm =>
-                    {
-                        lock (DialogMessages)
-                            DialogMessages.Remove(vm);
-                    }));
+
         }
         void PageSwitcherViewModel_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            lock(Pages)
+            lock (Pages)
                 switch (e.Action)
                 {
                     case NotifyCollectionChangedAction.Add:
                         for (var i = 0; i < e.NewItems.Count; i++)
                         {
                             var accountModel = (Account)e.NewItems[i];
-                            var account = new AccountViewModel(accountModel);
-                            account.OpenedStreamPanel += account_OpenedStreamPanel;
-                            account.BackedToAccountManager += account_BackedToAccountManager;
+                            var account = new AccountViewModel(accountModel, this);
                             Pages.InsertOnDispatcher(e.NewStartingIndex + i, account);
+                            if (SelectedPageIndex == -1)
+                                SelectedPageIndex = 0;
                         }
                         break;
                     case NotifyCollectionChangedAction.Remove:
                         for (var i = 0; i < e.OldItems.Count; i++)
                         {
-                            var account = Pages[e.OldStartingIndex];
-                            account.OpenedStreamPanel -= account_OpenedStreamPanel;
-                            account.BackedToAccountManager -= account_BackedToAccountManager;
                             Pages.RemoveAtOnDispatcher(e.OldStartingIndex);
+                            if (Pages.Count == 0)
+                                SelectedPageIndex = -1;
                         }
                         break;
                     case NotifyCollectionChangedAction.Reset:
                         if (Pages.Count > 0)
                         {
-                            var accountManager = Pages.First();
-                            foreach (var item in Pages.OfType<AccountViewModel>())
-                            {
-                                item.OpenedStreamPanel -= account_OpenedStreamPanel;
-                                item.BackedToAccountManager -= account_BackedToAccountManager;
-                            }
                             Pages.Clear();
-                            Pages.AddOnDispatcher(accountManager);
                             SelectedPageIndex = -1;
                         }
                         break;
                 }
         }
-        void account_OpenedStreamPanel(object sender, EventArgs e)
-        {
-            lock (Pages)
-            {
-                var idx = Pages.IndexOf((AccountViewModel)sender);
-                SelectedPageIndex = idx;
-            }
-        }
-        void account_BackedToAccountManager(object sender, EventArgs e)
-        { SelectedPageIndex = -1; }
     }
     public class IntToVisibilityConverter : System.Windows.Data.IValueConverter
     {

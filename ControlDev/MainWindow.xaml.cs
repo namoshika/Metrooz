@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MahApps.Metro.Controls;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,24 +19,11 @@ namespace ControlDev
     /// <summary>
     /// MainWindow.xaml の相互作用ロジック
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow : MetroWindow
     {
         public MainWindow()
         {
             InitializeComponent();
-            aaa.ItemsSource = source;
-        }
-
-        System.Collections.ObjectModel.ObservableCollection<string> source =
-            new System.Collections.ObjectModel.ObservableCollection<string>();
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
-            source.Add(DateTime.Now.ToString());
-        }
-
-        private void Button_Click_1(object sender, RoutedEventArgs e)
-        {
-            source.RemoveAt(source.Count - 1);
         }
     }
 }

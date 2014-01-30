@@ -20,23 +20,40 @@ namespace GPlusBrowser.ViewModel
 
     public class AccountViewModel : ViewModelBase
     {
-        public AccountViewModel(Account model)
+        public AccountViewModel(Account model, MainViewModel managerVM)
         {
             _accountModel = model;
             _accountModel.Initialized += _accountModel_Initialized;
             _userName = _accountModel.Builder.Name;
-            DataCacheDictionary.DownloadImage(new Uri(_accountModel.Builder.IconUrl.Replace("$SIZE_SEGMENT", "s35-c-k")))
+            _userMailAddress = _accountModel.Builder.Email;
+            _manager = managerVM;
+            DataCacheDictionary.DownloadImage(new Uri(_accountModel.Builder.IconUrl.Replace("$SIZE_SEGMENT", "s38-c-k")))
                 .ContinueWith(tsk => UserIconUrl = tsk.Result);
-
-            OpenStreamPanelCommand = new RelayCommand(OpenStreamPanelCommand_Execute);
-            BackToAccountManagerCommand = new RelayCommand(BackToAccountManagerCommand_Execute);
             ConnectStreamCommand = new RelayCommand(ConnectStreamCommand_Execute);
+            OpenAccountListCommand = new RelayCommand(OpenAccountListCommand_Execute);
+            ActivateCommand = new RelayCommand(ActivateCommand_Execute);
         }
+        MainViewModel _manager;
         Account _accountModel;
         StreamManagerViewModel _stream;
         BitmapImage _userIconUrl;
-        string _userName;
+        string _userName, _userMailAddress;
+        bool _isActive;
 
+        public bool IsActive
+        {
+            get { return _isActive; }
+            set
+            {
+                if (Set(() => IsActive, ref _isActive, value))
+                    OnChangedIsActive();
+            }
+        }
+        public string UserMailAddress
+        {
+            get { return _userMailAddress; }
+            set { Set(() => UserMailAddress, ref _userMailAddress, value); }
+        }
         public string UserName
         {
             get { return _userName; }
@@ -52,9 +69,9 @@ namespace GPlusBrowser.ViewModel
             get { return _stream; }
             set { Set(() => Stream, ref _stream, value); }
         }
-        public ICommand OpenStreamPanelCommand { get; private set; }
-        public ICommand BackToAccountManagerCommand { get; private set; }
         public ICommand ConnectStreamCommand { get; private set; }
+        public ICommand OpenAccountListCommand { get; private set; }
+        public ICommand ActivateCommand { get; private set; }
         public override void Cleanup()
         {
             base.Cleanup();
@@ -78,34 +95,24 @@ namespace GPlusBrowser.ViewModel
                         .Replace("$SIZE_NUM", "80"))).ConfigureAwait(false);
             }
         }
-        async void OpenStreamPanelCommand_Execute()
+        async void OnChangedIsActive()
         {
-            OnOpenedStreamPanel(new EventArgs());
-
             try { await _accountModel.Initialize(false).ConfigureAwait(false); }
             catch (FailToOperationException)
             {
                 Messenger.Default.Send(new DialogMessage(
                     "ストリームの初期化に失敗しました。ネットワークの設定を確認して下さい。",
-                    res => OpenStreamPanelCommand_Execute()));
+                    res => OnChangedIsActive()));
             }
         }
-        void BackToAccountManagerCommand_Execute()
-        { OnBackedToAccountManager(new EventArgs()); }
         void ConnectStreamCommand_Execute()
         { _accountModel.Connect(); }
-
-        public event EventHandler OpenedStreamPanel;
-        protected virtual void OnOpenedStreamPanel(EventArgs e)
+        void OpenAccountListCommand_Execute()
+        { _manager.IsAccountSelectorMode = !_manager.IsAccountSelectorMode; }
+        void ActivateCommand_Execute()
         {
-            if (OpenedStreamPanel != null)
-                OpenedStreamPanel(this, e);
-        }
-        public event EventHandler BackedToAccountManager;
-        protected virtual void OnBackedToAccountManager(EventArgs e)
-        {
-            if (BackedToAccountManager != null)
-                BackedToAccountManager(this, e);
+            _manager.IsAccountSelectorMode = false;
+            _manager.SelectedPageIndex = _manager.Pages.IndexOf(this);
         }
     }
 }

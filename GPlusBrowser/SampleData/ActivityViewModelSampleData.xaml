@@ -1,0 +1,97 @@
+﻿<ViewModel:ActivityViewModel xmlns:ViewModel="clr-namespace:GPlusBrowser.ViewModel" xmlns:Imaging="clr-namespace:System.Windows.Media.Imaging;assembly=PresentationCore" xmlns:Windows="clr-namespace:System.Windows;assembly=WindowsBase" xmlns:Cache="clr-namespace:System.Net.Cache;assembly=System" xmlns:GooglePlus="clr-namespace:SunokoLibrary.Web.GooglePlus;assembly=SnkLib.Web.GooglePlus" PostCommentText="Sed dis parturient" PostDate="00:00" PostUserName="Vestibulum" PostText="Aenean adipiscing cras praesent nam" ShareBoxStatus="Writing">
+	<ViewModel:ActivityViewModel.ActorIcon>
+        <Imaging:BitmapImage UriSource="Files\accountIcon00.png" />
+    </ViewModel:ActivityViewModel.ActorIcon>
+	<ViewModel:ActivityViewModel.AttachedContent>
+        <ViewModel:AttachedLinkViewModel AncourIntroductionText="Aliquam cras vestibulum" AncourTitle="Aenean nam">
+            <ViewModel:AttachedLinkViewModel.AncourFaviconUrl>
+                <Imaging:BitmapImage UriSource="Files\pic01.jpg" />
+            </ViewModel:AttachedLinkViewModel.AncourFaviconUrl>
+            <ViewModel:AttachedLinkViewModel.ThumnailUrl>
+                <Imaging:BitmapImage UriSource="Files\pic00.jpg" />
+            </ViewModel:AttachedLinkViewModel.ThumnailUrl>
+        </ViewModel:AttachedLinkViewModel>
+    </ViewModel:ActivityViewModel.AttachedContent>
+	<ViewModel:ActivityViewModel.Comments>
+		<ViewModel:CommentViewModel CommentDate="00:00" CommentContent="Est hac vestibulum vestibulum" Id="Convallis accumsan duis" OwnerName="Leo mus adipiscing">
+			<ViewModel:CommentViewModel.ActorIcon>
+                <Imaging:BitmapImage UriSource="Files\accountIcon00.png" />
+            </ViewModel:CommentViewModel.ActorIcon>
+			<ViewModel:CommentViewModel.PostContentInline>
+                <GooglePlus:StyleElement Style="None" Type="Style">
+                    <GooglePlus:StyleElement.Children>
+                        <GooglePlus:TextElement Text="aewarsrea adfae aEaeadefaeg"/>
+                        <GooglePlus:StyleElement Style="Bold" Type="Style">
+                            <GooglePlus:StyleElement.Children>
+                                <GooglePlus:TextElement Text="aefae aerguhiugyg"/>
+                            </GooglePlus:StyleElement.Children>
+                        </GooglePlus:StyleElement>
+                    </GooglePlus:StyleElement.Children>
+                </GooglePlus:StyleElement>
+            </ViewModel:CommentViewModel.PostContentInline>
+		</ViewModel:CommentViewModel>
+		<ViewModel:CommentViewModel CommentDate="00:00" CommentContent="Arcu elementum vestibulum" Id="Curae parturient vestibulum dignissim bibendum" OwnerName="Donec nec adipiscing non">
+			<ViewModel:CommentViewModel.ActorIcon>
+                <Imaging:BitmapImage UriSource="Files\accountIcon00.png" />
+            </ViewModel:CommentViewModel.ActorIcon>
+			<ViewModel:CommentViewModel.PostContentInline>
+                <GooglePlus:StyleElement Style="None" Type="Style">
+                    <GooglePlus:StyleElement.Children>
+                        <GooglePlus:TextElement Text="aewarsrea adfae aEaeadefaeg"/>
+                        <GooglePlus:StyleElement Style="Bold" Type="Style">
+                            <GooglePlus:StyleElement.Children>
+                                <GooglePlus:TextElement Text="aefae aerguhiugyg"/>
+                            </GooglePlus:StyleElement.Children>
+                        </GooglePlus:StyleElement>
+                    </GooglePlus:StyleElement.Children>
+                </GooglePlus:StyleElement>
+            </ViewModel:CommentViewModel.PostContentInline>
+		</ViewModel:CommentViewModel>
+		<ViewModel:CommentViewModel CommentDate="00:00" CommentContent="Aliquam mauris eleifend facilisis" Id="Etiam diam per fusce" OwnerName="Lorem morbi vestibulum nulla fermentum">
+			<ViewModel:CommentViewModel.ActorIcon>
+                <Imaging:BitmapImage UriSource="Files\accountIcon00.png" />
+            </ViewModel:CommentViewModel.ActorIcon>
+			<ViewModel:CommentViewModel.PostContentInline>
+                <GooglePlus:StyleElement Style="None" Type="Style">
+                    <GooglePlus:StyleElement.Children>
+                        <GooglePlus:TextElement Text="aewarsrea adfae aEaeadefaeg"/>
+                        <GooglePlus:StyleElement Style="Bold" Type="Style">
+                            <GooglePlus:StyleElement.Children>
+                                <GooglePlus:TextElement Text="aefae aerguhiugyg"/>
+                            </GooglePlus:StyleElement.Children>
+                        </GooglePlus:StyleElement>
+                    </GooglePlus:StyleElement.Children>
+                </GooglePlus:StyleElement>
+            </ViewModel:CommentViewModel.PostContentInline>
+		</ViewModel:CommentViewModel>
+        <ViewModel:CommentViewModel CommentDate="00:00" CommentContent="Facilisi habitasse hendrerit sem augue" Id="Blandit proin" OwnerName="Nullam himenaeos vestibulum">
+            <ViewModel:CommentViewModel.ActorIcon>
+                <Imaging:BitmapImage UriSource="Files\accountIcon00.png" />
+            </ViewModel:CommentViewModel.ActorIcon>
+            <ViewModel:CommentViewModel.PostContentInline>
+                <GooglePlus:StyleElement Style="None" Type="Style">
+                    <GooglePlus:StyleElement.Children>
+                        <GooglePlus:TextElement Text="aewarsrea adfae aEaeadefaeg"/>
+                        <GooglePlus:StyleElement Style="Bold" Type="Style">
+                            <GooglePlus:StyleElement.Children>
+                                <GooglePlus:TextElement Text="aefae aerguhiugyg"/>
+                            </GooglePlus:StyleElement.Children>
+                        </GooglePlus:StyleElement>
+                    </GooglePlus:StyleElement.Children>
+                </GooglePlus:StyleElement>
+            </ViewModel:CommentViewModel.PostContentInline>
+        </ViewModel:CommentViewModel>
+    </ViewModel:ActivityViewModel.Comments>
+	<ViewModel:ActivityViewModel.PostContentInline>
+		<GooglePlus:StyleElement Style="None" Type="Style">
+			<GooglePlus:StyleElement.Children>
+                <GooglePlus:TextElement Text="aewarsrea adfae aEaeadefaeg"/>
+                <GooglePlus:StyleElement Style="Bold" Type="Style">
+                    <GooglePlus:StyleElement.Children>
+                        <GooglePlus:TextElement Text="aefae aerguhiugyg"/>
+                    </GooglePlus:StyleElement.Children>
+                </GooglePlus:StyleElement>
+			</GooglePlus:StyleElement.Children>
+		</GooglePlus:StyleElement>
+	</ViewModel:ActivityViewModel.PostContentInline>
+</ViewModel:ActivityViewModel>

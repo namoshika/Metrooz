@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using SunokoLibrary.Web.GooglePlus;
 using SunokoLibrary.Web.GooglePlus.Primitive;
@@ -35,7 +35,7 @@ namespace GPlusBrowser.ViewModel
         }
         CommentPostBoxState _shareBoxStatus;
         Activity _model;
-        ImageSource _iconUrl;
+        BitmapImage _actorIcon;
         Uri _activityUrl;
         string _postUserName;
         string _postDate;
@@ -45,10 +45,10 @@ namespace GPlusBrowser.ViewModel
         ObservableCollection<CommentViewModel> _comments;
         StyleElement _postContentInline;
 
-        public ImageSource PostUserIconUrl
+        public BitmapImage ActorIcon
         {
-            get { return _iconUrl; }
-            set { Set(() => PostUserIconUrl, ref _iconUrl, value); }
+            get { return _actorIcon; }
+            set { Set(() => ActorIcon, ref _actorIcon, value); }
         }
         public Uri ActivityUrl
         {
@@ -112,7 +112,7 @@ namespace GPlusBrowser.ViewModel
 
                 if (_model.CoreInfo.AttachedContent != null)
                     AttachedContent = await AttachedContentViewModel.Create(_model.CoreInfo.AttachedContent).ConfigureAwait(false);
-                PostUserIconUrl = await DataCacheDictionary.DownloadImage(
+                ActorIcon = await DataCacheDictionary.DownloadImage(
                     new Uri(_model.CoreInfo.PostUser.IconImageUrl
                         .Replace("$SIZE_SEGMENT", "s40-c-k").Replace("$SIZE_NUM", "80"))).ConfigureAwait(false);
             }
