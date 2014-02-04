@@ -43,7 +43,7 @@ namespace GPlusBrowser.ViewModel
         string _postCommentText;
         object _attachedContent;
         ObservableCollection<CommentViewModel> _comments;
-        ContentElement _postContentInline;
+        StyleElement _postContentInline;
 
         public ImageSource PostUserIconUrl
         {
@@ -85,7 +85,7 @@ namespace GPlusBrowser.ViewModel
             get { return _comments; }
             set { Set(() => Comments, ref _comments, value); }
         }
-        public ContentElement PostContentInline
+        public StyleElement PostContentInline
         {
             get { return _postContentInline; }
             set { Set(() => PostContentInline, ref _postContentInline, value); }
@@ -105,7 +105,7 @@ namespace GPlusBrowser.ViewModel
                 var postDate = TimeZone.CurrentTimeZone.ToLocalTime(_model.CoreInfo.PostDate);
                 PostUserName = _model.CoreInfo.PostUser.Name;
                 PostDate = postDate >= DateTime.Today ? postDate.ToString("HH:mm") : postDate.ToString("yyyy/MM/dd");
-                content = _model.CoreInfo.GetParsedContent();
+                content = _model.CoreInfo.ParsedText;
                 ActivityUrl = _model.CoreInfo.PostUrl;
                 PostText = _model.CoreInfo.Text;
                 PostContentInline = content;
