@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace GPlusBrowser.ViewModel
 {
-    public class AttachedLinkViewModel : ViewModelBase
+    public class AttachedLinkViewModel : AttachedContentViewModel
     {
         public AttachedLinkViewModel(string ancourTitle, string ancourIntroductionText, Uri ancourUrl, BitmapImage ancourFaviconUrl, BitmapImage thumnailUrl)
         {

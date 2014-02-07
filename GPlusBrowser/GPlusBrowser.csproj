@@ -129,8 +129,10 @@
     <Compile Include="Model\Account.cs" />
     <Compile Include="Model\SettingModel.cs" />
     <Compile Include="ViewModel\MainViewModel.cs" />
+    <Compile Include="ViewModel\Stream\AttachedActivityViewModel.cs" />
     <Compile Include="ViewModel\Stream\AttachedAlbumViewModel.cs" />
     <Compile Include="ViewModel\Notification\NotificationManagerViewModel.cs" />
+    <Compile Include="ViewModel\Stream\AttachedContentViewModel.cs" />
     <Compile Include="ViewModel\Stream\AttachedImageViewModel.cs" />
     <Compile Include="ViewModel\Stream\AttachedLinkViewModel.cs" />
     <Compile Include="Model\Stream\Comment.cs" />

@@ -13,7 +13,7 @@ namespace GPlusBrowser.ViewModel
     using SunokoLibrary.Web.GooglePlus;
     using SunokoLibrary.Web.GooglePlus.Primitive;
 
-    public class AttachedImageViewModel : ViewModelBase
+    public class AttachedImageViewModel : AttachedContentViewModel
     {
         public AttachedImageViewModel(AttachedImage attachedAlbumModel, BitmapImage image)
         {

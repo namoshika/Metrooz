@@ -41,7 +41,7 @@ namespace GPlusBrowser.ViewModel
         string _postDate;
         string _postText;
         string _postCommentText;
-        object _attachedContent;
+        AttachedContentViewModel _attachedContent;
         ObservableCollection<CommentViewModel> _comments;
         StyleElement _postContentInline;
 
@@ -75,7 +75,7 @@ namespace GPlusBrowser.ViewModel
             get { return _postCommentText; }
             set { Set(() => PostCommentText, ref _postCommentText, value); }
         }
-        public object AttachedContent
+        public AttachedContentViewModel AttachedContent
         {
             get { return _attachedContent; }
             set { Set(() => AttachedContent, ref _attachedContent, value); }
@@ -111,24 +111,7 @@ namespace GPlusBrowser.ViewModel
                 PostContentInline = content;
 
                 if (_model.CoreInfo.AttachedContent != null)
-                    switch (_model.CoreInfo.AttachedContent.Type)
-                    {
-                        case ContentType.Album:
-                            var attachedAlbum = (AttachedAlbum)_model.CoreInfo.AttachedContent;
-                            AttachedContent = await AttachedAlbumViewModel.Create(attachedAlbum);
-                            break;
-                        case ContentType.Image:
-                            var attachedImage = (AttachedImage)_model.CoreInfo.AttachedContent;
-                            AttachedContent = await AttachedImageViewModel.Create(attachedImage);
-                            break;
-                        case ContentType.Link:
-                            var attachedLink = (AttachedLink)_model.CoreInfo.AttachedContent;
-                            AttachedContent = await AttachedLinkViewModel.Create(
-                                attachedLink.Title,
-                                string.IsNullOrEmpty(attachedLink.Summary) ? null : attachedLink.Summary.Trim('\n', '\r', ' '),
-                                attachedLink.LinkUrl, attachedLink.FaviconUrl, attachedLink.OriginalThumbnailUrl);
-                            break;
-                    }
+                    AttachedContent = await AttachedContentViewModel.Create(_model.CoreInfo.AttachedContent);
                 PostUserIconUrl = await DataCacheDictionary.DownloadImage(
                     new Uri(_model.CoreInfo.PostUser.IconImageUrl.Replace("$SIZE_SEGMENT", "s40-c-k").Replace("$SIZE_NUM", "80")));
             }

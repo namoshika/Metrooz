@@ -14,7 +14,7 @@ namespace GPlusBrowser.ViewModel
     using SunokoLibrary.Web.GooglePlus;
     using SunokoLibrary.Web.GooglePlus.Primitive;
 
-    public class AttachedAlbumViewModel : ViewModelBase
+    public class AttachedAlbumViewModel : AttachedContentViewModel
     {
         public AttachedAlbumViewModel(AttachedAlbum attachedAlbumModel, BitmapImage[] thumbnailImages, BitmapImage[] largeImages)
         {

@@ -221,6 +221,22 @@
                 <Image Source="{Binding Image}" />
             </Border>
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:AttachedActivityViewModel}">
+            <Border BorderBrush="LightGray" BorderThickness="0,1,0,0" Margin="0,0,0,5" Padding="0,5,0,5">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Image Width="25" Height="25" Source="{Binding OwnerIcon}" />
+                        <TextBlock Margin="5,0,0,0" VerticalAlignment="Center" Style="{StaticResource postTextStyle}">
+                            <Run>最初に</Run>
+                            <Run Text="{Binding OwnerName}" Style="{StaticResource userNameTextStyle}" />
+                            <Run>さんが共有</Run>
+                        </TextBlock>
+                    </StackPanel>
+                    <TextBlock Margin="0,5,0,5" ctl:InlineBehavior.Inline="{Binding PostContentInline}" TextWrapping="Wrap" Style="{StaticResource postTextStyle}" />
+                    <ContentPresenter Content="{Binding AttachedContent}" />
+                </StackPanel>
+            </Border>
+        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:CommentViewModel}">
             <Border BorderBrush="LightGray" BorderThickness="0,1,0,0" Padding="0,5,5,5">
                 <StackPanel>
