@@ -54,8 +54,8 @@ namespace GPlusBrowser.ViewModel
             var downDatas = await Task.Factory.ContinueWhenAll(attachedAlbumModel.Pictures
                 .SelectMany(imgInf =>
                     new[]{
-                        new { IsThumbnail = true, Url = new Uri(imgInf.ThumbnailUrl.Replace("$SIZE_SEGMENT", "s50-c-k")) },
-                        new { IsThumbnail = false, Url = new Uri(imgInf.ThumbnailUrl.Replace("$SIZE_SEGMENT", "w640-h480")) }
+                        new { IsThumbnail = true, Url = new Uri(imgInf.ImageUrl.Replace("$SIZE_SEGMENT", "s50-c-k")) },
+                        new { IsThumbnail = false, Url = new Uri(imgInf.ImageUrl.Replace("$SIZE_SEGMENT", "w640-h480")) }
                     })
                 .Select(async jobInf =>
                     new
