@@ -91,20 +91,16 @@
                 </Setter.Value>
             </Setter>
         </Style>
-        <Style x:Key="activityItemStyle" TargetType="{x:Type TreeViewItem}">
+        <Style x:Key="activityItemStyle" TargetType="{x:Type ListBoxItem}">
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
             <Setter Property="Background" Value="Transparent" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
             <Setter Property="Template">
                 <Setter.Value>
-                    <ControlTemplate TargetType="{x:Type TreeViewItem}">
-                        <Grid Margin="0">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition />
-                            </Grid.RowDefinitions>
-                            <ContentPresenter Content="{TemplateBinding HeaderedContentControl.Header}" ContentTemplate="{TemplateBinding HeaderedContentControl.HeaderTemplate}" ContentStringFormat="{TemplateBinding HeaderStringFormat}" ContentSource="Header" x:Name="PART_Header" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
-                            <ItemsPresenter x:Name="ItemsHost" Margin="15,0,0,0" Grid.Row="1" />
-                        </Grid>
+                    <ControlTemplate TargetType="{x:Type ListBoxItem}">
+                        <Border x:Name="Bd" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}" SnapsToDevicePixels="True">
+                            <ContentPresenter ContentTemplate="{TemplateBinding ContentTemplate}" Content="{TemplateBinding Content}" ContentStringFormat="{TemplateBinding ContentStringFormat}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                        </Border>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
@@ -115,13 +111,14 @@
             <Setter Property="ContentTemplate">
                 <Setter.Value>
                     <DataTemplate DataType="{x:Type vm:StreamViewModel}">
-                        <TreeView Focusable="False" Background="Transparent"
-                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                  VirtualizingPanel.IsVirtualizing="True"
-                                  VirtualizingPanel.VirtualizationMode="Recycling"
-                                  VirtualizingPanel.ScrollUnit="Pixel"
-                                  BorderThickness="0" ItemsSource="{Binding Activities}"
-                                  ItemContainerStyle="{StaticResource activityItemStyle}" />
+                        <ListBox Focusable="False" Background="Transparent"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                 VirtualizingPanel.IsVirtualizing="True"
+                                 VirtualizingPanel.VirtualizationMode="Recycling"
+                                 VirtualizingPanel.ScrollUnit="Pixel"
+                                 BorderThickness="0" ItemsSource="{Binding Activities}"
+                                 ItemContainerStyle="{StaticResource activityItemStyle}">
+                        </ListBox>
                     </DataTemplate>
                 </Setter.Value>
             </Setter>
@@ -256,7 +253,7 @@
             <DataTemplate.Resources>
                 <ctl:IsExpandCommentCountToStringConverter x:Key="commentExpanderHeaderConverter" />
             </DataTemplate.Resources>
-            <Border BorderBrush="LightGray" BorderThickness="1" Margin="10,8,10,8" Padding="10">
+            <Border Name="cardBorder" BorderThickness="1" Margin="8" Padding="10">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="45" />
@@ -389,6 +386,14 @@
                         </StackPanel>
                     </StackPanel>
                 </Grid>
+                <i:Interaction.Triggers>
+                    <ei:DataTrigger Value="True" Binding="{Binding IsSelected, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ListBoxItem}}}">
+                        <ei:ChangePropertyAction Value="DarkGray" PropertyName="BorderBrush" TargetObject="{Binding ElementName=cardBorder}" />
+                    </ei:DataTrigger>
+                    <ei:DataTrigger Value="False" Binding="{Binding IsSelected, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ListBoxItem}}}">
+                        <ei:ChangePropertyAction Value="LightGray" PropertyName="BorderBrush" TargetObject="{Binding ElementName=cardBorder}" />
+                    </ei:DataTrigger>
+                </i:Interaction.Triggers>
             </Border>
         </DataTemplate>
         <DataTemplate DataType="{x:Type vm:StreamErrorPanelViewModel}">
