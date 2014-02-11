@@ -49,7 +49,7 @@ namespace GPlusBrowser.Model
         }
         async void CoreInfo_Refreshed(object sender, EventArgs e)
         {
-            await CoreInfo.UpdateGetActivityAsync(false, ActivityUpdateApiFlag.GetActivities);
+            await CoreInfo.UpdateGetActivityAsync(false, ActivityUpdateApiFlag.GetActivities).ConfigureAwait(false);
             OnUpdated(new EventArgs());
         }
         void CoreInfo_RefreshComment(CommentInfo comment)

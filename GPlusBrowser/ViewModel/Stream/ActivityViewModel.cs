@@ -111,9 +111,10 @@ namespace GPlusBrowser.ViewModel
                 PostContentInline = content;
 
                 if (_model.CoreInfo.AttachedContent != null)
-                    AttachedContent = await AttachedContentViewModel.Create(_model.CoreInfo.AttachedContent);
+                    AttachedContent = await AttachedContentViewModel.Create(_model.CoreInfo.AttachedContent).ConfigureAwait(false);
                 PostUserIconUrl = await DataCacheDictionary.DownloadImage(
-                    new Uri(_model.CoreInfo.PostUser.IconImageUrl.Replace("$SIZE_SEGMENT", "s40-c-k").Replace("$SIZE_NUM", "80")));
+                    new Uri(_model.CoreInfo.PostUser.IconImageUrl
+                        .Replace("$SIZE_SEGMENT", "s40-c-k").Replace("$SIZE_NUM", "80"))).ConfigureAwait(false);
             }
         }
         public override void Cleanup()

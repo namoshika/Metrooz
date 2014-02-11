@@ -29,21 +29,21 @@ namespace GPlusBrowser.Model
         {
             try
             {
-                await _initSyncer.WaitAsync();
+                await _initSyncer.WaitAsync().ConfigureAwait(false);
                 if (IsInitialized && isForced == false)
                     return;
 
                 if (PlusClient != null)
                     PlusClient.Dispose();
                 //G+APIライブラリの初期化を行う
-                PlusClient = await Builder.Build();
+                PlusClient = await Builder.Build().ConfigureAwait(false);
                 MyProfile = await PlusClient.People.GetProfileOfMeAsync(false).ConfigureAwait(false);
 
                 //各モジュールの初期化を行う
                 Stream = new StreamManager(this);
                 //Notification = new NotificationManager(this);
                 //Notification.Initialize();
-                await Stream.Initialize();
+                await Stream.Initialize().ConfigureAwait(false);
                 Connect();
 
                 IsInitialized = true;

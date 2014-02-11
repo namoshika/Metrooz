@@ -54,8 +54,8 @@ namespace GPlusBrowser.ViewModel
 
         public static async Task<AttachedLinkViewModel> Create(string ancourTitle, string ancourIntroductionText, Uri ancourUrl, Uri ancourFaviconUrl, Uri thumnailUrl)
         {
-            var aa = await DataCacheDictionary.DownloadImage(ancourFaviconUrl);
-            var bb = await DataCacheDictionary.DownloadImage(thumnailUrl);
+            var aa = await DataCacheDictionary.DownloadImage(ancourFaviconUrl).ConfigureAwait(false);
+            var bb = await DataCacheDictionary.DownloadImage(thumnailUrl).ConfigureAwait(false);
             return new AttachedLinkViewModel(ancourTitle, ancourIntroductionText, ancourUrl, aa, bb);
         }
     }

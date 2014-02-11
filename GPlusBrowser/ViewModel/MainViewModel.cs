@@ -78,7 +78,7 @@ namespace GPlusBrowser.ViewModel
                     _accountManagerModel = accountManagerModel;
                     ((INotifyCollectionChanged)_accountManagerModel.Accounts)
                         .CollectionChanged += PageSwitcherViewModel_CollectionChanged;
-                    await _accountManagerModel.Initialize();
+                    await _accountManagerModel.Initialize().ConfigureAwait(false);
                 }
             }
             catch (FailToOperationException)

@@ -7,6 +7,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -74,14 +75,14 @@ namespace GPlusBrowser.ViewModel
                 UserIconUrl = await DataCacheDictionary.DownloadImage(
                     new Uri(_accountModel.Builder.IconUrl
                         .Replace("$SIZE_SEGMENT", "s35-c-k")
-                        .Replace("$SIZE_NUM", "80")));
+                        .Replace("$SIZE_NUM", "80"))).ConfigureAwait(false);
             }
         }
         async void OpenStreamPanelCommand_Execute()
         {
             OnOpenedStreamPanel(new EventArgs());
 
-            try { await _accountModel.Initialize(false); }
+            try { await _accountModel.Initialize(false).ConfigureAwait(false); }
             catch (FailToOperationException)
             {
                 Messenger.Default.Send(new DialogMessage(

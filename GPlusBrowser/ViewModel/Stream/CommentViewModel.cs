@@ -71,7 +71,7 @@ namespace GPlusBrowser.ViewModel
             CommentDate = postDate >= DateTime.Today ? postDate.ToString("HH:mm") : postDate.ToString("yyyy/MM/dd");
             OwnerName = _model.CommentInfo.Owner.Name;
             OwnerIconUrl = await DataCacheDictionary.DownloadImage(new Uri(_model.CommentInfo.Owner.IconImageUrl
-                .Replace("$SIZE_SEGMENT", "s25-c-k").Replace("$SIZE_NUM", "80")));
+                .Replace("$SIZE_SEGMENT", "s25-c-k").Replace("$SIZE_NUM", "80"))).ConfigureAwait(false);
             PostContentInline = _model.CommentInfo.GetParsedContent();
         }
     }

@@ -42,7 +42,7 @@ namespace GPlusBrowser.Model
         {
             try
             {
-                await _syncer.WaitAsync();
+                await _syncer.WaitAsync().ConfigureAwait(false);
                 IsConnected = true;
                 if (_isUpdated == false)
                 {
@@ -56,7 +56,7 @@ namespace GPlusBrowser.Model
                         {
                             try
                             {
-                                await _syncer.WaitAsync();
+                                await _syncer.WaitAsync().ConfigureAwait(false);
                                 var item = Activities.FirstOrDefault(activity => activity.CoreInfo.Id == newInfo.Id);
                                 switch (newInfo.PostStatus)
                                 {
@@ -96,7 +96,7 @@ namespace GPlusBrowser.Model
         {
             try
             {
-                await _syncer.WaitAsync();
+                await _syncer.WaitAsync().ConfigureAwait(false);
                 if (_streamObj != null)
                     _streamObj.Dispose();
                 _streamObj = null;

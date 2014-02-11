@@ -64,8 +64,8 @@ namespace GPlusBrowser.ViewModel
 
         public async static Task<AttachedActivityViewModel> Create(AttachedPost model)
         {
-            var ownerIcon = await DataCacheDictionary.DownloadImage(new Uri(model.OwnerIconUrl.Replace("$SIZE_SEGMENT", "s25-c-k")));
-            var attachedContent = model.AttachedContent != null ? await AttachedContentViewModel.Create(model.AttachedContent): null;
+            var ownerIcon = await DataCacheDictionary.DownloadImage(new Uri(model.OwnerIconUrl.Replace("$SIZE_SEGMENT", "s25-c-k"))).ConfigureAwait(false);
+            var attachedContent = model.AttachedContent != null ? await AttachedContentViewModel.Create(model.AttachedContent).ConfigureAwait(false) : null;
             return new AttachedActivityViewModel(model.OwnerName, null,
                 model.LinkUrl, ownerIcon, model.ParsedText, attachedContent);
         }

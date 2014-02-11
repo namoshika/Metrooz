@@ -18,20 +18,20 @@ namespace GPlusBrowser.ViewModel
             {
                 case ContentType.Album:
                     var attachedAlbum = (AttachedAlbum)model;
-                    return await AttachedAlbumViewModel.Create(attachedAlbum);
+                    return await AttachedAlbumViewModel.Create(attachedAlbum).ConfigureAwait(false);
                 case ContentType.Image:
                     var attachedImage = (AttachedImage)model;
-                    return await AttachedImageViewModel.Create(attachedImage);
+                    return await AttachedImageViewModel.Create(attachedImage).ConfigureAwait(false);
                 case ContentType.Link:
                 case ContentType.InteractiveLink:
                     var attachedLink = (AttachedLink)model;
                     return await AttachedLinkViewModel.Create(
                         attachedLink.Title,
                         string.IsNullOrEmpty(attachedLink.Summary) ? null : attachedLink.Summary.Trim('\n', '\r', ' '),
-                        attachedLink.LinkUrl, attachedLink.FaviconUrl, attachedLink.OriginalThumbnailUrl);
+                        attachedLink.LinkUrl, attachedLink.FaviconUrl, attachedLink.OriginalThumbnailUrl).ConfigureAwait(false);
                 case ContentType.Reshare:
                     var attachedActivity = (AttachedPost)model;
-                    return await AttachedActivityViewModel.Create(attachedActivity);
+                    return await AttachedActivityViewModel.Create(attachedActivity).ConfigureAwait(false);
                 default:
                     return null;
             }

@@ -31,7 +31,7 @@ namespace GPlusBrowser.ViewModel
         public static async Task<AttachedImageViewModel> Create(AttachedImage attachedAlbumModel)
         {
             var img = await DataCacheDictionary.DownloadImage(
-                new Uri(attachedAlbumModel.Image.ImageUrl.Replace("$SIZE_SEGMENT", "w640-h480")));
+                new Uri(attachedAlbumModel.Image.ImageUrl.Replace("$SIZE_SEGMENT", "w640-h480"))).ConfigureAwait(false);
             return new AttachedImageViewModel(attachedAlbumModel, img);
         }
     }
