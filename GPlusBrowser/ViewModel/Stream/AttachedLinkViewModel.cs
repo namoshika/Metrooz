@@ -14,11 +14,11 @@ namespace GPlusBrowser.ViewModel
     {
         public AttachedLinkViewModel(string ancourTitle, string ancourIntroductionText, Uri ancourUrl, BitmapImage ancourFaviconUrl, BitmapImage thumnailUrl)
         {
-            AncourTitle = ancourTitle;
-            AncourUrl = ancourUrl;
-            AncourIntroductionText = ancourIntroductionText;
-            ThumnailUrl = thumnailUrl;
-            AncourFaviconUrl = ancourFaviconUrl;
+            _ancourTitle = ancourTitle;
+            _ancourUrl = ancourUrl;
+            _ancourIntroductionText = ancourIntroductionText;
+            _thumnailUrl = thumnailUrl;
+            _ancourFaviconUrl = ancourFaviconUrl;
         }
         string _ancourTitle;
         Uri _ancourUrl;

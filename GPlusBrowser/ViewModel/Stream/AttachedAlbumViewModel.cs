@@ -21,7 +21,8 @@ namespace GPlusBrowser.ViewModel
             _largeImages = largeImages;
             _thumbnailImages = thumbnailImages;
             _attachedAlbumModel = attachedAlbumModel;
-            SelectedImageIndex = largeImages.Length > 0 ? 0 : -1;
+            _selectedImageIndex = largeImages.Length > 0 ? 0 : -1;
+            _selectedImage = _selectedImageIndex > -1 ? _largeImages[_selectedImageIndex] : null;
         }
         int _selectedImageIndex;
         BitmapImage _selectedImage;
