@@ -52,6 +52,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <Optimize>true</Optimize>
     <Prefer32Bit>false</Prefer32Bit>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="GalaSoft.MvvmLight.Extras.WPF45">
@@ -117,9 +118,7 @@
     </ApplicationDefinition>
     <Compile Include="Controls\Behaviors.cs" />
     <Compile Include="ViewModel\DataCacheDictionary.cs" />
-    <Compile Include="Controls\ColumnPanel.cs" />
     <Compile Include="Controls\ExpandableListView.cs" />
-    <Compile Include="Controls\ExTreeView.cs" />
     <Compile Include="Controls\ImageBox.cs" />
     <Compile Include="Model\NotificationManager.cs" />
     <Compile Include="ViewModel\DialogViewModel.cs" />

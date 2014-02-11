@@ -90,10 +90,13 @@ namespace GPlusBrowser.ViewModel
         }
         public override void Cleanup()
         {
-            base.Cleanup();
-            Messenger.Default.Unregister<DialogMessage>(this, Recieved_DialogMessage);
-            foreach (AccountViewModel item in Pages)
-                item.Cleanup();
+            lock (Pages)
+            {
+                base.Cleanup();
+                Messenger.Default.Unregister<DialogMessage>(this, Recieved_DialogMessage);
+                foreach (AccountViewModel item in Pages)
+                    item.Cleanup();
+            }
         }
         void Recieved_DialogMessage(DialogMessage message)
         {
@@ -106,47 +109,51 @@ namespace GPlusBrowser.ViewModel
         }
         void PageSwitcherViewModel_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            switch (e.Action)
-            {
-                case NotifyCollectionChangedAction.Add:
-                    for (var i = 0; i < e.NewItems.Count; i++)
-                    {
-                        var accountModel = (Account)e.NewItems[i];
-                        var account = new AccountViewModel(accountModel);
-                        account.OpenedStreamPanel += account_OpenedStreamPanel;
-                        account.BackedToAccountManager += account_BackedToAccountManager;
-                        Pages.InsertOnDispatcher(e.NewStartingIndex + i, account);
-                    }
-                    break;
-                case NotifyCollectionChangedAction.Remove:
-                    for (var i = 0; i < e.OldItems.Count; i++)
-                    {
-                        var account = Pages[e.OldStartingIndex];
-                        account.OpenedStreamPanel -= account_OpenedStreamPanel;
-                        account.BackedToAccountManager -= account_BackedToAccountManager;
-                        Pages.RemoveAtOnDispatcher(e.OldStartingIndex);
-                    }
-                    break;
-                case NotifyCollectionChangedAction.Reset:
-                    if (Pages.Count > 0)
-                    {
-                        var accountManager = Pages.First();
-                        foreach (var item in Pages.OfType<AccountViewModel>())
+            lock(Pages)
+                switch (e.Action)
+                {
+                    case NotifyCollectionChangedAction.Add:
+                        for (var i = 0; i < e.NewItems.Count; i++)
                         {
-                            item.OpenedStreamPanel -= account_OpenedStreamPanel;
-                            item.BackedToAccountManager -= account_BackedToAccountManager;
+                            var accountModel = (Account)e.NewItems[i];
+                            var account = new AccountViewModel(accountModel);
+                            account.OpenedStreamPanel += account_OpenedStreamPanel;
+                            account.BackedToAccountManager += account_BackedToAccountManager;
+                            Pages.InsertOnDispatcher(e.NewStartingIndex + i, account);
                         }
-                        Pages.Clear();
-                        Pages.AddOnDispatcher(accountManager);
-                        SelectedPageIndex = -1;
-                    }
-                    break;
-            }
+                        break;
+                    case NotifyCollectionChangedAction.Remove:
+                        for (var i = 0; i < e.OldItems.Count; i++)
+                        {
+                            var account = Pages[e.OldStartingIndex];
+                            account.OpenedStreamPanel -= account_OpenedStreamPanel;
+                            account.BackedToAccountManager -= account_BackedToAccountManager;
+                            Pages.RemoveAtOnDispatcher(e.OldStartingIndex);
+                        }
+                        break;
+                    case NotifyCollectionChangedAction.Reset:
+                        if (Pages.Count > 0)
+                        {
+                            var accountManager = Pages.First();
+                            foreach (var item in Pages.OfType<AccountViewModel>())
+                            {
+                                item.OpenedStreamPanel -= account_OpenedStreamPanel;
+                                item.BackedToAccountManager -= account_BackedToAccountManager;
+                            }
+                            Pages.Clear();
+                            Pages.AddOnDispatcher(accountManager);
+                            SelectedPageIndex = -1;
+                        }
+                        break;
+                }
         }
         void account_OpenedStreamPanel(object sender, EventArgs e)
         {
-            var idx = Pages.IndexOf((AccountViewModel)sender);
-            SelectedPageIndex = idx;
+            lock (Pages)
+            {
+                var idx = Pages.IndexOf((AccountViewModel)sender);
+                SelectedPageIndex = idx;
+            }
         }
         void account_BackedToAccountManager(object sender, EventArgs e)
         { SelectedPageIndex = -1; }

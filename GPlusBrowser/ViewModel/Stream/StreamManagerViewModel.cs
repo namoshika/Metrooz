@@ -59,10 +59,13 @@ namespace GPlusBrowser.ViewModel
         }
         public override void Cleanup()
         {
-            base.Cleanup();
-            _streamManagerModel.Streams.CollectionChanged -= _stream_ChangedDisplayStreams;
-            foreach (var item in DisplayStreams)
-                item.Cleanup();
+            lock (_displayStreams)
+            {
+                base.Cleanup();
+                _streamManagerModel.Streams.CollectionChanged -= _stream_ChangedDisplayStreams;
+                foreach (var item in DisplayStreams)
+                    item.Cleanup();
+            }
         }
 
         void Activity_ChangedIsConnected(object sender, EventArgs e)
@@ -71,7 +74,7 @@ namespace GPlusBrowser.ViewModel
         }
         void _stream_ChangedDisplayStreams(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
-            lock(_displayStreams)
+            lock (_displayStreams)
                 switch (e.Action)
                 {
                     case System.Collections.Specialized.NotifyCollectionChangedAction.Add:

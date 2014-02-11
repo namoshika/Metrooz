@@ -118,11 +118,14 @@ namespace GPlusBrowser.ViewModel
         }
         public override void Cleanup()
         {
-            base.Cleanup();
-            _model.Updated -= _activity_Refreshed;
-            _model.Comments.CollectionChanged -= _activity_Comments_CollectionChanged;
-            foreach (var item in _comments)
-                item.Cleanup();
+            lock (_comments)
+            {
+                base.Cleanup();
+                _model.Updated -= _activity_Refreshed;
+                _model.Comments.CollectionChanged -= _activity_Comments_CollectionChanged;
+                foreach (var item in _comments)
+                    item.Cleanup();
+            }
         }
 
         async void SendCommentCommand_Executed()
@@ -148,23 +151,24 @@ namespace GPlusBrowser.ViewModel
         void _activity_Refreshed(object sender, EventArgs e) { Refresh(); }
         void _activity_Comments_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
-            switch (e.Action)
-            {
-                case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
-                    foreach (var item in e.NewItems)
-                        Comments.AddOnDispatcher(new CommentViewModel((Comment)item));
-                    break;
-                case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
-                    for (var i = 0; i < e.OldItems.Count; i++)
-                    {
-                        var tmp = Comments.First(vm => vm.Id == ((Comment)e.OldItems[i]).CommentInfo.Id);
-                        Comments.RemoveOnDispatcher(tmp);
-                    }
-                    break;
-                case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:
-                    Comments.ClearOnDispatcher();
-                    break;
-            }
+            lock(_comments)
+                switch (e.Action)
+                {
+                    case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
+                        foreach (var item in e.NewItems)
+                            _comments.AddOnDispatcher(new CommentViewModel((Comment)item));
+                        break;
+                    case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
+                        for (var i = 0; i < e.OldItems.Count; i++)
+                        {
+                            var tmp = _comments.First(vm => vm.Id == ((Comment)e.OldItems[i]).CommentInfo.Id);
+                            _comments.RemoveOnDispatcher(tmp);
+                        }
+                        break;
+                    case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:
+                        _comments.ClearOnDispatcher();
+                        break;
+                }
         }
     }
     public enum CommentPostBoxState

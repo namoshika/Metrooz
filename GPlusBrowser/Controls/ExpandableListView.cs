@@ -80,6 +80,7 @@ namespace GPlusBrowser.Controls
         protected override DependencyObject GetContainerForItemOverride()
         {
             var container = (FrameworkElement)base.GetContainerForItemOverride();
+            container.SizeChanged += itemPresenter_SizeChanged;
             container.Loaded += itemPresenter_Loaded;
             return container;
         }
@@ -112,18 +113,18 @@ namespace GPlusBrowser.Controls
         }
         void itemPresenter_Loaded(object sender, RoutedEventArgs e)
         {
+            if (_itemContainer == null)
+                return;
+
             var target = (FrameworkElement)sender;
             var data = ItemContainerGenerator.ItemFromContainer(target);
-            target.Loaded -= itemPresenter_Loaded;
-            target.SizeChanged += itemPresenter_SizeChanged;
             var newAreaHeight = 0.0;
             for (var i = IsExpand ? 0 : Math.Max(Items.Count - _displayMaxCount, 0); i < Items.Count; i++)
             {
                 var container = (FrameworkElement)ItemContainerGenerator.ContainerFromIndex(i);
                 newAreaHeight += container.ActualHeight;
             }
-
-            if (_addTimes.ContainsKey(data) && DateTime.UtcNow - _addTimes[data] < TimeSpan.FromMilliseconds(10))
+            if (_addTimes.ContainsKey(data) && DateTime.UtcNow - _addTimes[data] < TimeSpan.FromMilliseconds(3))
             {
                 //スクロール
                 var scrollAnime = new DoubleAnimation(newAreaHeight - _itemsPanel.ActualHeight, _insertAnimationDuration);
@@ -141,6 +142,9 @@ namespace GPlusBrowser.Controls
         }
         void itemPresenter_SizeChanged(object sender, SizeChangedEventArgs e)
         {
+            if (_itemContainer == null)
+                return;
+
             var newAreaHeight = 0.0;
             for (var i = IsExpand ? 0 : Math.Max(Items.Count - _displayMaxCount, 0); i < Items.Count; i++)
             {

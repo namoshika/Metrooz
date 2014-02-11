@@ -34,26 +34,29 @@ namespace GPlusBrowser.ViewModel
             get { return _isActive; }
             set
             {
-                Set(() => IsActive, ref _isActive, value);
-                if (value)
+                lock (_activities)
                 {
-                    if (_activities != null)
-                        foreach (var item in _circleModel.Activities.ToArray())
-                        {
-                            var viewModel = new ActivityViewModel(item);
-                            _activities.Add(viewModel);
-                        }
-                    _circleModel.Activities.CollectionChanged += OnActivitiesCollectionChanged;
-                    _circleModel.Connect();
-                }
-                else
-                {
-                    _circleModel.Activities.CollectionChanged -= OnActivitiesCollectionChanged;
-                    if (_activities != null)
+                    Set(() => IsActive, ref _isActive, value);
+                    if (value)
                     {
-                        foreach (var item in _activities)
-                            item.Cleanup();
-                        _activities.Clear();
+                        if (_activities != null)
+                            foreach (var item in _circleModel.Activities.ToArray())
+                            {
+                                var viewModel = new ActivityViewModel(item);
+                                _activities.Add(viewModel);
+                            }
+                        _circleModel.Activities.CollectionChanged += OnActivitiesCollectionChanged;
+                        _circleModel.Connect();
+                    }
+                    else
+                    {
+                        _circleModel.Activities.CollectionChanged -= OnActivitiesCollectionChanged;
+                        if (_activities != null)
+                        {
+                            foreach (var item in _activities)
+                                item.Cleanup();
+                            _activities.Clear();
+                        }
                     }
                 }
             }
@@ -78,8 +81,10 @@ namespace GPlusBrowser.ViewModel
         protected void OnActivitiesCollectionChanged(
             object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
-            lock (Activities)
+            lock (_activities)
             {
+                if (IsActive == false)
+                    return;
                 switch (e.Action)
                 {
                     case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
