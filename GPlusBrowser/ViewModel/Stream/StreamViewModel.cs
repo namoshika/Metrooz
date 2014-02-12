@@ -23,43 +23,19 @@ namespace GPlusBrowser.ViewModel
             _activities = new ObservableCollection<ViewModelBase>();
             _circleModel = circle;
             _circleName = circle.Name;
+            PropertyChanged += StreamViewModel_PropertyChanged;
         }
+
         bool _isActive;
         string _circleName;
         Stream _circleModel;
         ObservableCollection<ViewModelBase> _activities;
+        readonly System.Threading.SemaphoreSlim _syncerActivities = new System.Threading.SemaphoreSlim(1, 1);
 
         public bool IsActive
         {
             get { return _isActive; }
-            set
-            {
-                lock (_activities)
-                {
-                    Set(() => IsActive, ref _isActive, value);
-                    if (value)
-                    {
-                        if (_activities != null)
-                            foreach (var item in _circleModel.Activities.ToArray())
-                            {
-                                var viewModel = new ActivityViewModel(item);
-                                _activities.Add(viewModel);
-                            }
-                        _circleModel.Activities.CollectionChanged += OnActivitiesCollectionChanged;
-                        _circleModel.Connect();
-                    }
-                    else
-                    {
-                        _circleModel.Activities.CollectionChanged -= OnActivitiesCollectionChanged;
-                        if (_activities != null)
-                        {
-                            foreach (var item in _activities)
-                                item.Cleanup();
-                            _activities.Clear();
-                        }
-                    }
-                }
-            }
+            set { Set(() => IsActive, ref _isActive, value); }
         }
         public string CircleName
         {
@@ -75,14 +51,15 @@ namespace GPlusBrowser.ViewModel
         public override void Cleanup()
         {
             base.Cleanup();
+            PropertyChanged -= StreamViewModel_PropertyChanged;
             foreach (var item in _activities)
                 item.Cleanup();
         }
-        protected void OnActivitiesCollectionChanged(
-            object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        protected async void OnActivitiesCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            lock (_activities)
+            try
             {
+                await _syncerActivities.WaitAsync();
                 if (IsActive == false)
                     return;
                 switch (e.Action)
@@ -111,6 +88,39 @@ namespace GPlusBrowser.ViewModel
                         Activities.ClearOnDispatcher();
                         break;
                 }
+            }
+            finally
+            { _syncerActivities.Release(); }
+        }
+        async void StreamViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            switch (e.PropertyName)
+            {
+                case "IsActive":
+                    try
+                    {
+                        await _syncerActivities.WaitAsync();
+                        //残留しているゴミを捨てる
+                        _circleModel.Activities.CollectionChanged -= OnActivitiesCollectionChanged;
+                        foreach (var item in _activities)
+                            item.Cleanup();
+                        _activities.Clear();
+
+                        //アクティブ時は新たにmodelから読み込む
+                        if (_isActive)
+                        {
+                            foreach (var item in _circleModel.Activities.ToArray())
+                            {
+                                var viewModel = new ActivityViewModel(item);
+                                _activities.Add(viewModel);
+                            }
+                            _circleModel.Activities.CollectionChanged += OnActivitiesCollectionChanged;
+                            _circleModel.Connect();
+                        }
+                        break;
+                    }
+                    finally
+                    { _syncerActivities.Release(); }
             }
         }
     }
