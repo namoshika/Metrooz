@@ -1,9 +1,0 @@
-diff a/GPlusBrowser/GPlusBrowser.csproj b/GPlusBrowser/GPlusBrowser.csproj	(rejected hunks)
-@@ -159,6 +162,7 @@
-       <DependentUpon>Settings.settings</DependentUpon>
-       <DesignTimeSharedInput>True</DesignTimeSharedInput>
-     </Compile>
-+    <None Include="app.config" />
-     <None Include="Properties\Settings.settings">
-       <Generator>SettingsSingleFileGenerator</Generator>
-       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
