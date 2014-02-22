@@ -26,7 +26,7 @@ namespace GPlusBrowser.Model
             foreach (var item in _accounts)
                 item.Dispose();
             _accounts.Clear();
-            foreach (var item in await PlatformClient.Factory.ImportFromChrome().ConfigureAwait(false))
+            foreach (var item in await PlatformClient.Factory.ImportFromIE().ConfigureAwait(false))
             {
                 var account = new Account(item);
                 _accounts.Add(account);
