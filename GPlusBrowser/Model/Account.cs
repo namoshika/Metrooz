@@ -16,6 +16,7 @@ namespace GPlusBrowser.Model
             Builder = setting;
             IsInitialized = false;
             Stream = new StreamManager(this);
+            //Notification = new NotificationManager(this);
         }
         public bool IsInitialized { get; private set; }
         public IPlatformClientBuilder Builder { get; private set; }
@@ -30,32 +31,30 @@ namespace GPlusBrowser.Model
             try
             {
                 await _initSyncer.WaitAsync().ConfigureAwait(false);
+                OnInitializing(new EventArgs());
+                IsInitialized = false;
+
                 if (IsInitialized && isForced == false)
                     return;
-
                 if (PlusClient != null)
                     PlusClient.Dispose();
+
                 //G+APIライブラリの初期化を行う
                 PlusClient = await Builder.Build().ConfigureAwait(false);
                 MyProfile = await PlusClient.People.GetProfileOfMeAsync(false).ConfigureAwait(false);
 
                 //各モジュールの初期化を行う
-                Stream = new StreamManager(this);
-                //Notification = new NotificationManager(this);
                 //Notification.Initialize();
                 await Stream.Initialize().ConfigureAwait(false);
                 Connect();
 
                 IsInitialized = true;
-                OnInitialized(new EventArgs());
-            }
-            catch (FailToOperationException e)
-            {
-                IsInitialized = false;
-                throw e;
             }
             finally
-            { _initSyncer.Release(); }
+            {
+                OnInitialized(new EventArgs());
+                _initSyncer.Release();
+            }
         }
         public void Connect()
         {
@@ -72,6 +71,12 @@ namespace GPlusBrowser.Model
             }
         }
 
+        public event EventHandler Initializing;
+        protected virtual void OnInitializing(EventArgs e)
+        {
+            if (Initializing != null)
+                Initializing(this, e);
+        }
         public event EventHandler Initialized;
         protected virtual void OnInitialized(EventArgs e)
         {

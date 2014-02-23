@@ -45,11 +45,12 @@ namespace GPlusBrowser.Model
                 if (IsConnected)
                     return;
 
+                IsConnected = true;
+                OnChangedIsConnected(new EventArgs());
                 var activities = await _activityGetter.TakeAsync(20).ConfigureAwait(false);
                 _activities.Clear();
                 foreach (var item in activities)
                     _activities.Add(new Activity(item));
-                IsConnected = true;
                 _streamObj = Circle.GetStream().Subscribe(async newInfo =>
                     {
                         try
@@ -89,11 +90,16 @@ namespace GPlusBrowser.Model
                             _streamObj.Dispose();
                             _streamObj = null;
                             IsConnected = false;
+                            OnChangedIsConnected(new EventArgs());
                         }
                         finally { _syncer.Release(); }
                     });
             }
-            catch (FailToOperationException) { IsConnected = false; }
+            catch (FailToOperationException)
+            {
+                IsConnected = false;
+                OnChangedIsConnected(new EventArgs());
+            }
             finally { _syncer.Release(); }
         }
         public async void Dispose()
@@ -108,6 +114,13 @@ namespace GPlusBrowser.Model
             }
             finally
             { _syncer.Release(); }
+        }
+
+        public event EventHandler ChangedIsConnected;
+        protected virtual void OnChangedIsConnected(EventArgs e)
+        {
+            if (ChangedIsConnected != null)
+                ChangedIsConnected(this, e);
         }
     }
 }

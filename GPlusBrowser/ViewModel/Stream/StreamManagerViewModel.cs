@@ -19,13 +19,9 @@ namespace GPlusBrowser.ViewModel
             _selectedCircleIndex = -1;
             _accountModel = account;
             _streamManagerModel = streamManager;
-            _displayStreams = new ObservableCollection<StreamViewModel>(
-                _streamManagerModel.Streams.Select(vm => new StreamViewModel(vm, account, streamManager))); ;
+            _displayStreams = new ObservableCollection<StreamViewModel>();
 
             _streamManagerModel.Streams.CollectionChanged += _stream_ChangedDisplayStreams;
-
-            if (_displayStreams.Count > 0)
-                SelectedCircleIndex = 0;
         }
         int _selectedCircleIndex;
         Account _accountModel;
@@ -56,6 +52,7 @@ namespace GPlusBrowser.ViewModel
         void _stream_ChangedDisplayStreams(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
             lock (_displayStreams)
+            {
                 switch (e.Action)
                 {
                     case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
@@ -77,6 +74,11 @@ namespace GPlusBrowser.ViewModel
                         DisplayStreams.ClearOnDispatcher();
                         break;
                 }
+                if (SelectedCircleIndex < 0 && _displayStreams.Count > 0)
+                    SelectedCircleIndex = 0;
+                else if (_displayStreams.Count == 0)
+                    SelectedCircleIndex = -1;
+            }
         }
     }
 }

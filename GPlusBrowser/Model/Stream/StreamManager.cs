@@ -53,7 +53,6 @@ namespace GPlusBrowser.Model
             {
                 foreach (var item in Streams)
                     item.Dispose();
-                Streams.Clear();
             }
         }
     }

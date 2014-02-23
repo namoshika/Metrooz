@@ -1,12 +1,14 @@
 ﻿using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Messaging;
 using GalaSoft.MvvmLight.Ioc;
+using MahApps.Metro.Controls.Dialogs;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows.Threading;
 using SunokoLibrary.Web.GooglePlus;
 
@@ -34,14 +36,16 @@ namespace GPlusBrowser.ViewModel
         public MainViewModel(AccountManager accountManagerModel)
         {
             _selectedMainPageIndex = -1;
-            IsAccountSelectorMode = false;
+            _isAccountSelectorMode = false;
+            _noSelectableAccount = false;
+            _accountManagerModel = accountManagerModel;
             Pages = new ObservableCollection<AccountViewModel>();
 
-            Messenger.Default.Register<DialogMessage>(this, Recieved_DialogMessage);
-            Initialize(accountManagerModel);
+            Initialize();
         }
         AccountManager _accountManagerModel;
         bool _isAccountSelectorMode;
+        bool _noSelectableAccount;
         int _selectedMainPageIndex;
 
         public int SelectedPageIndex
@@ -54,9 +58,14 @@ namespace GPlusBrowser.ViewModel
             get { return _isAccountSelectorMode; }
             set { Set(() => IsAccountSelectorMode, ref _isAccountSelectorMode, value); }
         }
+        public bool NoSelectableAccount
+        {
+            get { return _noSelectableAccount; }
+            set { Set(() => NoSelectableAccount, ref _noSelectableAccount, value); }
+        }
         public ObservableCollection<AccountViewModel> Pages { get; set; }
 
-        public async void Initialize(AccountManager accountManagerModel)
+        public async void Initialize()
         {
             try
             {
@@ -70,17 +79,19 @@ namespace GPlusBrowser.ViewModel
                         ((INotifyCollectionChanged)_accountManagerModel.Accounts)
                             .CollectionChanged -= PageSwitcherViewModel_CollectionChanged;
 
-                    _accountManagerModel = accountManagerModel;
-                    ((INotifyCollectionChanged)_accountManagerModel.Accounts)
-                        .CollectionChanged += PageSwitcherViewModel_CollectionChanged;
+                    _accountManagerModel.Accounts.CollectionChanged += PageSwitcherViewModel_CollectionChanged;
                     await _accountManagerModel.Initialize().ConfigureAwait(false);
+                    
+                    NoSelectableAccount = _accountManagerModel.Accounts.Count == 0;
                 }
             }
             catch (FailToOperationException)
             {
-                Messenger.Default.Send(new DialogMessage(
-                    "アカウント一覧の読み込みに失敗しました。ネットワークの設定を確認して下さい。",
-                    res => Initialize(accountManagerModel)));
+                var message = new DialogOptionInfo(
+                    "Error", "アカウント一覧の読み込みに失敗しました。ネットワークの設定を確認して下さい。",
+                    setting: new MetroDialogSettings() { AffirmativeButtonText = "再接続" });
+                Messenger.Default.Send(message);
+                var tmp = message.CallbackTask.ContinueWith(tsk => Initialize());
             }
         }
         public override void Cleanup()
@@ -88,14 +99,9 @@ namespace GPlusBrowser.ViewModel
             lock (Pages)
             {
                 base.Cleanup();
-                Messenger.Default.Unregister<DialogMessage>(this, Recieved_DialogMessage);
                 foreach (AccountViewModel item in Pages)
                     item.Cleanup();
             }
-        }
-        void Recieved_DialogMessage(DialogMessage message)
-        {
-
         }
         void PageSwitcherViewModel_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
@@ -129,6 +135,23 @@ namespace GPlusBrowser.ViewModel
                         break;
                 }
         }
+    }
+    public class DialogOptionInfo
+    {
+        public DialogOptionInfo(string title, string message, MessageDialogStyle style = MessageDialogStyle.Affirmative, MetroDialogSettings setting = null)
+        {
+            Title = title;
+            Message = message;
+            Style = style;
+            Settings = setting;
+            CallbackTaskSource = new TaskCompletionSource<MessageDialogResult>();
+        }
+        public string Title { get; set; }
+        public string Message { get; set; }
+        public MessageDialogStyle Style { get; set; }
+        public MetroDialogSettings Settings { get; set; }
+        public TaskCompletionSource<MessageDialogResult> CallbackTaskSource { get; private set; }
+        public Task<MessageDialogResult> CallbackTask { get { return CallbackTaskSource.Task; } }
     }
     public class IntToVisibilityConverter : System.Windows.Data.IValueConverter
     {

@@ -14,22 +14,19 @@ namespace GPlusBrowser.Model
     {
         public AccountManager()
         {
-            _accounts = new ObservableCollection<Account>();
-            _readonlyAccounts = new ReadOnlyObservableCollection<Account>(_accounts);
+            Accounts = new ObservableCollection<Account>();
         }
-        ObservableCollection<Account> _accounts;
-        ReadOnlyObservableCollection<Account> _readonlyAccounts;
-        public ReadOnlyCollection<Account> Accounts { get { return _readonlyAccounts; } }
+        public ObservableCollection<Account> Accounts { get; private set; }
 
         public async Task Initialize()
         {
-            foreach (var item in _accounts)
+            foreach (var item in Accounts)
                 item.Dispose();
-            _accounts.Clear();
+            Accounts.Clear();
             foreach (var item in await PlatformClient.Factory.ImportFromIE().ConfigureAwait(false))
             {
                 var account = new Account(item);
-                _accounts.Add(account);
+                Accounts.Add(account);
             }
         }
         public void Dispose()

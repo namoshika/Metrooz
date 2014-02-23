@@ -20,28 +20,31 @@ namespace GPlusBrowser.ViewModel
     {
         public StreamViewModel(Stream circle, Account account, StreamManager manager)
         {
-            _activities = new ObservableCollection<ActivityViewModel>();
             _circleModel = circle;
             _circleName = circle.Name;
             _circleManagerModel = manager;
             _accountModel = account;
-            _accountModel.PlusClient.Activity.ChangedIsConnected += Activity_ChangedIsConnected;
-            PropertyChanged += StreamViewModel_PropertyChanged;
+
+            _activities = new ObservableCollection<ActivityViewModel>();
+            _connectStatus = ConnectStateType.UnInitialized;
             ReconnectCommand = new RelayCommand(ReconnectCommand_Executed);
+
+            _circleModel.ChangedIsConnected += _circleModel_ChangedIsConnected;
+            PropertyChanged += StreamViewModel_PropertyChanged;
         }
-        bool _isDisconnected;
-        bool _isActive;
+        bool _isActive, isLoading;
         string _circleName;
+        ConnectStateType _connectStatus;
         Stream _circleModel;
         Account _accountModel;
         StreamManager _circleManagerModel;
         ObservableCollection<ActivityViewModel> _activities;
         readonly System.Threading.SemaphoreSlim _syncerActivities = new System.Threading.SemaphoreSlim(1, 1);
 
-        public bool IsDisconnected
+        public bool IsLoading
         {
-            get { return _isDisconnected; }
-            set { Set(() => IsDisconnected, ref _isDisconnected, value); }
+            get { return isLoading; }
+            set { Set(() => IsLoading, ref isLoading, value); }
         }
         public bool IsActive
         {
@@ -52,6 +55,11 @@ namespace GPlusBrowser.ViewModel
         {
             get { return _circleName; }
             set { Set(() => CircleName, ref _circleName, value); }
+        }
+        public ConnectStateType ConnectStatus
+        {
+            get { return _connectStatus; }
+            set { Set(() => ConnectStatus, ref _connectStatus, value); }
         }
         public ObservableCollection<ActivityViewModel> Activities
         {
@@ -127,7 +135,12 @@ namespace GPlusBrowser.ViewModel
                                 _activities.Add(viewModel);
                             }
                             _circleModel.Activities.CollectionChanged += OnActivitiesCollectionChanged;
-                            _circleModel.Connect();
+                            if (_circleModel.IsConnected == false)
+                            {
+                                IsLoading = true;
+                                await _circleModel.Connect();
+                                IsLoading = false;
+                            }
                         }
                         break;
                     }
@@ -135,10 +148,8 @@ namespace GPlusBrowser.ViewModel
                     { _syncerActivities.Release(); }
             }
         }
-        void Activity_ChangedIsConnected(object sender, EventArgs e)
-        {
-            IsDisconnected = !_accountModel.PlusClient.Activity.IsConnected;
-        }
+        void _circleModel_ChangedIsConnected(object sender, EventArgs e)
+        { ConnectStatus = _circleModel.IsConnected ? ConnectStateType.Connected : ConnectStateType.Disconnected; }
         async void ReconnectCommand_Executed()
         {
             if (IsActive == false)
@@ -149,4 +160,6 @@ namespace GPlusBrowser.ViewModel
             IsLoading = false;
         }
     }
+    public enum ConnectStateType
+    { UnInitialized, Connected, Disconnected }
 }

@@ -1,4 +1,5 @@
 ﻿using MahApps.Metro.Controls;
+using MahApps.Metro.Controls.Dialogs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,6 +25,13 @@ namespace ControlDev
         public MainWindow()
         {
             InitializeComponent();
+            Loaded += MainWindow_Loaded;
         }
+
+        void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            this.ShowMessageAsync("title", "message", MessageDialogStyle.Affirmative);
+        }
+
     }
 }
