@@ -7,6 +7,7 @@ using System.Text;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Threading.Tasks;
+using SunokoLibrary.Web.GooglePlus.Primitive;
 
 namespace GPlusBrowser.ViewModel
 {
@@ -52,11 +53,11 @@ namespace GPlusBrowser.ViewModel
             set { Set(() => ThumnailUrl, ref _thumnailUrl, value); }
         }
 
-        public static async Task<AttachedLinkViewModel> Create(string ancourTitle, string ancourIntroductionText, Uri ancourUrl, Uri ancourFaviconUrl, Uri thumnailUrl)
+        public static async Task<AttachedLinkViewModel> Create(AttachedLink model)
         {
-            var aa = await DataCacheDictionary.DownloadImage(ancourFaviconUrl).ConfigureAwait(false);
-            var bb = await DataCacheDictionary.DownloadImage(thumnailUrl).ConfigureAwait(false);
-            return new AttachedLinkViewModel(ancourTitle, ancourIntroductionText, ancourUrl, aa, bb);
+            var aa = await DataCacheDictionary.DownloadImage(model.FaviconUrl).ConfigureAwait(false);
+            var bb = await DataCacheDictionary.DownloadImage(new Uri(model.ThumbnailUrl.Replace("$SIZE_SEGMENT", "s100"))).ConfigureAwait(false);
+            return new AttachedLinkViewModel(model.Title, model.Summary, model.LinkUrl, aa, bb);
         }
     }
 }

@@ -25,10 +25,7 @@ namespace GPlusBrowser.ViewModel
                 case ContentType.Link:
                 case ContentType.InteractiveLink:
                     var attachedLink = (AttachedLink)model;
-                    return await AttachedLinkViewModel.Create(
-                        attachedLink.Title,
-                        string.IsNullOrEmpty(attachedLink.Summary) ? null : attachedLink.Summary.Trim('\n', '\r', ' '),
-                        attachedLink.LinkUrl, attachedLink.FaviconUrl, attachedLink.OriginalThumbnailUrl).ConfigureAwait(false);
+                    return await AttachedLinkViewModel.Create(attachedLink).ConfigureAwait(false);
                 case ContentType.Reshare:
                     var attachedActivity = (AttachedPost)model;
                     return await AttachedActivityViewModel.Create(attachedActivity).ConfigureAwait(false);

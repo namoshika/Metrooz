@@ -16,17 +16,22 @@ namespace GPlusBrowser.ViewModel
 
     public class AttachedAlbumViewModel : AttachedContentViewModel
     {
-        public AttachedAlbumViewModel(AttachedAlbum attachedAlbumModel, BitmapImage[] thumbnailImages, BitmapImage[] largeImages)
+        public AttachedAlbumViewModel(string title, AttachedAlbum attachedAlbumModel, AttachedImageViewModel[] thumbnailImages, BitmapImage[] largeImages)
         {
+            _title = title;
             _largeImages = largeImages;
             _thumbnailImages = thumbnailImages;
             _attachedAlbumModel = attachedAlbumModel;
             _selectedImageIndex = largeImages.Length > 0 ? 0 : -1;
             _selectedImage = _selectedImageIndex > -1 ? _largeImages[_selectedImageIndex] : null;
+            _linkUrl = attachedAlbumModel.LinkUrl;
         }
         int _selectedImageIndex;
+        string _title;
+        Uri _linkUrl;
         BitmapImage _selectedImage;
-        BitmapImage[] _thumbnailImages, _largeImages;
+        BitmapImage[] _largeImages;
+        AttachedImageViewModel[] _thumbnailImages;
         AttachedAlbum _attachedAlbumModel;
 
         public int SelectedImageIndex
@@ -38,41 +43,53 @@ namespace GPlusBrowser.ViewModel
                 SelectedImage = _selectedImageIndex > -1 ? _largeImages[value] : null;
             }
         }
+        public string Title
+        {
+            get { return _title; }
+            set { Set(() => Title, ref _title, value); }
+        }
+        public Uri LinkUrl
+        {
+            get { return _linkUrl; }
+            set { Set(() => LinkUrl, ref _linkUrl, value); }
+        }
         public BitmapImage SelectedImage
         {
             get { return _selectedImage; }
             set { Set(() => SelectedImage, ref _selectedImage, value); }
         }
-        public BitmapImage[] ThumbnailImages
+        public AttachedImageViewModel[] ThumbnailImages
         {
             get { return _thumbnailImages; }
             set { Set(() => ThumbnailImages, ref _thumbnailImages, value); }
         }
         public static async Task<AttachedAlbumViewModel> Create(AttachedAlbum attachedAlbumModel)
         {
-            var thumbImgs = new List<BitmapImage>();
+            var title = attachedAlbumModel.Album.Name;
+            var thumbImgs = new List<AttachedImageViewModel>();
             var largeImgs = new List<BitmapImage>();
             var downDatas = await Task.Factory.ContinueWhenAll(attachedAlbumModel.Pictures
                 .SelectMany(imgInf =>
                     new[]{
-                        new { IsThumbnail = true, Url = new Uri(imgInf.ImageUrl.Replace("$SIZE_SEGMENT", "s50-c-k")) },
-                        new { IsThumbnail = false, Url = new Uri(imgInf.ImageUrl.Replace("$SIZE_SEGMENT", "w640-h480")) }
+                        new { IsThumbnail = true, Info = imgInf, Url = new Uri(imgInf.Image.ImageUrl.Replace("$SIZE_SEGMENT", "s70-c-k")) },
+                        new { IsThumbnail = false, Info = imgInf, Url = new Uri(imgInf.Image.ImageUrl.Replace("$SIZE_SEGMENT", "w640-h480")) }
                     })
                 .Select(async jobInf =>
                     new
                     {
                         IsThumbnail = jobInf.IsThumbnail,
+                        Info = jobInf.Info,
                         Data = await DataCacheDictionary.DownloadImage(jobInf.Url).ConfigureAwait(false)
                     })
                 .ToArray(), tsks => tsks.Select(tsk => tsk.Result)).ConfigureAwait(false);
             foreach (var jobInf in downDatas)
             {
                 if (jobInf.IsThumbnail)
-                    thumbImgs.Add(jobInf.Data);
+                    thumbImgs.Add(new AttachedImageViewModel(jobInf.Info, jobInf.Data));
                 else
                     largeImgs.Add(jobInf.Data);
             }
-            return new AttachedAlbumViewModel(attachedAlbumModel, thumbImgs.ToArray(), largeImgs.ToArray());
+            return new AttachedAlbumViewModel(title, attachedAlbumModel, thumbImgs.ToArray(), largeImgs.ToArray());
         }
     }
 }

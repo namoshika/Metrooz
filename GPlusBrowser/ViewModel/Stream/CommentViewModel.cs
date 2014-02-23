@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using SunokoLibrary.Web.GooglePlus;
@@ -16,10 +17,10 @@ namespace GPlusBrowser.ViewModel
     {
         public CommentViewModel(Comment model)
         {
-            _model = model;
             Id = model.CommentInfo.Id;
-            model_Refreshed(null, null);
-            model.Refreshed += model_Refreshed;
+            _model = model;
+            _model.Refreshed += model_Refreshed;
+            var tsk = Refresh();
         }
         Comment _model;
         BitmapImage _actorIcon;
@@ -59,13 +60,7 @@ namespace GPlusBrowser.ViewModel
             get { return _postContentInline; }
             set { Set(() => PostContentInline, ref _postContentInline, value); }
         }
-        public override void Cleanup()
-        {
-            base.Cleanup();
-            _model.Refreshed -= model_Refreshed;
-        }
-
-        async void model_Refreshed(object sender, EventArgs e)
+        public async Task Refresh()
         {
             var postDate = TimeZone.CurrentTimeZone.ToLocalTime(_model.CommentInfo.PostDate);
             CommentDate = postDate >= DateTime.Today ? postDate.ToString("HH:mm") : postDate.ToString("yyyy/MM/dd");
@@ -74,5 +69,12 @@ namespace GPlusBrowser.ViewModel
                 .Replace("$SIZE_SEGMENT", "s25-c-k").Replace("$SIZE_NUM", "80"))).ConfigureAwait(false);
             PostContentInline = _model.CommentInfo.GetParsedContent();
         }
+        public override void Cleanup()
+        {
+            base.Cleanup();
+            _model.Refreshed -= model_Refreshed;
+        }
+        void model_Refreshed(object sender, EventArgs e)
+        { var tsk = Refresh(); }
     }
 }

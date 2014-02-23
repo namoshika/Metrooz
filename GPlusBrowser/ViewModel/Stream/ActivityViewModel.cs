@@ -21,15 +21,7 @@ namespace GPlusBrowser.ViewModel
         public ActivityViewModel(Activity activity)
         {
             _model = activity;
-            _comments = new ObservableCollection<CommentViewModel>();
-            Refresh();
-            lock (_model.Comments)
-                foreach (var item in _model.Comments.Select(
-                    comment => (CommentViewModel)new CommentViewModel(comment)))
-                    Comments.Add(item);
-
-            _model.Comments.CollectionChanged += _activity_Comments_CollectionChanged;
-            _model.Updated += _activity_Refreshed;
+            var tsk = Refresh();
             SendCommentCommand = new RelayCommand(SendCommentCommand_Executed);
             CancelCommentCommand = new RelayCommand(CancelCommentCommand_Executed);
         }
@@ -44,6 +36,7 @@ namespace GPlusBrowser.ViewModel
         AttachedContentViewModel _attachedContent;
         ObservableCollection<CommentViewModel> _comments;
         StyleElement _postContentInline;
+        readonly System.Threading.SemaphoreSlim _syncer = new System.Threading.SemaphoreSlim(1, 1);
 
         public BitmapImage ActorIcon
         {
@@ -97,10 +90,25 @@ namespace GPlusBrowser.ViewModel
         }
         public ICommand SendCommentCommand { get; private set; }
         public ICommand CancelCommentCommand { get; private set; }
-        public async void Refresh()
+        public async Task Refresh()
         {
+            _model.Comments.CollectionChanged -= _activity_Comments_CollectionChanged;
+            _model.Updated -= _activity_Refreshed;
             if (_model.CoreInfo.PostStatus != PostStatusType.Removed)
             {
+                try
+                {
+                    await _syncer.WaitAsync();
+                    if (_comments == null)
+                    {
+                        Comments = new ObservableCollection<CommentViewModel>();
+                        foreach (var item in _model.Comments)
+                            _comments.Add(new CommentViewModel(item));
+                        _model.Comments.CollectionChanged += _activity_Comments_CollectionChanged;
+                    }
+                }
+                finally { _syncer.Release(); }
+
                 StyleElement content;
                 var postDate = TimeZone.CurrentTimeZone.ToLocalTime(_model.CoreInfo.PostDate);
                 PostUserName = _model.CoreInfo.PostUser.Name;
@@ -112,23 +120,53 @@ namespace GPlusBrowser.ViewModel
 
                 if (_model.CoreInfo.AttachedContent != null)
                     AttachedContent = await AttachedContentViewModel.Create(_model.CoreInfo.AttachedContent).ConfigureAwait(false);
-                ActorIcon = await DataCacheDictionary.DownloadImage(
-                    new Uri(_model.CoreInfo.PostUser.IconImageUrl
-                        .Replace("$SIZE_SEGMENT", "s40-c-k").Replace("$SIZE_NUM", "80"))).ConfigureAwait(false);
+                ActorIcon = await DataCacheDictionary
+                    .DownloadImage(new Uri(_model.CoreInfo.PostUser.IconImageUrl.Replace("$SIZE_SEGMENT", "s40-c-k").Replace("$SIZE_NUM", "80")))
+                    .ConfigureAwait(false);
+
+                _model.Updated += _activity_Refreshed;
             }
         }
-        public override void Cleanup()
+        public async override void Cleanup()
         {
-            lock (_comments)
+            try
             {
+                await _syncer.WaitAsync();
                 base.Cleanup();
                 _model.Updated -= _activity_Refreshed;
                 _model.Comments.CollectionChanged -= _activity_Comments_CollectionChanged;
                 foreach (var item in _comments)
                     item.Cleanup();
             }
+            finally { _syncer.Release(); }
         }
 
+        void _activity_Refreshed(object sender, EventArgs e) { var tsk = Refresh(); }
+        async void _activity_Comments_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            try
+            {
+                await _syncer.WaitAsync();
+                switch (e.Action)
+                {
+                    case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
+                        foreach (var item in e.NewItems)
+                            _comments.AddOnDispatcher(new CommentViewModel((Comment)item));
+                        break;
+                    case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
+                        for (var i = 0; i < e.OldItems.Count; i++)
+                        {
+                            var tmp = _comments.First(vm => vm.Id == ((Comment)e.OldItems[i]).CommentInfo.Id);
+                            _comments.RemoveOnDispatcher(tmp);
+                        }
+                        break;
+                    case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:
+                        _comments.ClearOnDispatcher();
+                        break;
+                }
+            }
+            finally { _syncer.Release(); }
+        }
         async void SendCommentCommand_Executed()
         {
             if (string.IsNullOrEmpty(PostCommentText) || ShareBoxStatus != CommentPostBoxState.Writing)
@@ -148,28 +186,6 @@ namespace GPlusBrowser.ViewModel
         {
             PostCommentText = null;
             ShareBoxStatus = CommentPostBoxState.Deactive;
-        }
-        void _activity_Refreshed(object sender, EventArgs e) { Refresh(); }
-        void _activity_Comments_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
-        {
-            lock(_comments)
-                switch (e.Action)
-                {
-                    case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
-                        foreach (var item in e.NewItems)
-                            _comments.AddOnDispatcher(new CommentViewModel((Comment)item));
-                        break;
-                    case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
-                        for (var i = 0; i < e.OldItems.Count; i++)
-                        {
-                            var tmp = _comments.First(vm => vm.Id == ((Comment)e.OldItems[i]).CommentInfo.Id);
-                            _comments.RemoveOnDispatcher(tmp);
-                        }
-                        break;
-                    case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:
-                        _comments.ClearOnDispatcher();
-                        break;
-                }
         }
     }
     public enum CommentPostBoxState

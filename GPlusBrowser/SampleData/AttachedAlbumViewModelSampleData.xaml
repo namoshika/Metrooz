@@ -1,0 +1,22 @@
+﻿<ViewModel:AttachedAlbumViewModel xmlns:ViewModel="clr-namespace:GPlusBrowser.ViewModel" xmlns:Imaging="clr-namespace:System.Windows.Media.Imaging;assembly=PresentationCore" xmlns:Windows="clr-namespace:System.Windows;assembly=WindowsBase" xmlns:Cache="clr-namespace:System.Net.Cache;assembly=System" SelectedImageIndex="0" Title="Class curae aenean vestibulum maecenas">
+	<ViewModel:AttachedAlbumViewModel.SelectedImage>
+        <Imaging:BitmapImage UriSource="Files\pic00.jpg" />
+    </ViewModel:AttachedAlbumViewModel.SelectedImage>
+    <ViewModel:AttachedAlbumViewModel.ThumbnailImages>
+        <ViewModel:AttachedImageViewModel>
+			<ViewModel:AttachedImageViewModel.Image>
+                <Imaging:BitmapImage UriSource="Files\pic00.jpg" />
+            </ViewModel:AttachedImageViewModel.Image>
+		</ViewModel:AttachedImageViewModel>
+		<ViewModel:AttachedImageViewModel>
+			<ViewModel:AttachedImageViewModel.Image>
+                <Imaging:BitmapImage UriSource="Files\pic01.jpg" />
+            </ViewModel:AttachedImageViewModel.Image>
+		</ViewModel:AttachedImageViewModel>
+        <ViewModel:AttachedImageViewModel>
+            <ViewModel:AttachedImageViewModel.Image>
+                <Imaging:BitmapImage UriSource="Files\pic02.jpg" />
+            </ViewModel:AttachedImageViewModel.Image>
+        </ViewModel:AttachedImageViewModel>
+    </ViewModel:AttachedAlbumViewModel.ThumbnailImages>
+</ViewModel:AttachedAlbumViewModel>

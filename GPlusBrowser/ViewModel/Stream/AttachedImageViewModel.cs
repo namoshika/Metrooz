@@ -18,20 +18,27 @@ namespace GPlusBrowser.ViewModel
         public AttachedImageViewModel(AttachedImage attachedAlbumModel, BitmapImage image)
         {
             _attachedAlbumModel = attachedAlbumModel;
+            _linkUrl = attachedAlbumModel.LinkUrl;
             _image = image;
         }
+        Uri _linkUrl;
         BitmapImage _image;
         AttachedImage _attachedAlbumModel;
 
+        public Uri LinkUrl
+        {
+            get { return _linkUrl; }
+            set { Set(() => LinkUrl, ref _linkUrl, value); }
+        }
         public BitmapImage Image
         {
             get { return _image; }
             set { Set(() => Image, ref _image, value); }
         }
-        public static async Task<AttachedImageViewModel> Create(AttachedImage attachedAlbumModel)
+        public static async Task<AttachedImageViewModel> Create(AttachedImage attachedAlbumModel, string option = "w640-h500")
         {
             var img = await DataCacheDictionary.DownloadImage(
-                new Uri(attachedAlbumModel.Image.ImageUrl.Replace("$SIZE_SEGMENT", "w640-h480"))).ConfigureAwait(false);
+                new Uri(attachedAlbumModel.Image.ImageUrl.Replace("$SIZE_SEGMENT", option))).ConfigureAwait(false);
             return new AttachedImageViewModel(attachedAlbumModel, img);
         }
     }

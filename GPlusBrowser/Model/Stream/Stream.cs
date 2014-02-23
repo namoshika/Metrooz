@@ -24,7 +24,7 @@ namespace GPlusBrowser.Model
         ObservableCollection<Activity> _activities;
         IDisposable _streamObj;
 
-        public bool IsConnected { get; private set; }
+        public StreamStateType Status { get; private set; }
         public string Name { get { return Circle.Name; } }
         public ObservableCollection<Activity> Activities { get { return _activities; } }
         public CircleInfo Circle
@@ -37,20 +37,37 @@ namespace GPlusBrowser.Model
             }
         }
 
+        public async Task Initialize()
+        {
+            try
+            {
+                await _syncer.WaitAsync().ConfigureAwait(false);
+                if (Status >= StreamStateType.Initializing)
+                    return;
+
+                Status = StreamStateType.Initializing;
+                var activities = await _activityGetter.TakeAsync(20).ConfigureAwait(false);
+                _activities.Clear();
+                foreach (var item in activities)
+                    _activities.Add(new Activity(item));
+            }
+            catch (FailToOperationException)
+            {
+                Status = StreamStateType.UnInitialized;
+                OnChangedStatus(new EventArgs());
+            }
+            finally { _syncer.Release(); }
+        }
         public async Task Connect()
         {
             try
             {
                 await _syncer.WaitAsync().ConfigureAwait(false);
-                if (IsConnected)
+                if (Status >= StreamStateType.Connecting)
                     return;
 
-                IsConnected = true;
-                OnChangedIsConnected(new EventArgs());
-                var activities = await _activityGetter.TakeAsync(20).ConfigureAwait(false);
-                _activities.Clear();
-                foreach (var item in activities)
-                    _activities.Add(new Activity(item));
+                Status = StreamStateType.Connecting;
+                OnChangedStatus(new EventArgs());
                 _streamObj = Circle.GetStream().Subscribe(async newInfo =>
                     {
                         try
@@ -89,16 +106,16 @@ namespace GPlusBrowser.Model
                             await _syncer.WaitAsync().ConfigureAwait(false);
                             _streamObj.Dispose();
                             _streamObj = null;
-                            IsConnected = false;
-                            OnChangedIsConnected(new EventArgs());
+                            Status = StreamStateType.UnInitialized;
+                            OnChangedStatus(new EventArgs());
                         }
                         finally { _syncer.Release(); }
                     });
             }
             catch (FailToOperationException)
             {
-                IsConnected = false;
-                OnChangedIsConnected(new EventArgs());
+                Status = StreamStateType.UnInitialized;
+                OnChangedStatus(new EventArgs());
             }
             finally { _syncer.Release(); }
         }
@@ -116,11 +133,13 @@ namespace GPlusBrowser.Model
             { _syncer.Release(); }
         }
 
-        public event EventHandler ChangedIsConnected;
-        protected virtual void OnChangedIsConnected(EventArgs e)
+        public event EventHandler ChangedStatus;
+        protected virtual void OnChangedStatus(EventArgs e)
         {
-            if (ChangedIsConnected != null)
-                ChangedIsConnected(this, e);
+            if (ChangedStatus != null)
+                ChangedStatus(this, e);
         }
     }
+    public enum StreamStateType
+    { UnInitialized, Initializing, Connecting }
 }
