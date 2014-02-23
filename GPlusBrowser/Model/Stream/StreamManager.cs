@@ -46,12 +46,6 @@ namespace GPlusBrowser.Model
                 IsInitialized = _accountModel.PlusClient.People.CirclesAndBlockStatus > CircleUpdateLevel.Unloaded;
             }
         }
-        public void Reconnect()
-        {
-            foreach (var item in Streams)
-                if (item.IsConnected)
-                    item.Connect();
-        }
 
         public void Dispose()
         {

@@ -139,6 +139,14 @@ namespace GPlusBrowser.ViewModel
         {
             IsDisconnected = !_accountModel.PlusClient.Activity.IsConnected;
         }
-        void ReconnectCommand_Executed() { _circleManagerModel.Reconnect(); }
+        async void ReconnectCommand_Executed()
+        {
+            if (IsActive == false)
+                return;
+
+            IsLoading = true;
+            await _circleModel.Connect();
+            IsLoading = false;
+        }
     }
 }

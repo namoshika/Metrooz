@@ -20,10 +20,9 @@ namespace GPlusBrowser.Model
         System.Threading.SemaphoreSlim _syncer;
         int _maxActivityCount = 30;
         CircleInfo _circle;
-        IDisposable _streamObj;
         IInfoList<ActivityInfo> _activityGetter;
         ObservableCollection<Activity> _activities;
-        bool _isUpdated;
+        IDisposable _streamObj;
 
         public bool IsConnected { get; private set; }
         public string Name { get { return Circle.Name; } }
@@ -38,58 +37,63 @@ namespace GPlusBrowser.Model
             }
         }
 
-        public async void Connect()
+        public async Task Connect()
         {
             try
             {
                 await _syncer.WaitAsync().ConfigureAwait(false);
+                if (IsConnected)
+                    return;
+
+                var activities = await _activityGetter.TakeAsync(20).ConfigureAwait(false);
+                _activities.Clear();
+                foreach (var item in activities)
+                    _activities.Add(new Activity(item));
                 IsConnected = true;
-                if (_isUpdated == false)
-                {
-                    _activities.Clear();
-                    foreach (var item in await _activityGetter.TakeAsync(20).ConfigureAwait(false))
-                        _activities.Add(new Activity(item));
-                    _isUpdated = true;
-                }
-                if (_streamObj == null)
-                    _streamObj = Circle.GetStream().Subscribe(async newInfo =>
+                _streamObj = Circle.GetStream().Subscribe(async newInfo =>
+                    {
+                        try
                         {
-                            try
+                            await _syncer.WaitAsync().ConfigureAwait(false);
+                            var item = Activities.FirstOrDefault(activity => activity.CoreInfo.Id == newInfo.Id);
+                            switch (newInfo.PostStatus)
                             {
-                                await _syncer.WaitAsync().ConfigureAwait(false);
-                                var item = Activities.FirstOrDefault(activity => activity.CoreInfo.Id == newInfo.Id);
-                                switch (newInfo.PostStatus)
-                                {
-                                    case PostStatusType.First:
-                                    case PostStatusType.Edited:
-                                        //itemがnullの場合は更新する。nullでない場合はすでにある値を更新する。
-                                        //しかし更新はActivityオブジェクト自体が行うため、Streamでは行わない
-                                        if (item == null)
+                                case PostStatusType.First:
+                                case PostStatusType.Edited:
+                                    //itemがnullの場合は更新する。nullでない場合はすでにある値を更新する。
+                                    //しかし更新はActivityオブジェクト自体が行うため、Streamでは行わない
+                                    if (item == null)
+                                    {
+                                        item = new Activity(newInfo);
+                                        _activities.Insert(0, item);
+                                        if (_activities.Count > _maxActivityCount)
                                         {
-                                            item = new Activity(newInfo);
-                                            _activities.Insert(0, item);
-                                            if (_activities.Count > _maxActivityCount)
-                                            {
-                                                _activities[_maxActivityCount].Dispose();
-                                                _activities.RemoveAt(_maxActivityCount);
-                                            }
+                                            _activities[_maxActivityCount].Dispose();
+                                            _activities.RemoveAt(_maxActivityCount);
                                         }
-                                        break;
-                                    case PostStatusType.Removed:
-                                        _activities.Remove(item);
-                                        break;
-                                }
+                                    }
+                                    break;
+                                case PostStatusType.Removed:
+                                    _activities.Remove(item);
+                                    break;
                             }
-                            finally
-                            { _syncer.Release(); }
-                        },
-                        ex =>
+                        }
+                        finally
+                        { _syncer.Release(); }
+                    },
+                    async ex =>
+                    {
+                        try
                         {
+                            await _syncer.WaitAsync().ConfigureAwait(false);
                             _streamObj.Dispose();
                             _streamObj = null;
-                        });
+                            IsConnected = false;
+                        }
+                        finally { _syncer.Release(); }
+                    });
             }
-            catch (FailToOperationException) { }
+            catch (FailToOperationException) { IsConnected = false; }
             finally { _syncer.Release(); }
         }
         public async void Dispose()
@@ -99,10 +103,8 @@ namespace GPlusBrowser.Model
                 await _syncer.WaitAsync().ConfigureAwait(false);
                 if (_streamObj != null)
                     _streamObj.Dispose();
-                _streamObj = null;
                 foreach (var item in _activities)
                     item.Dispose();
-                _activities.Clear();
             }
             finally
             { _syncer.Release(); }
