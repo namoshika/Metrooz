@@ -37,34 +37,23 @@ namespace GPlusBrowser.Model
             }
         }
 
-        public async Task Initialize()
+        public async void Connect()
         {
             try
             {
                 await _syncer.WaitAsync().ConfigureAwait(false);
-                if (Status >= StreamStateType.Initializing)
+                if (Status >= StreamStateType.Loading)
                     return;
 
-                Status = StreamStateType.Initializing;
+                Status = StreamStateType.Loading;
+                OnChangedStatus(new EventArgs());
                 var activities = await _activityGetter.TakeAsync(20).ConfigureAwait(false);
+
+                Status = StreamStateType.Initing;
+                OnChangedStatus(new EventArgs());
                 _activities.Clear();
                 foreach (var item in activities)
                     _activities.Add(new Activity(item));
-            }
-            catch (FailToOperationException)
-            {
-                Status = StreamStateType.UnInitialized;
-                OnChangedStatus(new EventArgs());
-            }
-            finally { _syncer.Release(); }
-        }
-        public async Task Connect()
-        {
-            try
-            {
-                await _syncer.WaitAsync().ConfigureAwait(false);
-                if (Status >= StreamStateType.Connecting)
-                    return;
 
                 Status = StreamStateType.Connecting;
                 OnChangedStatus(new EventArgs());
@@ -106,7 +95,19 @@ namespace GPlusBrowser.Model
                             await _syncer.WaitAsync().ConfigureAwait(false);
                             _streamObj.Dispose();
                             _streamObj = null;
-                            Status = StreamStateType.UnInitialized;
+                            Status = StreamStateType.UnLoaded;
+                            OnChangedStatus(new EventArgs());
+                        }
+                        finally { _syncer.Release(); }
+                    },
+                    async () =>
+                    {
+                        try
+                        {
+                            await _syncer.WaitAsync().ConfigureAwait(false);
+                            _streamObj.Dispose();
+                            _streamObj = null;
+                            Status = StreamStateType.UnLoaded;
                             OnChangedStatus(new EventArgs());
                         }
                         finally { _syncer.Release(); }
@@ -114,7 +115,7 @@ namespace GPlusBrowser.Model
             }
             catch (FailToOperationException)
             {
-                Status = StreamStateType.UnInitialized;
+                Status = StreamStateType.UnLoaded;
                 OnChangedStatus(new EventArgs());
             }
             finally { _syncer.Release(); }
@@ -141,5 +142,5 @@ namespace GPlusBrowser.Model
         }
     }
     public enum StreamStateType
-    { UnInitialized, Initializing, Connecting }
+    { UnLoaded, Loading, Initing, Connecting }
 }

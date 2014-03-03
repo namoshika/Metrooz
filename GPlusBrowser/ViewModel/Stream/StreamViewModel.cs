@@ -25,9 +25,11 @@ namespace GPlusBrowser.ViewModel
             _circleManagerModel = manager;
             _accountModel = account;
             _isConnected = true;
+            _lastConnectDate = DateTime.MaxValue;
             _activities = new ObservableCollection<ActivityViewModel>();
             ReconnectCommand = new RelayCommand(ReconnectCommand_Executed);
 
+            _circleModel.ChangedStatus += _circleModel_ChangedStatus;
             PropertyChanged += StreamViewModel_PropertyChanged;
         }
         bool _isActive, _isLoading, _isIniting, _isConnected;
@@ -36,6 +38,7 @@ namespace GPlusBrowser.ViewModel
         Account _accountModel;
         StreamManager _circleManagerModel;
         ObservableCollection<ActivityViewModel> _activities;
+        DateTime _lastConnectDate;
         readonly System.Threading.SemaphoreSlim _syncerActivities = new System.Threading.SemaphoreSlim(1, 1);
 
         public bool IsActive
@@ -70,54 +73,10 @@ namespace GPlusBrowser.ViewModel
         }
         public ICommand ReconnectCommand { get; private set; }
 
-        public async Task Activate()
+        public void Activate()
         {
-            try
-            {
-                await _syncerActivities.WaitAsync();
-
-                //_circleModelの初期化
-                //接続に失敗しても連打防止として1秒間は通信中の表示をする。これの
-                //実装用に_circleModel.ChangedStatusの購読を切っておく必要があった。
-                _circleModel.ChangedStatus -= _circleModel_ChangedStatus;
-                if (_circleModel.Status < StreamStateType.Initializing)
-                {
-                    IsConnected = true;
-                    IsLoading = true;
-                    await _circleModel.Initialize();
-                    if (_circleModel.Status < StreamStateType.Initializing)
-                    {
-                        await Task.Delay(1000);
-                        IsConnected = false;
-                    }
-                    IsIniting = true;
-                }
-                //初期化に成功したら_activitiesの更新を行う
-                _circleModel.ChangedStatus += _circleModel_ChangedStatus;
-                if (_circleModel.Status >= StreamStateType.Initializing)
-                {
-                    //古い要素を削除
-                    _circleModel.Activities.CollectionChanged -= _circleModel_ActivitiesCollectionChanged;
-                    foreach (var item in _activities)
-                        item.Cleanup();
-                    _activities.Clear();
-                    //新しい要素を追加
-                    foreach (var item in _circleModel.Activities)
-                    {
-                        var activity = new ActivityViewModel(item);
-                        var tsk = activity.Refresh();
-                        _activities.Add(activity);
-                    }
-
-                    //ストリーミングapiへ接続
-                    _circleModel.Activities.CollectionChanged += _circleModel_ActivitiesCollectionChanged;
-                    if (_circleModel.Status < StreamStateType.Connecting)
-                        await _circleModel.Connect();
-                }
-                IsIniting = false;
-                IsLoading = false;
-            }
-            finally { _syncerActivities.Release(); }
+            if (_circleModel.Status < StreamStateType.Loading)
+                _circleModel.Connect();
         }
         public override void Cleanup()
         {
@@ -127,23 +86,33 @@ namespace GPlusBrowser.ViewModel
                 item.Cleanup();
         }
 
-        void StreamViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        async void StreamViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             switch (e.PropertyName)
             {
                 case "IsActive":
-                    if (_isActive)
+                    try
                     {
-                        var tsk = Activate();
-                    }
-                    else
-                    {
+                        await _syncerActivities.WaitAsync();
                         //古い要素を削除
                         _circleModel.Activities.CollectionChanged -= _circleModel_ActivitiesCollectionChanged;
                         foreach (var item in _activities)
                             item.Cleanup();
                         _activities.Clear();
+
+                        //新しい要素を追加
+                        if (_isActive == false)
+                            return;
+                        _circleModel.Activities.CollectionChanged += _circleModel_ActivitiesCollectionChanged;
+                        foreach (var item in _circleModel.Activities)
+                        {
+                            var activity = new ActivityViewModel(item);
+                            _activities.Add(activity);
+                        }
                     }
+                    finally
+                    { _syncerActivities.Release(); }
+                    Activate();
                     break;
             }
         }
@@ -184,12 +153,37 @@ namespace GPlusBrowser.ViewModel
             finally
             { _syncerActivities.Release(); }
         }
-        void _circleModel_ChangedStatus(object sender, EventArgs e)
+        async void _circleModel_ChangedStatus(object sender, EventArgs e)
         {
-            if (_circleModel.Status == StreamStateType.UnInitialized)
-                IsConnected = false;
+            try
+            {
+                await _syncerActivities.WaitAsync().ConfigureAwait(false);
+                switch (_circleModel.Status)
+                {
+                    case StreamStateType.Loading:
+                        IsConnected = true;
+                        IsLoading = true;
+                        _lastConnectDate = DateTime.UtcNow;
+                        break;
+                    case StreamStateType.Initing:
+                        IsIniting = true;
+                        await Task.Delay(300);
+                        break;
+                    case StreamStateType.Connecting:
+                        IsIniting = false;
+                        IsLoading = false;
+                        break;
+                    case StreamStateType.UnLoaded:
+                        await Task.Delay(1000);
+                        IsIniting = false;
+                        IsLoading = false;
+                        IsConnected = false;
+                        break;
+                }
+            }
+            finally
+            { _syncerActivities.Release(); }
         }
-        void ReconnectCommand_Executed()
-        { var tsk = Activate(); }
+        void ReconnectCommand_Executed() { Activate(); }
     }
 }
