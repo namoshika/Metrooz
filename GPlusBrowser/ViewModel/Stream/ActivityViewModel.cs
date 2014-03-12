@@ -21,15 +21,19 @@ namespace GPlusBrowser.ViewModel
         public ActivityViewModel(Activity activity)
         {
             _model = activity;
+            Comments = new ObservableCollection<CommentViewModel>();
             SendCommentCommand = new RelayCommand(SendCommentCommand_Executed);
             CancelCommentCommand = new RelayCommand(CancelCommentCommand_Executed);
 
-            var tsk = Refresh().ConfigureAwait(false);
+            var tsk = Refresh();
+            PropertyChanged += ActivityViewModel_PropertyChanged;
         }
         CommentPostBoxState _shareBoxStatus;
         Activity _model;
         BitmapImage _actorIcon;
         Uri _activityUrl;
+        bool _isEnableCommentsHeader, _isCheckedCommentsHeader;
+        bool _isOpenedCommentList, _isLoadingCommentList;
         string _postUserName;
         string _postDate;
         string _postText;
@@ -38,6 +42,7 @@ namespace GPlusBrowser.ViewModel
         ObservableCollection<CommentViewModel> _comments;
         StyleElement _postContentInline;
         readonly System.Threading.SemaphoreSlim _activitySyncer = new System.Threading.SemaphoreSlim(1, 1);
+        readonly System.Threading.SemaphoreSlim _loadingSyncer = new System.Threading.SemaphoreSlim(1, 1);
 
         public BitmapImage ActorIcon
         {
@@ -48,6 +53,26 @@ namespace GPlusBrowser.ViewModel
         {
             get { return _activityUrl; }
             set { Set(() => ActivityUrl, ref _activityUrl, value); }
+        }
+        public bool IsEnableCommentsHeader
+        {
+            get { return _isEnableCommentsHeader; }
+            set { Set(() => IsEnableCommentsHeader, ref _isEnableCommentsHeader, value); }
+        }
+        public bool IsCheckedCommentsHeader
+        {
+            get { return _isCheckedCommentsHeader; }
+            set { Set(() => IsCheckedCommentsHeader, ref _isCheckedCommentsHeader, value); }
+        }
+        public bool IsOpenedCommentList
+        {
+            get { return _isOpenedCommentList; }
+            set { Set(() => IsOpenedCommentList, ref _isOpenedCommentList, value); }
+        }
+        public bool IsLoadingCommentList
+        {
+            get { return _isLoadingCommentList; }
+            set { Set(() => IsLoadingCommentList, ref _isLoadingCommentList, value); }
         }
         public string PostUserName
         {
@@ -93,7 +118,6 @@ namespace GPlusBrowser.ViewModel
         public ICommand CancelCommentCommand { get; private set; }
         public async Task Refresh()
         {
-            _model.Comments.CollectionChanged -= _activity_Comments_CollectionChanged;
             _model.Updated -= _activity_Refreshed;
             if (_model.CoreInfo.PostStatus != PostStatusType.Removed)
             {
@@ -116,6 +140,7 @@ namespace GPlusBrowser.ViewModel
                             _model.Comments.Select(item => new CommentViewModel(item)));
                         _model.Comments.CollectionChanged += _activity_Comments_CollectionChanged;
                         Comments = commes;
+                        IsEnableCommentsHeader = _comments.Count > 2;
 
                         if (_model.CoreInfo.AttachedContent != null)
                             AttachedContent = await AttachedContentViewModel.Create(_model.CoreInfo.AttachedContent).ConfigureAwait(false);
@@ -142,7 +167,6 @@ namespace GPlusBrowser.ViewModel
             finally { _activitySyncer.Release(); }
         }
 
-        void _activity_Refreshed(object sender, EventArgs e) { var tsk = Refresh().ConfigureAwait(false); }
         async void _activity_Comments_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
             try
@@ -165,8 +189,36 @@ namespace GPlusBrowser.ViewModel
                         await _comments.ClearOnDispatcher().ConfigureAwait(false);
                         break;
                 }
+                IsEnableCommentsHeader = _comments.Count > 2;
             }
             finally { _activitySyncer.Release(); }
+        }
+        void _activity_Refreshed(object sender, EventArgs e) { var tsk = Refresh().ConfigureAwait(false); }
+        void ActivityViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            switch(e.PropertyName)
+            {
+                case "IsCheckedCommentsHeader":
+                    Task.Run(async () =>
+                        {
+                            if (IsCheckedCommentsHeader)
+                                try
+                                {
+                                    await _loadingSyncer.WaitAsync();
+                                    IsLoadingCommentList = true;
+                                    await _model.CoreInfo.UpdateGetActivityAsync(false, ActivityUpdateApiFlag.GetActivity);
+                                    await Refresh();
+                                    IsLoadingCommentList = false;
+                                    IsOpenedCommentList = true;
+                                }
+                                finally { _loadingSyncer.Release(); }
+                            else
+                            {
+                                IsOpenedCommentList = false;
+                            }
+                        });
+                    break;
+            }
         }
         void SendCommentCommand_Executed()
         {

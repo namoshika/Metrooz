@@ -423,14 +423,30 @@
                             	</i:Interaction.Behaviors>
                         </TextBlock>
                         <ContentPresenter Content="{Binding AttachedContent}" />
-                        <ctl:ExpandableListView ItemsSource="{Binding Comments}" HorizontalContentAlignment="Stretch">
-                            <ctl:ExpandableListView.Header>
-                                <MultiBinding Converter="{StaticResource commentExpanderHeaderConverter}">
-                                    <Binding RelativeSource="{RelativeSource Self}" Path="IsExpand" />
-                                    <Binding RelativeSource="{RelativeSource Self}" Path="Items.Count" />
-                                </MultiBinding>
-                            </ctl:ExpandableListView.Header>
-                        </ctl:ExpandableListView>
+                        <Border Grid.Row="0" BorderThickness="0,0,0,1" BorderBrush="LightGray">
+                            <ToggleButton Height="30" IsChecked="{Binding IsCheckedCommentsHeader, Mode=OneWayToSource}"
+                                          Visibility="{Binding IsEnableCommentsHeader, Converter={StaticResource booleanToVisibilityConverter}}" FontSize="13" FontWeight="Bold" Padding="5,0">
+                                <Grid>
+                                    <TextBlock VerticalAlignment="Center">
+                                        <TextBlock.Text>
+                                            <MultiBinding Converter="{StaticResource commentExpanderHeaderConverter}">
+                                                <Binding ElementName="commentList" Path="IsExpand" />
+                                                <Binding ElementName="commentList" Path="Items.Count" />
+                                            </MultiBinding>
+                                        </TextBlock.Text>
+                                    </TextBlock>
+                                    <controls:ProgressRing IsActive="{Binding IsLoadingCommentList}" Width="22" Height="22" HorizontalAlignment="Right" />
+                                </Grid>
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="{x:Type ToggleButton}">
+                                        <Border BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="0,1,0,0" Background="#f0f0f0">
+                                            <ContentPresenter Margin="{TemplateBinding Padding}" />
+                                        </Border>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                            </ToggleButton>
+                        </Border>
+                        <ctl:ExpandableListView x:Name="commentList" IsExpand="{Binding IsOpenedCommentList}" ItemsSource="{Binding Comments}" HorizontalContentAlignment="Stretch" />
                         <StackPanel FocusManager.IsFocusScope="True" KeyboardNavigation.TabNavigation="Local" FocusVisualStyle="{x:Null}">
                             <Border BorderBrush="LightGray" BorderThickness="1,0,1,1">
                                 <Grid>

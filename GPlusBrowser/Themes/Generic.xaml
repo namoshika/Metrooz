@@ -16,28 +16,9 @@
                     <Border Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="auto" MinHeight="15" />
-                                <RowDefinition Height="auto" />
-                            </Grid.RowDefinitions>
-                            <Border Grid.Row="0" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="0,0,0,1">
-                                <ToggleButton Height="30" FontWeight="Bold" FontSize="{TemplateBinding FontSize}" Content="{TemplateBinding Header}" BorderBrush="{TemplateBinding BorderBrush}"
-                        		              Visibility="{TemplateBinding Expandable, Converter={StaticResource boolToVisibilityConverter}}"
-                        		              IsChecked="{Binding IsExpand, RelativeSource={RelativeSource TemplatedParent}}">
-                                    <ToggleButton.Template>
-                                        <ControlTemplate TargetType="{x:Type ToggleButton}">
-                                            <Border BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="0,1,0,0" Background="#f0f0f0">
-                                                <ContentPresenter Margin="10,0,10,0" HorizontalAlignment="Left" VerticalAlignment="Center" />
-                                            </Border>
-                                        </ControlTemplate>
-                                    </ToggleButton.Template>
-                                </ToggleButton>
-                            </Border>
-                        	<Border x:Name="PART_scroller_itemsPresenter" Grid.Row="1" VerticalAlignment="Top" Height="0.0">
-                        		<ItemsPresenter />
-                        	</Border>
-                        </Grid>
+                        <Border x:Name="PART_scroller_itemsPresenter" VerticalAlignment="Top" Height="0.0">
+                            <ItemsPresenter />
+                        </Border>
                     </Border>
                 </ControlTemplate>
             </Setter.Value>
