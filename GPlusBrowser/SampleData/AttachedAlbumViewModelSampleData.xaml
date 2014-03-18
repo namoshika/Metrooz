@@ -1,7 +1,7 @@
-﻿<ViewModel:AttachedAlbumViewModel xmlns:ViewModel="clr-namespace:GPlusBrowser.ViewModel" xmlns:Imaging="clr-namespace:System.Windows.Media.Imaging;assembly=PresentationCore" xmlns:Windows="clr-namespace:System.Windows;assembly=WindowsBase" xmlns:Cache="clr-namespace:System.Net.Cache;assembly=System" SelectedImageIndex="0" Title="Class curae aenean vestibulum maecenas">
-	<ViewModel:AttachedAlbumViewModel.SelectedImage>
+﻿<ViewModel:AttachedAlbumViewModel xmlns:ViewModel="clr-namespace:GPlusBrowser.ViewModel" xmlns:Imaging="clr-namespace:System.Windows.Media.Imaging;assembly=PresentationCore" xmlns:Windows="clr-namespace:System.Windows;assembly=WindowsBase" xmlns:Cache="clr-namespace:System.Net.Cache;assembly=System" Title="Class curae aenean vestibulum maecenas">
+	<ViewModel:AttachedAlbumViewModel.LargeImage>
         <Imaging:BitmapImage UriSource="Files\pic00.jpg" />
-    </ViewModel:AttachedAlbumViewModel.SelectedImage>
+    </ViewModel:AttachedAlbumViewModel.LargeImage>
     <ViewModel:AttachedAlbumViewModel.ThumbnailImages>
         <ViewModel:AttachedImageViewModel>
 			<ViewModel:AttachedImageViewModel.Image>

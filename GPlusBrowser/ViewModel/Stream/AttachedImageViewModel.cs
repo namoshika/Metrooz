@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Threading;
-using System.Windows.Media.Imaging;
+using System.Windows.Media;
 namespace GPlusBrowser.ViewModel
 {
     using SunokoLibrary.Web.GooglePlus;
@@ -15,22 +15,35 @@ namespace GPlusBrowser.ViewModel
 
     public class AttachedImageViewModel : AttachedContentViewModel
     {
-        public AttachedImageViewModel(AttachedImage attachedAlbumModel, BitmapImage image)
+        public AttachedImageViewModel(AttachedImage attachedAlbumModel, ImageSource image)
         {
             _attachedAlbumModel = attachedAlbumModel;
             _linkUrl = attachedAlbumModel.LinkUrl;
             _image = image;
+            _width = image.Width;
+            _height = image.Height;
         }
+        double _width, _height;
         Uri _linkUrl;
-        BitmapImage _image;
+        ImageSource _image;
         AttachedImage _attachedAlbumModel;
 
+        public double Width
+        {
+            get { return _width; }
+            set { Set(() => Width, ref _width, value); }
+        }
+        public double Height
+        {
+            get { return _height; }
+            set { Set(() => Height, ref _height, value); }
+        }
         public Uri LinkUrl
         {
             get { return _linkUrl; }
             set { Set(() => LinkUrl, ref _linkUrl, value); }
         }
-        public BitmapImage Image
+        public ImageSource Image
         {
             get { return _image; }
             set { Set(() => Image, ref _image, value); }

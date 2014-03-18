@@ -12,20 +12,41 @@ namespace GPlusBrowser.ViewModel
 {
     public class AttachedLinkViewModel : AttachedContentViewModel
     {
-        public AttachedLinkViewModel(string ancourTitle, string ancourIntroductionText, Uri ancourUrl, ImageSource ancourFaviconUrl, ImageSource thumnailUrl)
+        public AttachedLinkViewModel(string ancourTitle, string ancourIntroductionText, Uri ancourUrl, ImageSource thumbnail)
         {
             _ancourTitle = ancourTitle;
             _ancourUrl = ancourUrl;
             _ancourIntroductionText = ancourIntroductionText;
-            _thumnailUrl = thumnailUrl;
-            _ancourFaviconUrl = ancourFaviconUrl;
+            _hasThumb = thumbnail != null;
+            _thumnailUrl = thumbnail;
+            if (thumbnail != null)
+            {
+                _thumbWidth = thumbnail.Width;
+                _thumbHeight = thumbnail.Height;
+            }
         }
+        bool _hasThumb;
+        double _thumbWidth, _thumbHeight;
         string _ancourTitle;
         Uri _ancourUrl;
-        ImageSource _ancourFaviconUrl;
         ImageSource _thumnailUrl;
         string _ancourIntroductionText;
 
+        public bool HasThumb
+        {
+            get { return _hasThumb; }
+            set { Set(() => HasThumb, ref _hasThumb, value); }
+        }
+        public double ThumbWidth
+        {
+            get { return _thumbWidth; }
+            set { Set(() => ThumbWidth, ref _thumbWidth, value); }
+        }
+        public double ThumbHeight
+        {
+            get { return _thumbHeight; }
+            set { Set(() => ThumbHeight, ref _thumbHeight, value); }
+        }
         public string AncourTitle
         {
             get { return _ancourTitle; }
@@ -41,11 +62,6 @@ namespace GPlusBrowser.ViewModel
             get { return _ancourUrl; }
             set { Set(() => AncourUrl, ref _ancourUrl, value); }
         }
-        public ImageSource AncourFaviconUrl
-        {
-            get { return _ancourFaviconUrl; }
-            set { Set(() => AncourFaviconUrl, ref _ancourFaviconUrl, value); }
-        }
         public ImageSource ThumnailUrl
         {
             get { return _thumnailUrl; }
@@ -54,9 +70,8 @@ namespace GPlusBrowser.ViewModel
 
         public static async Task<AttachedLinkViewModel> Create(AttachedLink model)
         {
-            var fvcnImg = model.FaviconUrl == null ? null : await DataCacheDictionary.DownloadImage(model.FaviconUrl).ConfigureAwait(false);
             var thmbImg = model.ThumbnailUrl == null ? null : await DataCacheDictionary.DownloadImage(new Uri(model.ThumbnailUrl.Replace("$SIZE_SEGMENT", "s100"))).ConfigureAwait(false);
-            return new AttachedLinkViewModel(model.Title, model.Summary, model.LinkUrl, fvcnImg, thmbImg);
+            return new AttachedLinkViewModel(model.Title, model.Summary, model.LinkUrl, thmbImg);
         }
     }
 }

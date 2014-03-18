@@ -9,9 +9,6 @@
             </ViewModel:ActivityViewModel.ActorIcon>
             <ViewModel:ActivityViewModel.AttachedContent>
                 <ViewModel:AttachedLinkViewModel AncourIntroductionText="Aliquam cras vestibulum" AncourTitle="Aenean nam">
-                    <ViewModel:AttachedLinkViewModel.AncourFaviconUrl>
-                        <Imaging:BitmapImage UriSource="Files\pic01.jpg" />
-                    </ViewModel:AttachedLinkViewModel.AncourFaviconUrl>
                     <ViewModel:AttachedLinkViewModel.ThumnailUrl>
                         <Imaging:BitmapImage UriSource="Files\pic00.jpg" />
                     </ViewModel:AttachedLinkViewModel.ThumnailUrl>

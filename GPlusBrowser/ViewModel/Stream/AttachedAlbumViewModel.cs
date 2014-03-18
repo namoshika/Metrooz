@@ -16,32 +16,32 @@ namespace GPlusBrowser.ViewModel
 
     public class AttachedAlbumViewModel : AttachedContentViewModel
     {
-        public AttachedAlbumViewModel(string title, AttachedAlbum attachedAlbumModel, AttachedImageViewModel[] thumbnailImages, ImageSource[] largeImages)
+        public AttachedAlbumViewModel(string title, AttachedAlbum attachedAlbumModel, AttachedImageViewModel[] thumbnailImages, ImageSource largeImage)
         {
             _title = title;
-            _largeImages = largeImages;
+            _largeImage = largeImage;
             _thumbnailImages = thumbnailImages;
             _attachedAlbumModel = attachedAlbumModel;
-            _selectedImageIndex = largeImages.Length > 0 ? 0 : -1;
-            _selectedImage = _selectedImageIndex > -1 ? _largeImages[_selectedImageIndex] : null;
             _linkUrl = attachedAlbumModel.LinkUrl;
+            _width = largeImage.Width;
+            _height = largeImage.Height;
         }
-        int _selectedImageIndex;
+        double _width, _height;
         string _title;
         Uri _linkUrl;
-        ImageSource _selectedImage;
-        ImageSource[] _largeImages;
+        ImageSource _largeImage;
         AttachedImageViewModel[] _thumbnailImages;
         AttachedAlbum _attachedAlbumModel;
 
-        public int SelectedImageIndex
+        public double Width
         {
-            get { return _selectedImageIndex; }
-            set
-            {
-                Set(() => SelectedImageIndex, ref _selectedImageIndex, value);
-                SelectedImage = _selectedImageIndex > -1 ? _largeImages[value] : null;
-            }
+            get { return _width; }
+            set { Set(() => Width, ref _width, value); }
+        }
+        public double Height
+        {
+            get { return _height; }
+            set { Set(() => Height, ref _height, value); }
         }
         public string Title
         {
@@ -53,10 +53,10 @@ namespace GPlusBrowser.ViewModel
             get { return _linkUrl; }
             set { Set(() => LinkUrl, ref _linkUrl, value); }
         }
-        public ImageSource SelectedImage
+        public ImageSource LargeImage
         {
-            get { return _selectedImage; }
-            set { Set(() => SelectedImage, ref _selectedImage, value); }
+            get { return _largeImage; }
+            set { Set(() => LargeImage, ref _largeImage, value); }
         }
         public AttachedImageViewModel[] ThumbnailImages
         {
@@ -67,29 +67,15 @@ namespace GPlusBrowser.ViewModel
         {
             var title = attachedAlbumModel.Album.Name;
             var thumbImgs = new List<AttachedImageViewModel>();
-            var largeImgs = new List<ImageSource>();
-            var downDatas = await Task.Factory.ContinueWhenAll(attachedAlbumModel.Pictures
-                .SelectMany(imgInf =>
-                    new[]{
-                        new { IsThumbnail = true, Info = imgInf, Url = new Uri(imgInf.Image.ImageUrl.Replace("$SIZE_SEGMENT", "s70-c-k")) },
-                        new { IsThumbnail = false, Info = imgInf, Url = new Uri(imgInf.Image.ImageUrl.Replace("$SIZE_SEGMENT", "w640-h480")) }
-                    })
-                .Select(async jobInf =>
-                    new
-                    {
-                        IsThumbnail = jobInf.IsThumbnail,
-                        Info = jobInf.Info,
-                        Data = await DataCacheDictionary.DownloadImage(jobInf.Url).ConfigureAwait(false)
-                    })
-                .ToArray(), tsks => tsks.Select(tsk => tsk.Result)).ConfigureAwait(false);
+            var downDatas = await Task.WhenAll(attachedAlbumModel.Pictures
+                .Select(async imgInf => new {
+                    Info = imgInf,
+                    Data = await DataCacheDictionary.DownloadImage(new Uri(imgInf.Image.ImageUrl.Replace("$SIZE_SEGMENT", "s70"))).ConfigureAwait(false) }))
+                .ConfigureAwait(false);
+            var largeImg = await DataCacheDictionary.DownloadImage(new Uri(attachedAlbumModel.Pictures.First().Image.ImageUrl.Replace("$SIZE_SEGMENT", "w640-h480")));
             foreach (var jobInf in downDatas)
-            {
-                if (jobInf.IsThumbnail)
-                    thumbImgs.Add(new AttachedImageViewModel(jobInf.Info, jobInf.Data));
-                else
-                    largeImgs.Add(jobInf.Data);
-            }
-            return new AttachedAlbumViewModel(title, attachedAlbumModel, thumbImgs.ToArray(), largeImgs.ToArray());
+                thumbImgs.Add(new AttachedImageViewModel(jobInf.Info, jobInf.Data));
+            return new AttachedAlbumViewModel(title, attachedAlbumModel, thumbImgs.ToArray(), largeImg);
         }
     }
 }

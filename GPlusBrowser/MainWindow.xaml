@@ -221,7 +221,16 @@
                 	<Border x:Name="border" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="White" d:IsHidden="True">
                 		<controls:ProgressRing x:Name="progressRing" HorizontalAlignment="Stretch" Height="40" VerticalAlignment="Stretch" Width="40" IsActive="True"/>
                 	</Border>
-                	<Rectangle Fill="{StaticResource AccentColorBrush}" Height="42" Width="10" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,8,0,0"/>
+                    <Rectangle Height="42" Width="10" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,8,0,0">
+                        <i:Interaction.Triggers>
+                            <ei:DataTrigger Binding="{Binding IsActive, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}" Value="True">
+                                <ei:ChangePropertyAction PropertyName="Fill" Value="{StaticResource AccentColorBrush}" />
+                            </ei:DataTrigger>
+                            <ei:DataTrigger Binding="{Binding IsActive, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}" Value="False">
+                                <ei:ChangePropertyAction PropertyName="Fill" Value="LightGray" />
+                            </ei:DataTrigger>
+                        </i:Interaction.Triggers>
+                    </Rectangle>
                 </Grid>
             </DataTemplate>
             <DataTemplate x:Key="streamTemplate" DataType="{x:Type vm:StreamViewModel}">
@@ -563,14 +572,14 @@
                 </Border>
             </DataTemplate>
             <DataTemplate DataType="{x:Type vm:AttachedLinkViewModel}">
-                <Border BorderBrush="LightGray" BorderThickness="0,1,0,0" Margin="0,0,0,5" d:DataContext="{d:DesignData /SampleData/AttachedLinkViewModelSampleData.xaml}">
+                <Border BorderBrush="LightGray" BorderThickness="0,1,0,0" Margin="0,0,0,5" Padding="0,8,0,0" d:DataContext="{d:DesignData /SampleData/AttachedLinkViewModelSampleData.xaml}">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="auto" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <Image Grid.Column="0" Source="{Binding ThumnailUrl}" MaxWidth="100" MaxHeight="100" Stretch="Uniform" VerticalAlignment="Top" Margin="0,5,5,0" />
-                        <TextBlock Grid.Column="1" Margin="0,8,0,0" TextWrapping="Wrap" Style="{StaticResource postTextStyle}">
+                        <Image Grid.Column="0" Source="{Binding ThumnailUrl}" Visibility="{Binding HasThumb, Converter={StaticResource booleanToVisibilityConverter}}" MaxWidth="{Binding ThumbWidth}" MaxHeight="{Binding Binding ThumbHeight}" Stretch="Uniform" VerticalAlignment="Top" Margin="0,0,5,0" />
+                        <TextBlock Grid.Column="1" TextWrapping="Wrap" Style="{StaticResource postTextStyle}">
                             <Hyperlink Focusable="False">
                                 <i:Interaction.Triggers>
                                     <i:EventTrigger EventName="Click">
@@ -655,7 +664,7 @@
                     </Storyboard>
                 </DataTemplate.Resources>
                 <Grid d:DesignWidth="550" d:DesignHeight="300" Background="Black" ClipToBounds="True" Margin="0,0,0,5" d:DataContext="{d:DesignData /SampleData/AttachedAlbumViewModelSampleData.xaml}">
-                    <Image x:Name="image" Source="{Binding SelectedImage}" Cursor="Hand" >
+                    <Image x:Name="image" MaxWidth="{Binding Width}" MaxHeight="{Binding Height}" Source="{Binding LargeImage}" Cursor="Hand" >
                     	<i:Interaction.Triggers>
                     		<i:EventTrigger EventName="MouseLeftButtonDown">
                     			<ei:LaunchUriOrFileAction Path="{Binding LinkUrl}"/>
@@ -693,8 +702,8 @@
                 </DataTemplate.Triggers>
             </DataTemplate>
             <DataTemplate DataType="{x:Type vm:AttachedImageViewModel}">
-                <Border MaxHeight="500" Background="Black" Margin="0,0,0,5" d:DesignWidth="400" d:DesignHeight="300">
-            		<Image Source="{Binding Image}" Cursor="Hand" >
+                <Border Background="Black" Margin="0,0,0,5" d:DesignWidth="400" d:DesignHeight="300">
+            		<Image MaxWidth="{Binding Width}" MaxHeight="{Binding Height}" Source="{Binding Image}" Cursor="Hand" >
             			<i:Interaction.Triggers>
             				<i:EventTrigger EventName="MouseLeftButtonDown">
             					<ei:LaunchUriOrFileAction Path="{Binding LinkUrl}"/>
