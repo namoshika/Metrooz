@@ -137,7 +137,6 @@
     <Compile Include="Model\AccountManager.cs" />
     <Compile Include="Model\Stream\Activity.cs" />
     <Compile Include="Model\Account.cs" />
-    <Compile Include="Model\SettingModel.cs" />
     <Compile Include="ViewModel\MainViewModel.cs" />
     <Compile Include="ViewModel\Stream\AttachedActivityViewModel.cs" />
     <Compile Include="ViewModel\Stream\AttachedAlbumViewModel.cs" />
@@ -152,7 +151,6 @@
     <Compile Include="ViewModel\AccountViewModel.cs" />
     <Compile Include="ViewModel\Stream\StreamViewModel.cs" />
     <Compile Include="ViewModel\Stream\CommentViewModel.cs" />
-    <Compile Include="ViewModel\SettingViewModel.cs" />
     <Compile Include="ViewModel\Stream\StreamManagerViewModel.cs" />
     <Compile Include="ViewModel\ViewModelLocator.cs" />
     <Page Include="MainWindow.xaml">

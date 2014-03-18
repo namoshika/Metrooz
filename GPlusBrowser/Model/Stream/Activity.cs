@@ -19,12 +19,13 @@ namespace GPlusBrowser.Model
             Initialize();
         }
         IDisposable _commReciever;
+        IDisposable _actvReciever;
 
         public ActivityInfo CoreInfo { get; private set; }
         public ObservableCollection<Comment> Comments { get; private set; }
         public void Initialize()
         {
-            CoreInfo.Refreshed += CoreInfo_Refreshed;
+            _actvReciever = CoreInfo.GetUpdatedActivity().Subscribe(CoreInfo_Refreshed);
             _commReciever = CoreInfo.GetComments(false, true).Subscribe(CoreInfo_RefreshComment);
         }
         public async Task<bool> CommentPost(string content)
@@ -43,11 +44,12 @@ namespace GPlusBrowser.Model
         }
         public void Dispose()
         {
-            CoreInfo.Refreshed -= CoreInfo_Refreshed;
+            if (_actvReciever != null)
+                _actvReciever.Dispose();
             if (_commReciever != null)
                 _commReciever.Dispose();
         }
-        async void CoreInfo_Refreshed(object sender, EventArgs e)
+        async void CoreInfo_Refreshed(ActivityInfo newValue)
         {
             await CoreInfo.UpdateGetActivityAsync(false, ActivityUpdateApiFlag.GetActivities).ConfigureAwait(false);
             OnUpdated(new EventArgs());

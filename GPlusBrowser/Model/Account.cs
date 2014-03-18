@@ -9,7 +9,7 @@ using SunokoLibrary.Web.GooglePlus.Primitive;
 
 namespace GPlusBrowser.Model
 {
-    public class Account : IDisposable
+    public class Account
     {
         public Account(IPlatformClientBuilder setting)
         {
@@ -18,7 +18,7 @@ namespace GPlusBrowser.Model
             Notification = new NotificationManager(this);
         }
         readonly System.Threading.SemaphoreSlim _initSyncer = new System.Threading.SemaphoreSlim(1, 1);
-
+        bool _isActivated;
         public IPlatformClientBuilder Builder { get; private set; }
         public PlatformClient PlusClient { get; private set; }
         public ProfileInfo MyProfile { get; private set; }
@@ -27,10 +27,11 @@ namespace GPlusBrowser.Model
 
         public async Task Activate()
         {
-            await Deactivate();
             try
             {
                 await _initSyncer.WaitAsync().ConfigureAwait(false);
+                if (_isActivated)
+                    return;
 
                 //G+APIライブラリの初期化を行う
                 PlusClient = await Builder.Build().ConfigureAwait(false);
@@ -39,6 +40,7 @@ namespace GPlusBrowser.Model
                 //各モジュールの初期化を行う
                 await Notification.Activate().ConfigureAwait(false);
                 await Stream.Activate().ConfigureAwait(false);
+                _isActivated = true;
             }
             finally { _initSyncer.Release(); }
         }
@@ -47,20 +49,17 @@ namespace GPlusBrowser.Model
             try
             {
                 await _initSyncer.WaitAsync().ConfigureAwait(false);
+                if (_isActivated == false)
+                    return;
+
+                //各モジュールを休止状態にする
                 await Notification.Deactivate().ConfigureAwait(false);
                 await Stream.Deactivate().ConfigureAwait(false);
                 if (PlusClient != null)
                     PlusClient.Dispose();
-                MyProfile = null;
+                _isActivated = false;
             }
             finally { _initSyncer.Release(); }
-        }
-        public void Dispose()
-        {
-            Stream.Dispose();
-            Notification.Dispose();
-            if (PlusClient != null)
-                PlusClient.Dispose();
         }
     }
 }

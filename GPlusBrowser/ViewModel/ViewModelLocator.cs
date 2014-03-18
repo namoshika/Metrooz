@@ -54,8 +54,6 @@ namespace GPlusBrowser.ViewModel
             // TODO Clear the ViewModels
             SimpleIoc.Default.GetInstance<MainViewModel>().Cleanup();
             SimpleIoc.Default.Unregister<MainViewModel>();
-
-            SimpleIoc.Default.GetInstance<AccountManager>().Dispose();
             SimpleIoc.Default.Unregister<AccountManager>();
         }
         void TaskScheduler_UnobservedTaskException(object sender, System.Threading.Tasks.UnobservedTaskExceptionEventArgs e)

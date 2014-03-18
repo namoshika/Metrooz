@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Threading;
-using System.Windows.Media.Imaging;
+using System.Windows.Media;
 
 namespace GPlusBrowser.ViewModel
 {
@@ -16,7 +16,7 @@ namespace GPlusBrowser.ViewModel
 
     public class AttachedAlbumViewModel : AttachedContentViewModel
     {
-        public AttachedAlbumViewModel(string title, AttachedAlbum attachedAlbumModel, AttachedImageViewModel[] thumbnailImages, BitmapImage[] largeImages)
+        public AttachedAlbumViewModel(string title, AttachedAlbum attachedAlbumModel, AttachedImageViewModel[] thumbnailImages, ImageSource[] largeImages)
         {
             _title = title;
             _largeImages = largeImages;
@@ -29,8 +29,8 @@ namespace GPlusBrowser.ViewModel
         int _selectedImageIndex;
         string _title;
         Uri _linkUrl;
-        BitmapImage _selectedImage;
-        BitmapImage[] _largeImages;
+        ImageSource _selectedImage;
+        ImageSource[] _largeImages;
         AttachedImageViewModel[] _thumbnailImages;
         AttachedAlbum _attachedAlbumModel;
 
@@ -53,7 +53,7 @@ namespace GPlusBrowser.ViewModel
             get { return _linkUrl; }
             set { Set(() => LinkUrl, ref _linkUrl, value); }
         }
-        public BitmapImage SelectedImage
+        public ImageSource SelectedImage
         {
             get { return _selectedImage; }
             set { Set(() => SelectedImage, ref _selectedImage, value); }
@@ -67,7 +67,7 @@ namespace GPlusBrowser.ViewModel
         {
             var title = attachedAlbumModel.Album.Name;
             var thumbImgs = new List<AttachedImageViewModel>();
-            var largeImgs = new List<BitmapImage>();
+            var largeImgs = new List<ImageSource>();
             var downDatas = await Task.Factory.ContinueWhenAll(attachedAlbumModel.Pictures
                 .SelectMany(imgInf =>
                     new[]{

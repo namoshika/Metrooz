@@ -76,7 +76,8 @@ namespace GPlusBrowser.ViewModel
         public async Task Activate()
         {
             if (_circleModel.Status < StreamStateType.Loading)
-                await _circleModel.Connect();
+                try { await _circleModel.Connect(); }
+                catch (FailToOperationException) { }
         }
         public override void Cleanup()
         {

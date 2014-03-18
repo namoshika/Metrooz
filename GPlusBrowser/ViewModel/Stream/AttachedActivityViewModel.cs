@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using System.Threading.Tasks;
 using SunokoLibrary.Web.GooglePlus;
 using SunokoLibrary.Web.GooglePlus.Primitive;
@@ -15,7 +14,7 @@ namespace GPlusBrowser.ViewModel
     public class AttachedActivityViewModel : AttachedContentViewModel
     {
         public AttachedActivityViewModel(string ownerName, Uri ownerProfileUrl, Uri ownerActivityUrl,
-            BitmapImage ownerIcon, StyleElement postContentInline, object attachedContent)
+            ImageSource ownerIcon, StyleElement postContentInline, object attachedContent)
         {
             _ownerName = ownerName;
             _ownerProfileUrl = ownerProfileUrl;
@@ -27,7 +26,7 @@ namespace GPlusBrowser.ViewModel
         string _ownerName;
         Uri _ownerProfileUrl;
         Uri _ownerActivityUrl;
-        BitmapImage _ownerIcon;
+        ImageSource _ownerIcon;
         StyleElement _postContentInline;
         object _attachedContent;
 
@@ -46,7 +45,7 @@ namespace GPlusBrowser.ViewModel
             get { return _ownerActivityUrl; }
             set { Set(() => OwnerActivityUrl, ref _ownerActivityUrl, value); }
         }
-        public BitmapImage OwnerIcon
+        public ImageSource OwnerIcon
         {
             get { return _ownerIcon; }
             set { Set(() => OwnerIcon, ref _ownerIcon, value); }

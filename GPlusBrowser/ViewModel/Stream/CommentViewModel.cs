@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Media.Imaging;
+using System.Windows.Media;
 using System.Windows.Threading;
 using SunokoLibrary.Web.GooglePlus;
 
@@ -23,12 +23,12 @@ namespace GPlusBrowser.ViewModel
             var tsk = Refresh();
         }
         Comment _model;
-        BitmapImage _actorIcon;
+        ImageSource _actorIcon;
         string _id;
         string _ownerName;
         string _commentContent;
         string _commentDate;
-        ContentElement _postContentInline;
+        StyleElement _postContentInline;
 
         public string Id
         {
@@ -50,12 +50,12 @@ namespace GPlusBrowser.ViewModel
             get { return _commentDate; }
             set { Set(() => CommentDate, ref _commentDate, value); }
         }
-        public BitmapImage ActorIcon
+        public ImageSource ActorIcon
         {
             get { return _actorIcon; }
             set { Set(() => ActorIcon, ref _actorIcon, value); }
         }
-        public ContentElement PostContentInline
+        public StyleElement PostContentInline
         {
             get { return _postContentInline; }
             set { Set(() => PostContentInline, ref _postContentInline, value); }

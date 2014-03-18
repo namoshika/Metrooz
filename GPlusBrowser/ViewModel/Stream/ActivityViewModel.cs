@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using System.Windows.Media.Imaging;
+using System.Windows.Media;
 using System.Windows.Threading;
 using SunokoLibrary.Web.GooglePlus;
 using SunokoLibrary.Web.GooglePlus.Primitive;
@@ -30,7 +30,7 @@ namespace GPlusBrowser.ViewModel
         }
         CommentPostBoxState _shareBoxStatus;
         Activity _model;
-        BitmapImage _actorIcon;
+        ImageSource _actorIcon;
         Uri _activityUrl;
         bool _isEnableCommentsHeader, _isCheckedCommentsHeader;
         bool _isOpenedCommentList, _isLoadingCommentList;
@@ -44,7 +44,7 @@ namespace GPlusBrowser.ViewModel
         readonly System.Threading.SemaphoreSlim _activitySyncer = new System.Threading.SemaphoreSlim(1, 1);
         readonly System.Threading.SemaphoreSlim _loadingSyncer = new System.Threading.SemaphoreSlim(1, 1);
 
-        public BitmapImage ActorIcon
+        public ImageSource ActorIcon
         {
             get { return _actorIcon; }
             set { Set(() => ActorIcon, ref _actorIcon, value); }

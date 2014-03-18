@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using System.Threading.Tasks;
 using SunokoLibrary.Web.GooglePlus.Primitive;
 
@@ -13,7 +12,7 @@ namespace GPlusBrowser.ViewModel
 {
     public class AttachedLinkViewModel : AttachedContentViewModel
     {
-        public AttachedLinkViewModel(string ancourTitle, string ancourIntroductionText, Uri ancourUrl, BitmapImage ancourFaviconUrl, BitmapImage thumnailUrl)
+        public AttachedLinkViewModel(string ancourTitle, string ancourIntroductionText, Uri ancourUrl, ImageSource ancourFaviconUrl, ImageSource thumnailUrl)
         {
             _ancourTitle = ancourTitle;
             _ancourUrl = ancourUrl;
@@ -23,8 +22,8 @@ namespace GPlusBrowser.ViewModel
         }
         string _ancourTitle;
         Uri _ancourUrl;
-        BitmapImage _ancourFaviconUrl;
-        BitmapImage _thumnailUrl;
+        ImageSource _ancourFaviconUrl;
+        ImageSource _thumnailUrl;
         string _ancourIntroductionText;
 
         public string AncourTitle
@@ -42,12 +41,12 @@ namespace GPlusBrowser.ViewModel
             get { return _ancourUrl; }
             set { Set(() => AncourUrl, ref _ancourUrl, value); }
         }
-        public BitmapImage AncourFaviconUrl
+        public ImageSource AncourFaviconUrl
         {
             get { return _ancourFaviconUrl; }
             set { Set(() => AncourFaviconUrl, ref _ancourFaviconUrl, value); }
         }
-        public BitmapImage ThumnailUrl
+        public ImageSource ThumnailUrl
         {
             get { return _thumnailUrl; }
             set { Set(() => ThumnailUrl, ref _thumnailUrl, value); }

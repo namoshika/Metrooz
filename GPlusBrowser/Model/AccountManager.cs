@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace GPlusBrowser.Model
 {
-    public class AccountManager : IDisposable
+    public class AccountManager
     {
         public AccountManager()
         {
@@ -20,19 +20,13 @@ namespace GPlusBrowser.Model
 
         public async Task Initialize()
         {
-            foreach (var item in Accounts)
-                item.Dispose();
+            await Task.WhenAll(Accounts.Select(item => item.Deactivate()).ToArray());
             Accounts.Clear();
             foreach (var item in await PlatformClient.Factory.ImportFromIE().ConfigureAwait(false))
             {
                 var account = new Account(item);
                 Accounts.Add(account);
             }
-        }
-        public void Dispose()
-        {
-            foreach (var item in Accounts)
-                item.Dispose();
         }
     }
 }

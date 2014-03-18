@@ -12,10 +12,11 @@ namespace GPlusBrowser.Model
 {
     public class Stream : IDisposable
     {
-        public Stream(StreamManager manager)
+        public Stream(CircleInfo source, StreamManager manager)
         {
             _activities = new ObservableCollection<Activity>();
             _syncer = new System.Threading.SemaphoreSlim(1, 1);
+            Circle = source;
         }
         System.Threading.SemaphoreSlim _syncer;
         int _maxActivityCount = 30;
@@ -30,7 +31,7 @@ namespace GPlusBrowser.Model
         public CircleInfo Circle
         {
             get { return _circle; }
-            set
+            private set
             {
                 _circle = value;
                 _activityGetter = Circle.GetActivities();

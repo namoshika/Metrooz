@@ -8,10 +8,10 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using SunokoLibrary.Web.GooglePlus;
 
@@ -29,7 +29,6 @@ namespace GPlusBrowser.ViewModel
             _manager = managerVM;
             _stream = new StreamManagerViewModel(_accountModel);
             _notification = new NotificationManagerViewModel(_accountModel.Notification);
-            ConnectStreamCommand = new RelayCommand(ConnectStreamCommand_Execute);
             OpenAccountListCommand = new RelayCommand(OpenAccountListCommand_Execute);
             ActivateCommand = new RelayCommand(ActivateCommand_Execute);
 
@@ -37,15 +36,15 @@ namespace GPlusBrowser.ViewModel
             DataCacheDictionary.DownloadImage(new Uri(_accountModel.Builder.IconUrl.Replace("$SIZE_SEGMENT", "s38-c-k")))
                 .ContinueWith(tsk => UserIconUrl = tsk.Result);
         }
-        MainViewModel _manager;
+        readonly SemaphoreSlim _syncerActivities = new SemaphoreSlim(1, 1);
         Account _accountModel;
+        MainViewModel _manager;
         StreamManagerViewModel _stream;
         NotificationManagerViewModel _notification;
-        BitmapImage _userIconUrl;
-        string _userName, _userMailAddress;
-        bool _isActive, _isLoading;
         int _selectedIndex;
-        readonly System.Threading.SemaphoreSlim _syncerActivities = new System.Threading.SemaphoreSlim(1, 1);
+        bool _isActive, _isLoading;
+        string _userName, _userMailAddress;
+        ImageSource _userIconUrl;
 
         public bool IsActive
         {
@@ -72,7 +71,7 @@ namespace GPlusBrowser.ViewModel
             get { return _userName; }
             set { Set(() => UserName, ref _userName, value); }
         }
-        public BitmapImage UserIconUrl
+        public ImageSource UserIconUrl
         {
             get { return _userIconUrl; }
             set { Set(() => UserIconUrl, ref _userIconUrl, value); }
@@ -87,10 +86,15 @@ namespace GPlusBrowser.ViewModel
             get { return _notification; }
             set { Set(() => Notification, ref _notification, value); }
         }
-        public ICommand ConnectStreamCommand { get; private set; }
         public ICommand OpenAccountListCommand { get; private set; }
         public ICommand ActivateCommand { get; private set; }
-        public async Task Activate()
+        public override void Cleanup()
+        {
+            base.Cleanup();
+            if (_stream != null)
+                _stream.Cleanup();
+        }
+        async Task Activate()
         {
             try
             {
@@ -121,21 +125,15 @@ namespace GPlusBrowser.ViewModel
                 _syncerActivities.Release();
             }
         }
-        public async Task Deactivate()
+        async Task Deactivate()
         {
             try
             {
-                SelectedIndex = -1;
                 await _syncerActivities.WaitAsync().ConfigureAwait(false);
+                SelectedIndex = -1;
                 await _accountModel.Deactivate().ConfigureAwait(false);
             }
             finally { _syncerActivities.Release(); }
-        }
-        public override void Cleanup()
-        {
-            base.Cleanup();
-            if (_stream != null)
-                _stream.Cleanup();
         }
 
         void AccountViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -153,14 +151,19 @@ namespace GPlusBrowser.ViewModel
                     break;
             }
         }
-        void ConnectStreamCommand_Execute()
-        { Task.Run(() => _accountModel.Activate()); }
         void OpenAccountListCommand_Execute()
         { _manager.IsAccountSelectorMode = !_manager.IsAccountSelectorMode; }
-        void ActivateCommand_Execute()
+        async void ActivateCommand_Execute()
         {
             _manager.IsAccountSelectorMode = false;
-            _manager.SelectedPageIndex = _manager.Pages.IndexOf(this);
+            if (_manager.SelectedPageIndex == _manager.Pages.IndexOf(this))
+            {
+                //既に表示されている場合は再アクティベートする
+                await Deactivate().ConfigureAwait(false);
+                await Activate().ConfigureAwait(false);
+            }
+            else
+                _manager.SelectedPageIndex = _manager.Pages.IndexOf(this);
         }
     }
 }
