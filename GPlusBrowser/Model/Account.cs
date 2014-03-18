@@ -14,74 +14,53 @@ namespace GPlusBrowser.Model
         public Account(IPlatformClientBuilder setting)
         {
             Builder = setting;
-            IsInitialized = false;
             Stream = new StreamManager(this);
-            //Notification = new NotificationManager(this);
+            Notification = new NotificationManager(this);
         }
-        public bool IsInitialized { get; private set; }
+        readonly System.Threading.SemaphoreSlim _initSyncer = new System.Threading.SemaphoreSlim(1, 1);
+
         public IPlatformClientBuilder Builder { get; private set; }
         public PlatformClient PlusClient { get; private set; }
         public ProfileInfo MyProfile { get; private set; }
         public StreamManager Stream { get; private set; }
-        //public NotificationManager Notification { get; private set; }
-        readonly System.Threading.SemaphoreSlim _initSyncer = new System.Threading.SemaphoreSlim(1, 1);
+        public NotificationManager Notification { get; private set; }
 
-        public async Task Initialize(bool isForced)
+        public async Task Activate()
         {
+            await Deactivate();
             try
             {
                 await _initSyncer.WaitAsync().ConfigureAwait(false);
-                OnInitializing(new EventArgs());
-                IsInitialized = false;
-
-                if (IsInitialized && isForced == false)
-                    return;
-                if (PlusClient != null)
-                    PlusClient.Dispose();
 
                 //G+APIライブラリの初期化を行う
                 PlusClient = await Builder.Build().ConfigureAwait(false);
                 MyProfile = await PlusClient.People.GetProfileOfMeAsync(false).ConfigureAwait(false);
 
                 //各モジュールの初期化を行う
-                //Notification.Initialize();
-                await Stream.Initialize().ConfigureAwait(false);
-                Connect();
-
-                IsInitialized = true;
+                await Notification.Activate().ConfigureAwait(false);
+                await Stream.Activate().ConfigureAwait(false);
             }
-            finally
-            {
-                OnInitialized(new EventArgs());
-                _initSyncer.Release();
-            }
+            finally { _initSyncer.Release(); }
         }
-        public void Connect()
+        public async Task Deactivate()
         {
-            //Stream.Connect();
-            //Notification.Connect();
+            try
+            {
+                await _initSyncer.WaitAsync().ConfigureAwait(false);
+                await Notification.Deactivate().ConfigureAwait(false);
+                await Stream.Deactivate().ConfigureAwait(false);
+                if (PlusClient != null)
+                    PlusClient.Dispose();
+                MyProfile = null;
+            }
+            finally { _initSyncer.Release(); }
         }
         public void Dispose()
         {
-            if (IsInitialized)
-            {
-                IsInitialized = false;
+            Stream.Dispose();
+            Notification.Dispose();
+            if (PlusClient != null)
                 PlusClient.Dispose();
-                Stream.Dispose();
-            }
-        }
-
-        public event EventHandler Initializing;
-        protected virtual void OnInitializing(EventArgs e)
-        {
-            if (Initializing != null)
-                Initializing(this, e);
-        }
-        public event EventHandler Initialized;
-        protected virtual void OnInitialized(EventArgs e)
-        {
-            if (Initialized != null)
-                Initialized(this, e);
         }
     }
 }

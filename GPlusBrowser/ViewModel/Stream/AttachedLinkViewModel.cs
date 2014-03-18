@@ -55,9 +55,9 @@ namespace GPlusBrowser.ViewModel
 
         public static async Task<AttachedLinkViewModel> Create(AttachedLink model)
         {
-            var aa = await DataCacheDictionary.DownloadImage(model.FaviconUrl).ConfigureAwait(false);
-            var bb = await DataCacheDictionary.DownloadImage(new Uri(model.ThumbnailUrl.Replace("$SIZE_SEGMENT", "s100"))).ConfigureAwait(false);
-            return new AttachedLinkViewModel(model.Title, model.Summary, model.LinkUrl, aa, bb);
+            var fvcnImg = model.FaviconUrl == null ? null : await DataCacheDictionary.DownloadImage(model.FaviconUrl).ConfigureAwait(false);
+            var thmbImg = model.ThumbnailUrl == null ? null : await DataCacheDictionary.DownloadImage(new Uri(model.ThumbnailUrl.Replace("$SIZE_SEGMENT", "s100"))).ConfigureAwait(false);
+            return new AttachedLinkViewModel(model.Title, model.Summary, model.LinkUrl, fvcnImg, thmbImg);
         }
     }
 }

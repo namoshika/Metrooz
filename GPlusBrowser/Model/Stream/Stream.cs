@@ -37,17 +37,17 @@ namespace GPlusBrowser.Model
             }
         }
 
-        public async void Connect()
+        public async Task Connect()
         {
             try
             {
-                await _syncer.WaitAsync().ConfigureAwait(false);
+                await _syncer.WaitAsync();
                 if (Status >= StreamStateType.Loading)
                     return;
 
                 Status = StreamStateType.Loading;
                 OnChangedStatus(new EventArgs());
-                var activities = await _activityGetter.TakeAsync(20).ConfigureAwait(false);
+                var activities = await _activityGetter.TakeAsync(20);
 
                 Status = StreamStateType.Initing;
                 OnChangedStatus(new EventArgs());
@@ -55,7 +55,7 @@ namespace GPlusBrowser.Model
                 foreach (var item in activities)
                     _activities.Add(new Activity(item));
 
-                Status = StreamStateType.Connecting;
+                Status = StreamStateType.Successful;
                 OnChangedStatus(new EventArgs());
                 _streamObj = Circle.GetStream().Subscribe(async newInfo =>
                     {
@@ -117,6 +117,7 @@ namespace GPlusBrowser.Model
             {
                 Status = StreamStateType.UnLoaded;
                 OnChangedStatus(new EventArgs());
+                throw;
             }
             finally { _syncer.Release(); }
         }
@@ -142,5 +143,5 @@ namespace GPlusBrowser.Model
         }
     }
     public enum StreamStateType
-    { UnLoaded, Loading, Initing, Connecting }
+    { UnLoaded, Loading, Initing, Successful }
 }

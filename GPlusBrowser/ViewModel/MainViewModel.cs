@@ -103,37 +103,36 @@ namespace GPlusBrowser.ViewModel
                     item.Cleanup();
             }
         }
-        void PageSwitcherViewModel_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        async void PageSwitcherViewModel_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            lock (Pages)
-                switch (e.Action)
-                {
-                    case NotifyCollectionChangedAction.Add:
-                        for (var i = 0; i < e.NewItems.Count; i++)
-                        {
-                            var accountModel = (Account)e.NewItems[i];
-                            var account = new AccountViewModel(accountModel, this);
-                            Pages.InsertOnDispatcher(e.NewStartingIndex + i, account);
-                            if (SelectedPageIndex == -1)
-                                SelectedPageIndex = 0;
-                        }
-                        break;
-                    case NotifyCollectionChangedAction.Remove:
-                        for (var i = 0; i < e.OldItems.Count; i++)
-                        {
-                            Pages.RemoveAtOnDispatcher(e.OldStartingIndex);
-                            if (Pages.Count == 0)
-                                SelectedPageIndex = -1;
-                        }
-                        break;
-                    case NotifyCollectionChangedAction.Reset:
-                        if (Pages.Count > 0)
-                        {
-                            Pages.Clear();
+            switch (e.Action)
+            {
+                case NotifyCollectionChangedAction.Add:
+                    for (var i = 0; i < e.NewItems.Count; i++)
+                    {
+                        var accountModel = (Account)e.NewItems[i];
+                        var account = new AccountViewModel(accountModel, this);
+                        await Pages.InsertOnDispatcher(e.NewStartingIndex + i, account);
+                        if (SelectedPageIndex == -1)
+                            SelectedPageIndex = 0;
+                    }
+                    break;
+                case NotifyCollectionChangedAction.Remove:
+                    for (var i = 0; i < e.OldItems.Count; i++)
+                    {
+                        await Pages.RemoveAtOnDispatcher(e.OldStartingIndex);
+                        if (Pages.Count == 0)
                             SelectedPageIndex = -1;
-                        }
-                        break;
-                }
+                    }
+                    break;
+                case NotifyCollectionChangedAction.Reset:
+                    if (Pages.Count > 0)
+                    {
+                        Pages.Clear();
+                        SelectedPageIndex = -1;
+                    }
+                    break;
+            }
         }
     }
     public class DialogOptionInfo

@@ -27,8 +27,8 @@ namespace GPlusBrowser.ViewModel
             _userName = _accountModel.Builder.Name;
             _userMailAddress = _accountModel.Builder.Email;
             _manager = managerVM;
-            _stream = new StreamManagerViewModel(_accountModel.Stream, _accountModel);
-            //Notification = new NotificationManagerViewModel(_accountModel.Notification, this, UiThreadDispatcher);
+            _stream = new StreamManagerViewModel(_accountModel);
+            _notification = new NotificationManagerViewModel(_accountModel.Notification);
             ConnectStreamCommand = new RelayCommand(ConnectStreamCommand_Execute);
             OpenAccountListCommand = new RelayCommand(OpenAccountListCommand_Execute);
             ActivateCommand = new RelayCommand(ActivateCommand_Execute);
@@ -40,9 +40,11 @@ namespace GPlusBrowser.ViewModel
         MainViewModel _manager;
         Account _accountModel;
         StreamManagerViewModel _stream;
+        NotificationManagerViewModel _notification;
         BitmapImage _userIconUrl;
         string _userName, _userMailAddress;
         bool _isActive, _isLoading;
+        int _selectedIndex;
         readonly System.Threading.SemaphoreSlim _syncerActivities = new System.Threading.SemaphoreSlim(1, 1);
 
         public bool IsActive
@@ -54,6 +56,11 @@ namespace GPlusBrowser.ViewModel
         {
             get { return _isLoading; }
             set { Set(() => IsLoading, ref _isLoading, value); }
+        }
+        public int SelectedIndex
+        {
+            get { return _selectedIndex; }
+            set { Set(() => SelectedIndex, ref _selectedIndex, value); }
         }
         public string UserMailAddress
         {
@@ -75,19 +82,25 @@ namespace GPlusBrowser.ViewModel
             get { return _stream; }
             set { Set(() => Stream, ref _stream, value); }
         }
+        public NotificationManagerViewModel Notification
+        {
+            get { return _notification; }
+            set { Set(() => Notification, ref _notification, value); }
+        }
         public ICommand ConnectStreamCommand { get; private set; }
         public ICommand OpenAccountListCommand { get; private set; }
         public ICommand ActivateCommand { get; private set; }
-        public async void Initialize()
+        public async Task Activate()
         {
             try
             {
-                await _syncerActivities.WaitAsync();
+                await _syncerActivities.WaitAsync().ConfigureAwait(false);
                 if (IsActive == false)
                     return;
 
+                SelectedIndex = 0;
                 IsLoading = true;
-                await _accountModel.Initialize(false).ConfigureAwait(false);
+                await _accountModel.Activate().ConfigureAwait(false);
                 UserName = _accountModel.MyProfile.Name;
                 UserIconUrl = await DataCacheDictionary.DownloadImage(
                     new Uri(_accountModel.Builder.IconUrl
@@ -100,13 +113,23 @@ namespace GPlusBrowser.ViewModel
                     "Error", "ストリームの初期化に失敗しました。ネットワークの設定を確認して下さい。",
                     setting: new MetroDialogSettings() { AffirmativeButtonText = "再接続" });
                 Messenger.Default.Send(message);
-                var tmp = message.CallbackTask.ContinueWith(tsk => Initialize());
+                var tmp = message.CallbackTask.ContinueWith(tsk => Activate());
             }
             finally
             {
                 IsLoading = false;
                 _syncerActivities.Release();
             }
+        }
+        public async Task Deactivate()
+        {
+            try
+            {
+                SelectedIndex = -1;
+                await _syncerActivities.WaitAsync().ConfigureAwait(false);
+                await _accountModel.Deactivate().ConfigureAwait(false);
+            }
+            finally { _syncerActivities.Release(); }
         }
         public override void Cleanup()
         {
@@ -120,12 +143,18 @@ namespace GPlusBrowser.ViewModel
             switch(e.PropertyName)
             {
                 case "IsActive":
-                    Initialize();
+                    Task.Run(async () =>
+                        {
+                            if (IsActive)
+                                await Activate();
+                            else
+                                await Deactivate();
+                        });
                     break;
             }
         }
         void ConnectStreamCommand_Execute()
-        { _accountModel.Connect(); }
+        { Task.Run(() => _accountModel.Activate()); }
         void OpenAccountListCommand_Execute()
         { _manager.IsAccountSelectorMode = !_manager.IsAccountSelectorMode; }
         void ActivateCommand_Execute()

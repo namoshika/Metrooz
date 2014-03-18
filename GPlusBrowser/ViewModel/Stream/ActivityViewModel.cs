@@ -21,9 +21,10 @@ namespace GPlusBrowser.ViewModel
         public ActivityViewModel(Activity activity)
         {
             _model = activity;
-            var tsk = Refresh();
             SendCommentCommand = new RelayCommand(SendCommentCommand_Executed);
             CancelCommentCommand = new RelayCommand(CancelCommentCommand_Executed);
+
+            var tsk = Refresh().ConfigureAwait(false);
         }
         CommentPostBoxState _shareBoxStatus;
         Activity _model;
@@ -36,7 +37,7 @@ namespace GPlusBrowser.ViewModel
         AttachedContentViewModel _attachedContent;
         ObservableCollection<CommentViewModel> _comments;
         StyleElement _postContentInline;
-        readonly System.Threading.SemaphoreSlim _syncer = new System.Threading.SemaphoreSlim(1, 1);
+        readonly System.Threading.SemaphoreSlim _activitySyncer = new System.Threading.SemaphoreSlim(1, 1);
 
         public BitmapImage ActorIcon
         {
@@ -96,19 +97,6 @@ namespace GPlusBrowser.ViewModel
             _model.Updated -= _activity_Refreshed;
             if (_model.CoreInfo.PostStatus != PostStatusType.Removed)
             {
-                try
-                {
-                    await _syncer.WaitAsync();
-                    if (_comments == null)
-                    {
-                        Comments = new ObservableCollection<CommentViewModel>();
-                        foreach (var item in _model.Comments)
-                            _comments.Add(new CommentViewModel(item));
-                        _model.Comments.CollectionChanged += _activity_Comments_CollectionChanged;
-                    }
-                }
-                finally { _syncer.Release(); }
-
                 StyleElement content;
                 var postDate = TimeZone.CurrentTimeZone.ToLocalTime(_model.CoreInfo.PostDate);
                 PostUserName = _model.CoreInfo.PostUser.Name;
@@ -118,12 +106,25 @@ namespace GPlusBrowser.ViewModel
                 PostText = _model.CoreInfo.Text;
                 PostContentInline = content;
 
-                if (_model.CoreInfo.AttachedContent != null)
-                    AttachedContent = await AttachedContentViewModel.Create(_model.CoreInfo.AttachedContent).ConfigureAwait(false);
-                ActorIcon = await DataCacheDictionary
-                    .DownloadImage(new Uri(_model.CoreInfo.PostUser.IconImageUrl.Replace("$SIZE_SEGMENT", "s40-c-k").Replace("$SIZE_NUM", "80")))
-                    .ConfigureAwait(false);
+                await Task.Run(async () =>
+                {
+                    try
+                    {
+                        await _activitySyncer.WaitAsync();
+                        _model.Comments.CollectionChanged -= _activity_Comments_CollectionChanged;
+                        var commes = new ObservableCollection<CommentViewModel>(
+                            _model.Comments.Select(item => new CommentViewModel(item)));
+                        _model.Comments.CollectionChanged += _activity_Comments_CollectionChanged;
+                        Comments = commes;
 
+                        if (_model.CoreInfo.AttachedContent != null)
+                            AttachedContent = await AttachedContentViewModel.Create(_model.CoreInfo.AttachedContent).ConfigureAwait(false);
+                        ActorIcon = await DataCacheDictionary
+                            .DownloadImage(new Uri(_model.CoreInfo.PostUser.IconImageUrl.Replace("$SIZE_SEGMENT", "s40-c-k").Replace("$SIZE_NUM", "80")))
+                            .ConfigureAwait(false);
+                    }
+                    finally { _activitySyncer.Release(); }
+                });
                 _model.Updated += _activity_Refreshed;
             }
         }
@@ -131,56 +132,59 @@ namespace GPlusBrowser.ViewModel
         {
             try
             {
-                await _syncer.WaitAsync();
+                await _activitySyncer.WaitAsync();
                 base.Cleanup();
                 _model.Updated -= _activity_Refreshed;
                 _model.Comments.CollectionChanged -= _activity_Comments_CollectionChanged;
                 foreach (var item in _comments)
                     item.Cleanup();
             }
-            finally { _syncer.Release(); }
+            finally { _activitySyncer.Release(); }
         }
 
-        void _activity_Refreshed(object sender, EventArgs e) { var tsk = Refresh(); }
+        void _activity_Refreshed(object sender, EventArgs e) { var tsk = Refresh().ConfigureAwait(false); }
         async void _activity_Comments_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
             try
             {
-                await _syncer.WaitAsync();
+                await _activitySyncer.WaitAsync();
                 switch (e.Action)
                 {
                     case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
                         foreach (var item in e.NewItems)
-                            _comments.AddOnDispatcher(new CommentViewModel((Comment)item));
+                            await _comments.AddOnDispatcher(new CommentViewModel((Comment)item)).ConfigureAwait(false);
                         break;
                     case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
                         for (var i = 0; i < e.OldItems.Count; i++)
                         {
                             var tmp = _comments.First(vm => vm.Id == ((Comment)e.OldItems[i]).CommentInfo.Id);
-                            _comments.RemoveOnDispatcher(tmp);
+                            await _comments.RemoveOnDispatcher(tmp).ConfigureAwait(false);
                         }
                         break;
                     case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:
-                        _comments.ClearOnDispatcher();
+                        await _comments.ClearOnDispatcher().ConfigureAwait(false);
                         break;
                 }
             }
-            finally { _syncer.Release(); }
+            finally { _activitySyncer.Release(); }
         }
-        async void SendCommentCommand_Executed()
+        void SendCommentCommand_Executed()
         {
             if (string.IsNullOrEmpty(PostCommentText) || ShareBoxStatus != CommentPostBoxState.Writing)
                 return;
-            try
-            {
-                ShareBoxStatus = CommentPostBoxState.Sending;
-                await _model.CommentPost(PostCommentText).ConfigureAwait(false);
-            }
-            finally
-            {
-                PostCommentText = null;
-                ShareBoxStatus = CommentPostBoxState.Deactive;
-            }
+            Task.Run(async () =>
+                {
+                    try
+                    {
+                        ShareBoxStatus = CommentPostBoxState.Sending;
+                        await _model.CommentPost(PostCommentText).ConfigureAwait(false);
+                    }
+                    finally
+                    {
+                        PostCommentText = null;
+                        ShareBoxStatus = CommentPostBoxState.Deactive;
+                    }
+                });
         }
         void CancelCommentCommand_Executed()
         {

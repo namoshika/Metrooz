@@ -130,7 +130,9 @@
     <Compile Include="ViewModel\DataCacheDictionary.cs" />
     <Compile Include="Controls\ExpandableListView.cs" />
     <Compile Include="Model\NotificationManager.cs" />
-    <Compile Include="ViewModel\DialogViewModel.cs" />
+    <Compile Include="ViewModel\Notification\NotificationViewModel.cs" />
+    <Compile Include="ViewModel\Notification\NotificationWithProfileViewModel.cs" />
+    <Compile Include="ViewModel\Notification\NotificationWithActivityViewModel.cs" />
     <Compile Include="ViewModel\ObservableCollectionEx.cs" />
     <Compile Include="Model\AccountManager.cs" />
     <Compile Include="Model\Stream\Activity.cs" />
@@ -205,6 +207,8 @@
     <DesignData Include="SampleData\Files\pic01.jpg" />
     <DesignData Include="SampleData\Files\pic02.jpg" />
     <DesignData Include="SampleData\MainViewModelSampleData.xaml" />
+    <DesignData Include="SampleData\NotificationWithActivityViewModelSampleData.xaml" />
+    <DesignData Include="SampleData\NotificationWithProfileViewModelSampleData.xaml" />
   </ItemGroup>
   <ItemGroup>
     <DesignData Include="SampleData\Files\accountIcon00.png" />

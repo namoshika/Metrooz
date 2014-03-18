@@ -14,45 +14,49 @@ namespace GPlusBrowser.ViewModel
 
     public class StreamManagerViewModel : ViewModelBase
     {
-        public StreamManagerViewModel(StreamManager streamManager, Account account)
+        public StreamManagerViewModel(Account account)
         {
             _selectedCircleIndex = -1;
             _accountModel = account;
-            _streamManagerModel = streamManager;
-            _displayStreams = new ObservableCollection<StreamViewModel>();
+            _streamManagerModel = account.Stream;
+            _streams = new ObservableCollection<StreamViewModel>();
 
             _streamManagerModel.Streams.CollectionChanged += _stream_ChangedDisplayStreams;
         }
         int _selectedCircleIndex;
         Account _accountModel;
         StreamManager _streamManagerModel;
-        ObservableCollection<StreamViewModel> _displayStreams;
+        ObservableCollection<StreamViewModel> _streams;
+        readonly System.Threading.SemaphoreSlim _syncerStreams = new System.Threading.SemaphoreSlim(1, 1);
 
-        public int SelectedCircleIndex
+        public int SelectedIndex
         {
             get { return _selectedCircleIndex; }
-            set { Set(() => SelectedCircleIndex, ref _selectedCircleIndex, value); }
+            set { Set(() => SelectedIndex, ref _selectedCircleIndex, value); }
         }
-        public ObservableCollection<StreamViewModel> DisplayStreams
+        public ObservableCollection<StreamViewModel> Items
         {
-            get { return _displayStreams; }
-            set { Set(() => DisplayStreams, ref _displayStreams, value); }
+            get { return _streams; }
+            set { Set(() => Items, ref _streams, value); }
         }
-        public override void Cleanup()
+        public async override void Cleanup()
         {
-            lock (_displayStreams)
+            try
             {
+                await _syncerStreams.WaitAsync();
                 base.Cleanup();
                 _streamManagerModel.Streams.CollectionChanged -= _stream_ChangedDisplayStreams;
-                foreach (var item in DisplayStreams)
+                foreach (var item in Items)
                     item.Cleanup();
             }
+            finally { _syncerStreams.Release(); }
         }
 
-        void _stream_ChangedDisplayStreams(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        async void _stream_ChangedDisplayStreams(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
-            lock (_displayStreams)
+            try
             {
+                await _syncerStreams.WaitAsync().ConfigureAwait(false);
                 switch (e.Action)
                 {
                     case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
@@ -60,25 +64,26 @@ namespace GPlusBrowser.ViewModel
                         {
                             var circle = (Stream)e.NewItems[i];
                             var circleVm = new StreamViewModel(circle, _accountModel, _streamManagerModel);
-                            DisplayStreams.InsertOnDispatcher(e.NewStartingIndex + i, circleVm);
+                            await Items.InsertOnDispatcher(e.NewStartingIndex + i, circleVm).ConfigureAwait(false);
                         }
                         break;
                     case System.Collections.Specialized.NotifyCollectionChangedAction.Move:
-                        DisplayStreams.MoveOnDispatcher(e.OldStartingIndex, e.NewStartingIndex);
+                        await Items.MoveOnDispatcher(e.OldStartingIndex, e.NewStartingIndex).ConfigureAwait(false);
                         break;
                     case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
                         for (var i = 0; i < e.OldItems.Count; i++)
-                            DisplayStreams.RemoveAtOnDispatcher(e.OldStartingIndex);
+                            await Items.RemoveAtOnDispatcher(e.OldStartingIndex).ConfigureAwait(false);
                         break;
                     case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:
-                        DisplayStreams.ClearOnDispatcher();
+                        await Items.ClearOnDispatcher().ConfigureAwait(false);
                         break;
                 }
-                if (SelectedCircleIndex < 0 && _displayStreams.Count > 0)
-                    SelectedCircleIndex = 0;
-                else if (_displayStreams.Count == 0)
-                    SelectedCircleIndex = -1;
+                if (SelectedIndex < 0 && _streams.Count > 0)
+                    SelectedIndex = 0;
+                else if (_streams.Count == 0)
+                    SelectedIndex = -1;
             }
+            finally { _syncerStreams.Release(); }
         }
     }
 }

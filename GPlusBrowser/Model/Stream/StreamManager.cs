@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Threading;
 using SunokoLibrary.Web.GooglePlus;
 
 namespace GPlusBrowser.Model
@@ -17,14 +18,15 @@ namespace GPlusBrowser.Model
             Streams = new ObservableCollection<Stream>();
         }
         Account _accountModel;
+        readonly SemaphoreSlim _streamSyncer = new SemaphoreSlim(1, 1);
 
-        public bool IsInitialized { get; private set; }
         public ObservableCollection<Stream> Streams { get; private set; }
-        public async Task Initialize()
+        public async Task Activate()
         {
             await _accountModel.PlusClient.People.UpdateCirclesAndBlockAsync(false, CircleUpdateLevel.Loaded);
-            lock (Streams)
+            try
             {
+                await _streamSyncer.WaitAsync();
                 Streams.Add(new Stream(this) { Circle = _accountModel.PlusClient.People.YourCircle });
 
                 var i = 0;
@@ -43,17 +45,30 @@ namespace GPlusBrowser.Model
                     Streams.RemoveAt(i);
                     rmItem.Dispose();
                 }
-                IsInitialized = _accountModel.PlusClient.People.CirclesAndBlockStatus > CircleUpdateLevel.Unloaded;
             }
+            finally { _streamSyncer.Release(); }
         }
-
-        public void Dispose()
+        public async Task Deactivate()
         {
-            lock (Streams)
+            try
             {
+                await _streamSyncer.WaitAsync();
+                var tmp = Streams.ToArray();
+                Streams.Clear();
+                foreach (var item in tmp)
+                    item.Dispose();
+            }
+            finally { _streamSyncer.Release(); }
+        }
+        public async void Dispose()
+        {
+            try
+            {
+                await _streamSyncer.WaitAsync().ConfigureAwait(false);
                 foreach (var item in Streams)
                     item.Dispose();
             }
+            finally { _streamSyncer.Release(); }
         }
     }
 }

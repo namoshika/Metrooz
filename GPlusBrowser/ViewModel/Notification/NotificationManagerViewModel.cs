@@ -1,9 +1,12 @@
-﻿using System;
+﻿using GalaSoft.MvvmLight;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
@@ -14,321 +17,238 @@ namespace GPlusBrowser.ViewModel
 {
     using GPlusBrowser.Model;
 
-//    public class NotificationManagerViewModel : ViewModelBase
-//    {
-//        public NotificationManagerViewModel(NotificationManager model, AccountViewModel topLevel, Dispatcher uiThreadDispatcher)
-//            : base(uiThreadDispatcher, topLevel)
-//        {
-//#if ENABLED_VMTEST_MODE
-//            Items = new ObservableCollection<NotificationViewModel>();
-//            Items.Add(new NotificationWithProfileViewModel(uiThreadDispatcher));
-//            Items.Add(new NotificationWithProfileViewModel(uiThreadDispatcher));
-//            Items.Add(new NotificationWithProfileViewModel(uiThreadDispatcher));
-//#else
-//            _managerModel = model;
-//            _managerModel.Updated += model_Updated;
-//            _notifications = new List<NotificationViewModel>();
-//            Items = new ObservableCollection<NotificationViewModel>();
-//#endif
-//        }
-//        int _unreadItemCount;
-//        bool _existUnreadItem;
-//        double _viewportOffset, _viewportHeight;
-//        List<NotificationViewModel> _notifications;
-//        NotificationManager _managerModel;
+    public class NotificationManagerViewModel : ViewModelBase
+    {
+        public NotificationManagerViewModel(NotificationManager model)
+        {
+            _managerModel = model;
+            _managerModel.RecievedSignal += _managerModel_RecievedSignal;
+            Items = new ObservableCollection<NotificationStreamViewModel>();
+            PropertyChanged += NotificationManagerViewModel_PropertyChanged;
+        }
+        readonly TimeSpan _markAsReadDelaySpan = TimeSpan.FromSeconds(3);
+        NotificationManager _managerModel;
+        DateTime _deactiveDate;
+        bool _isActive, _existUnreadItem;
+        int _unreadItemCount;
+        int _selectedIndex;
 
-//        public double ViewportOffsetA
-//        {
-//            get { return _viewportOffset; }
-//            set
-//            {
-//                _viewportOffset = value;
-//                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("ViewportOffsetA"));
-//            }
-//        }
-//        public double ViewportHeightA
-//        {
-//            get { return _viewportHeight; }
-//            set
-//            {
-//                _viewportHeight = value;
-//                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("ViewportHeightA"));
-//            }
-//        }
-//        public ObservableCollection<NotificationViewModel> Items { get; private set; }
-//        public bool ExistUnreadItem
-//        {
-//            get { return _existUnreadItem; }
-//            set
-//            {
-//                _existUnreadItem = value;
-//                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("ExistUnreadItem"));
-//            }
-//        }
-//        public int UnreadItemCount
-//        {
-//            get { return _unreadItemCount; }
-//            set
-//            {
-//                _unreadItemCount = value;
-//                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("UnreadItemCount"));
-//            }
-//        }
+        public ObservableCollection<NotificationStreamViewModel> Items { get; private set; }
+        public bool IsActive
+        {
+            get { return _isActive; }
+            set { Set(() => IsActive, ref _isActive, value); }
+        }
+        public bool ExistUnreadItem
+        {
+            get { return _existUnreadItem; }
+            set { Set(() => ExistUnreadItem, ref _existUnreadItem, value); }
+        }
+        public int UnreadItemCount
+        {
+            get { return _unreadItemCount; }
+            set { Set(() => UnreadItemCount, ref _unreadItemCount, value); }
+        }
+        public int SelectedIndex
+        {
+            get { return _selectedIndex; }
+            set { Set(() => SelectedIndex, ref _selectedIndex, value); }
+        }
 
-//        void model_Updated(object sender, NotificationContainerUpdatedEventArgs e)
-//        {
-//            UnreadItemCount = _managerModel.UnreadItemCount;
-//            ExistUnreadItem = _managerModel.UnreadItemCount > 0;
+        void NotificationManagerViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            switch(e.PropertyName)
+            {
+                case "IsActive":
+                    Task.Run(async () =>
+                        {
+                            if (IsActive)
+                            {
+                                await Items.AddOnDispatcher(new NotificationStreamViewModel("新着", _managerModel.UnreadedStream)).ConfigureAwait(false);
+                                await Items.AddOnDispatcher(new NotificationStreamViewModel("既読通知", _managerModel.ReadedStream)).ConfigureAwait(false);
+                                SelectedIndex = 0;
+                            }
+                            else
+                            {
+                                SelectedIndex = -1;
+                                var tmp = Items.ToArray();
+                                await Items.ClearOnDispatcher();
+                                foreach (var item in tmp)
+                                    item.Cleanup();
 
-//            var offset = 0.0;
-//            var viewportElements = new List<NotificationViewModel>();
-//            var updatedNotification = e.NewNotifications
-//                .Concat(e.UpdatedNotifications)
-//                .OrderByDescending(info => info.LatestNoticeDate)
-//                .ToArray();
-//            foreach (var item in _notifications)
-//            {
-//                if (offset < _viewportOffset + item.ElementHeight
-//                    && offset + item.ElementHeight > _viewportOffset)
-//                    viewportElements.Add(item);
-//                offset += item.ElementHeight;
-//            }
-//            foreach (var item in e.PushedOutNotifications)
-//            {
-//                var pushoutViewModel = _notifications.First(viewModel => viewModel.Model == item);
-//                _notifications.Remove(pushoutViewModel);
-//                Items.RemoveAsync(pushoutViewModel, UiThreadDispatcher);
-//            }
-//            for (var i = updatedNotification.Length - 1; i >= 0; i--)
-//            {
-//                var item = updatedNotification[i];
-//                if (item.ExistsNewUpdated)
-//                {
-//                    var updatedViewModel = _notifications.FirstOrDefault(viewModel => viewModel.Model == item);
-//                    var index = _notifications.IndexOf(updatedViewModel);
-//                    //新着通知だった場合は新しくVMを作成する
-//                    if (updatedViewModel == null)
-//                    {
-//                        NotificationViewModel obj;
-//                        switch (item.Type)
-//                        {
-//                            case NotificationsFilter.Mension:
-//                            case NotificationsFilter.OtherPost:
-//                            case NotificationsFilter.PostIntoYou:
-//                                obj = new NotificationWithActivityViewModel((NotificationInfoWithActivity)item, _managerModel, TopLevel, UiThreadDispatcher);
-//                                _notifications.Insert(0, obj);
-//                                Items.InsertAsync(0, obj, UiThreadDispatcher);
-//                                break;
-//                            case NotificationsFilter.CircleIn:
-//                                obj = new NotificationWithProfileViewModel(item, TopLevel, UiThreadDispatcher);
-//                                _notifications.Insert(0, obj);
-//                                Items.InsertAsync(0, obj, UiThreadDispatcher);
-//                                break;
-//                        }
-//                    }
-//                    else
-//                        //通知要素に後続通知があった場合は表示領域に入っていない通知は一番上に挿入する
-//                        if (!viewportElements.Select(viewModel => viewModel.Model).Contains(item))
-//                            Items.MoveAsync(index, 0, UiThreadDispatcher);
-//                }
-//            }
-//        }
-//    }
-//    public abstract class NotificationViewModel : ViewModelBase
-//    {
-//        public NotificationViewModel(Dispatcher uiThreadDispatcher, AccountViewModel topLevel)
-//            : base(uiThreadDispatcher, topLevel) { }
-//        bool _existOverlaiedIcon;
-//        ImageSource _displayIconUrl;
-//        double _elementHeight;
+                                //非表示化後に一定時間放置されたら既読化処理をする
+                                _deactiveDate = DateTime.UtcNow;
+                                await Task.Delay(_markAsReadDelaySpan).ConfigureAwait(false);
+                                if (IsActive == false && DateTime.UtcNow - _deactiveDate >= _markAsReadDelaySpan)
+                                {
+                                    await _managerModel.AllMarkAsRead().ConfigureAwait(false);
+                                    ExistUnreadItem = false;
+                                    UnreadItemCount = 0;
+                                }
+                            }
+                        });
+                    break;
+            }
+        }
+        async void _managerModel_RecievedSignal(object sender, EventArgs e)
+        {
+            UnreadItemCount = _managerModel.UnreadItemCount;
+            ExistUnreadItem = _managerModel.UnreadItemCount > 0;
+            if (_isActive == false || Items[0].IsActive == false)
+                return;
+            await Items[0].Update().ConfigureAwait(false);
+        }
+    }
+    public class NotificationStreamViewModel : ViewModelBase
+    {
+        public NotificationStreamViewModel(string name, NotificationStream model)
+        {
+            _name = name;
+            _streamModel = model;
+            Items = new ObservableCollection<NotificationViewModel>();
 
-//        public abstract NotificationInfo Model { get; }
-//        public bool ExistOverlaiedIcon
-//        {
-//            get { return _existOverlaiedIcon; }
-//            protected set
-//            {
-//                _existOverlaiedIcon = value;
-//                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("ExistOverlaiedIcon"));
-//            }
-//        }
-//        public double ElementHeight
-//        {
-//            get { return _elementHeight; }
-//            set
-//            {
-//                _elementHeight = value;
-//                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("ElementHeight"));
-//            }
-//        }
-//        public ImageSource DisplayIconUrl
-//        {
-//            get { return _displayIconUrl; }
-//            protected set
-//            {
-//                _displayIconUrl = value;
-//                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("DisplayIconUrl"));
-//            }
-//        }
-//    }
-//    public class NotificationWithActivityViewModel : NotificationViewModel
-//    {
-//        public NotificationWithActivityViewModel(NotificationInfoWithActivity model, NotificationManager managerModel, AccountViewModel topLevel, Dispatcher uiThreadDispatcher)
-//            : base(uiThreadDispatcher, topLevel)
-//        {
-//            if (model.Activity.PostStatus != PostStatusType.Removed)
-//                _target = new ActivityViewModel(new Model.Activity(model.Activity), topLevel, uiThreadDispatcher);
-//            _notificationModel = model;
-//            _notificationModel_Updated(null, null);
-//            //_notificationModel.Updated += _notificationModel_Updated;
-//        }
-//        NotificationInfoWithActivity _notificationModel;
-//        ActivityViewModel _target;
-//        string _noticeDate;
-//        string _noticeText;
+            model.Items.CollectionChanged += Items_CollectionChanged;
+            PropertyChanged += NotificationManagerViewModel_PropertyChanged;
+        }
+        readonly SemaphoreSlim _syncerItems = new SemaphoreSlim(1, 1);
+        NotificationStream _streamModel;
+        bool _isActive, _isLoading, _noItem;
+        string _name;
 
-//        public ICommand MuteCommand { get; private set; }
-//        public string NoticeDate
-//        {
-//            get { return _noticeDate; }
-//            protected set
-//            {
-//                _noticeDate = value;
-//                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("NoticeDate"));
-//            }
-//        }
-//        public string NoticeText
-//        {
-//            get { return _noticeText; }
-//            protected set
-//            {
-//                _noticeText = value;
-//                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("NoticeText"));
-//            }
-//        }
-//        public ActivityViewModel Target
-//        {
-//            get { return _target; }
-//            private set
-//            {
-//                _target = value;
-//                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("Target"));
-//            }
-//        }
-//        public override NotificationInfo Model { get { return _notificationModel; } }
-//        async void _notificationModel_Updated(object sender, NotificationUpdatedEventArgs e)
-//        {
-//            var count = 0;
-//            _noticeText = string.Format("{0}{1}が投稿にコメントしました。",
-//                string.Join(", ", _notificationModel.FollowingNotifications.Reverse().TakeWhile(model => count++ < 3).Select(notification => notification.Actor.Name)),
-//                _notificationModel.FollowingNotifications.Count > count
-//                    ? string.Format("他{0}人", _notificationModel.FollowingNotifications.Count - count)
-//                    : string.Empty);
-//            ExistOverlaiedIcon = _notificationModel.FollowingNotifications.Count > 1;
-//            DisplayIconUrl = await TopLevel.DataCacheDict.DownloadImage(new Uri(_notificationModel.FollowingNotifications.Last()
-//                .Actor.IconImageUrl.Replace("$SIZE_SEGMENT", "s35-c-k")));
-//            _noticeDate = _notificationModel.NoticedDate.ToString(
-//                _notificationModel.NoticedDate > DateTime.Today ? "HH:mm" : "yyyy:MM:dd");
-//        }
-//    }
-//    public class NotificationWithProfileViewModel : NotificationViewModel
-//    {
-//        public NotificationWithProfileViewModel(NotificationInfo model, AccountViewModel topLevel, Dispatcher uiThreadDispatcher)
-//            : base(uiThreadDispatcher, topLevel)
-//        {
-//            _notificationModel = model;
-//            model_Updated(this, null);
-//            model.Updated += model_Updated;
-//        }
+        public ObservableCollection<NotificationViewModel> Items { get; private set; }
+        public bool IsActive
+        {
+            get { return _isActive; }
+            set { Set(() => IsActive, ref _isActive, value); }
+        }
+        public bool IsLoading
+        {
+            get { return _isLoading; }
+            set { Set(() => IsLoading, ref _isLoading, value); }
+        }
+        public bool NoItem
+        {
+            get { return _noItem; }
+            set { Set(() => NoItem, ref _noItem, value); }
+        }
+        public string Name
+        {
+            get { return _name; }
+            set { Set(() => Name, ref _name, value); }
+        }
+        public async Task Update()
+        {
+            if (IsActive == false)
+                return;
+            try
+            {
+                IsLoading = true;
+                await _streamModel.Update();
+            }
+            catch (FailToOperationException) { }
+            finally
+            {
+                NoItem = _streamModel.Items.Count == 0;
+                IsLoading = false;
+            }
+        }
+        public async override void Cleanup()
+        {
+            base.Cleanup();
+            try
+            {
+                await _syncerItems.WaitAsync().ConfigureAwait(false);
+                _streamModel.Items.CollectionChanged -= Items_CollectionChanged;
+                PropertyChanged -= NotificationManagerViewModel_PropertyChanged;
 
-//        int _memberCount;
-//        NotificationInfo _notificationModel;
-//        ProfileRegisterViewModel[] _members;
+                var tmp = Items.ToArray();
+                await Items.ClearOnDispatcher().ConfigureAwait(false);
+                foreach (var item in tmp)
+                    item.Cleanup();
+            }
+            finally
+            { _syncerItems.Release(); }
+        }
+        async Task<NotificationViewModel> WrapViewModel(NotificationInfo item)
+        {
+            NotificationViewModel itemVM = null;
+            if ((int)(item.Type & (NotificationFlag.Mension | NotificationFlag.Response | NotificationFlag.Followup | NotificationFlag.PlusOne)) > 0)
+                itemVM = await NotificationWithActivityViewModel.Create((NotificationInfoWithActivity)item);
+            else if ((int)(item.Type & NotificationFlag.CircleIn) > 0)
+                itemVM = new NotificationWithProfileViewModel((NotificationInfoWithActor)item);
+            return itemVM;
+        }
 
-//        public int MemberCount
-//        {
-//            get { return _memberCount; }
-//            set
-//            {
-//                _memberCount = value;
-//                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("MemberCount"));
-//            }
-//        }
-//        public ProfileRegisterViewModel[] Members
-//        {
-//            get { return _members; }
-//            set
-//            {
-//                _members = value;
-//                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("Members"));
-//            }
-//        }
-//        public override NotificationInfo Model { get { return _notificationModel; } }
-
-//        void model_Updated(object sender, NotificationUpdatedEventArgs e)
-//        {
-//            _memberCount = _notificationModel.FollowingNotifications.Count;
-//            //_members = _notificationModel.FollowingNotifications
-//            //    .Select(obj => new ProfileRegisterViewModel(
-//            //        0, obj.Actor.Name, new Uri(obj.Actor.IconImageUrlText.Replace("$SIZE_SEGMENT", "s50-c-k")), TopLevel, UiThreadDispatcher))
-//            //    .ToArray();
-//        }
-
-//#if ENABLED_VMTEST_MODE
-//        public NotificationWithProfileViewModel(Dispatcher uiThreadDispatcher)
-//            : base(uiThreadDispatcher)
-//        {
-//            _memberCount = 3;
-//            _members = new ProfileRegisterViewModel[]
-//            {
-//                new ProfileRegisterViewModel(3, "TestNameA", new Uri("https://lh3.googleusercontent.com/-D4uozvCEfCU/AAAAAAAAAAI/AAAAAAAAABk/hbWru0Ic_9c/s250-c-k/photo.jpg"), uiThreadDispatcher),
-//                new ProfileRegisterViewModel(4, "TestNameB", new Uri("https://lh4.googleusercontent.com/-VWujZsal7hI/AAAAAAAAAAI/AAAAAAAAAAc/zADzIc0bpxo/s250-c-k/photo.jpg"), uiThreadDispatcher),
-//                new ProfileRegisterViewModel(5, "TestNameC", new Uri("https://lh6.googleusercontent.com/-xQAd1_KgBGM/AAAAAAAAAAI/AAAAAAAAAAc/MDJltt8KLOI/s250-c-k/photo.jpg"), uiThreadDispatcher),
-//            };
-//        }
-//#endif
-//    }
-//    public class ProfileRegisterViewModel : ViewModelBase
-//    {
-//        public ProfileRegisterViewModel(int commonFriendLength, string name, Uri profileIconUrl, AccountViewModel topLevel, Dispatcher uiThreadDispatcher)
-//            : base(uiThreadDispatcher, topLevel)
-//        {
-//            _commonFriendLength = commonFriendLength;
-//            _name = name;
-//            topLevel.DataCacheDict.DownloadImage(profileIconUrl)
-//                .ContinueWith(tsk => _profileIconUrl = tsk.Result);
-//        }
-//        int _commonFriendLength;
-//        string _name;
-//        ImageSource _profileIconUrl;
-
-//        public int CommonFriendLength
-//        {
-//            get { return _commonFriendLength; }
-//            set
-//            {
-//                _commonFriendLength = value;
-//                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("CommonFriendLength"));
-//            }
-//        }
-//        public string Name
-//        {
-//            get { return _name; }
-//            set
-//            {
-//                _name = value;
-//                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("Name"));
-//            }
-//        }
-//        public ImageSource ProfileIconUrl
-//        {
-//            get { return _profileIconUrl; }
-//            set
-//            {
-//                _profileIconUrl = value;
-//                OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("ProfileIconUrl"));
-//            }
-//        }
-//        public ICommand IgnoreCommand { get; private set; }
-//    }
+        void NotificationManagerViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            switch (e.PropertyName)
+            {
+                case "IsActive":
+                    Task.Run(async () =>
+                        {
+                            try
+                            {
+                                await _syncerItems.WaitAsync().ConfigureAwait(false);
+                                if (_isActive)
+                                {
+                                    //新しい要素として追加し直す
+                                    IsLoading = true;
+                                    if (_streamModel.Items.Count > 0)
+                                        foreach (var item in await Task.WhenAll(_streamModel.Items.Select(inf => WrapViewModel(inf))))
+                                            await Items.AddOnDispatcher(item).ConfigureAwait(false);
+                                    await Update().ConfigureAwait(false);
+                                }
+                                else
+                                {
+                                    //古い要素を削除
+                                    var tmp = Items.ToArray();
+                                    await Items.ClearOnDispatcher();
+                                    foreach (var item in tmp)
+                                        item.Cleanup();
+                                }
+                            }
+                            finally { _syncerItems.Release(); }
+                        });
+                    break;
+            }
+        }
+        async void Items_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            try
+            {
+                await _syncerItems.WaitAsync().ConfigureAwait(false);
+                if (IsActive == false)
+                    return;
+                switch (e.Action)
+                {
+                    case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
+                        for (var i = e.NewItems.Count - 1; i >= 0; i--)
+                        {
+                            var idx = e.NewStartingIndex + i;
+                            var viewModel = await WrapViewModel((NotificationInfo)e.NewItems[i]);
+                            await Items.InsertOnDispatcher(idx, viewModel).ConfigureAwait(false);
+                        }
+                        break;
+                    case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
+                        for (var i = 0; i < e.OldItems.Count; i++)
+                        {
+                            var viewModel = Items[Math.Min(e.OldStartingIndex + i, Items.Count - 1)];
+                            await Items.RemoveAtOnDispatcher(e.OldStartingIndex + i).ConfigureAwait(false);
+                            viewModel.Cleanup();
+                        }
+                        break;
+                    case NotifyCollectionChangedAction.Move:
+                        await Items.MoveOnDispatcher(e.OldStartingIndex, e.NewStartingIndex);
+                        break;
+                    case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:
+                        for (var i = 0; i < Items.Count; i++)
+                            Items[i].Cleanup();
+                        await Items.ClearOnDispatcher().ConfigureAwait(false);
+                        break;
+                }
+            }
+            finally
+            { _syncerItems.Release(); }
+        }
+    }
 }

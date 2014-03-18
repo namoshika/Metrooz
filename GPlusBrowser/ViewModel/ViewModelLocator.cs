@@ -32,6 +32,7 @@ namespace GPlusBrowser.ViewModel
         public ViewModelLocator()
         {
             ServiceLocator.SetLocatorProvider(() => SimpleIoc.Default);
+            System.Threading.Tasks.TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
 
             if (ViewModelBase.IsInDesignModeStatic)
             {
@@ -45,7 +46,6 @@ namespace GPlusBrowser.ViewModel
             }
             SimpleIoc.Default.Register<MainViewModel>();
         }
-
         public MainViewModel Main
         { get { return ServiceLocator.Current.GetInstance<MainViewModel>(); } }
         
@@ -57,6 +57,11 @@ namespace GPlusBrowser.ViewModel
 
             SimpleIoc.Default.GetInstance<AccountManager>().Dispose();
             SimpleIoc.Default.Unregister<AccountManager>();
+        }
+        void TaskScheduler_UnobservedTaskException(object sender, System.Threading.Tasks.UnobservedTaskExceptionEventArgs e)
+        {
+            if(System.Diagnostics.Debugger.IsAttached)
+                System.Diagnostics.Debugger.Break();
         }
     }
 }

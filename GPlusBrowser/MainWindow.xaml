@@ -103,10 +103,14 @@
                 <Setter Property="IsSelected" Value="{Binding IsActive}" />
                 <Setter Property="ContentTemplate" Value="{DynamicResource accountTemplate}" />
             </Style>
-            <Style x:Key="activityStyle" TargetType="{x:Type ListBoxItem}">
+            <Style x:Key="cardStyle" TargetType="{x:Type ListBoxItem}">
                 <Setter Property="HorizontalContentAlignment" Value="Stretch" />
                 <Setter Property="Background" Value="Transparent" />
                 <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="BorderBrush" Value="LightGray" />
+                <Setter Property="Margin" Value="8,5" />
+                <Setter Property="Padding" Value="10" />
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="{x:Type ListBoxItem}">
@@ -120,9 +124,11 @@
             <Style x:Key="streamStyle" TargetType="{x:Type TabItem}">
                 <Setter Property="IsSelected" Value="{Binding IsActive, Mode=OneWayToSource}" />
                 <Setter Property="Background" Value="Transparent" />
-                <Setter Property="Header" Value="{Binding CircleName}" />
+                <Setter Property="Header" Value="{Binding Name}" />
                 <Setter Property="controls:ControlsHelper.HeaderFontSize" Value="13" />
-                <Setter Property="ContentTemplate" Value="{DynamicResource streamTemplate}" />
+            </Style>
+            <Style x:Key="notificationStyle" TargetType="{x:Type TabItem}">
+                <Setter Property="IsSelected" Value="{Binding IsActive, Mode=OneWayToSource}" />
             </Style>
 
             <DataTemplate x:Key="accountListTemplate" DataType="{x:Type vm:MainViewModel}">
@@ -190,11 +196,19 @@
                 	<controls:MetroContentControl>
                 		<Grid>
                             <Image HorizontalAlignment="Left" VerticalAlignment="Top" Width="38" Height="38" Margin="20,4,0,0" Source="{Binding UserIconUrl}" />
-                            <controls:MetroAnimatedSingleRowTabControl Margin="10,12,0,0" VerticalAlignment="Stretch" Padding="0" TabStripMargin="50,0,0,0">
+                            <controls:MetroAnimatedSingleRowTabControl Margin="10,12,0,0" SelectedIndex="{Binding SelectedIndex}" VerticalAlignment="Stretch" Padding="0" TabStripMargin="50,0,0,0">
                 				<controls:MetroTabItem Header="Stream" Padding="0,0,6,0">
-                					<controls:MetroAnimatedSingleRowTabControl Margin="0,-5,0,0" DataContext="{Binding Stream}" ItemsSource="{Binding DisplayStreams}" SelectedIndex="{Binding SelectedCircleIndex}" ItemContainerStyle="{DynamicResource streamStyle}" TabStripMargin="5,0,0,0" />
+                                    <controls:MetroAnimatedSingleRowTabControl Margin="0,-5,0,0" DataContext="{Binding Stream}" ItemsSource="{Binding Items}" SelectedIndex="{Binding SelectedIndex}" ItemContainerStyle="{DynamicResource streamStyle}" ContentTemplate="{DynamicResource streamTemplate}" TabStripMargin="5,0,0,0" />
                 				</controls:MetroTabItem>
-                				<controls:MetroTabItem Header="Notification" Padding="0,0,6,0" />
+                                <controls:MetroTabItem Padding="0,0,6,0" DataContext="{Binding Notification}" IsSelected="{Binding IsActive}">
+                                    <controls:MetroTabItem.Header>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="Notification" FontSize="26.67" />
+                                            <TextBlock Text="{Binding UnreadItemCount}" FontSize="18" Foreground="{StaticResource AccentColorBrush}" Visibility="{Binding ExistUnreadItem, Converter={StaticResource booleanToVisibilityConverter}}" />
+                                        </StackPanel>
+                                    </controls:MetroTabItem.Header>
+                                    <controls:MetroAnimatedSingleRowTabControl Margin="0,-5,0,0" ItemsSource="{Binding Items}" SelectedIndex="{Binding SelectedIndex}" ItemContainerStyle="{DynamicResource streamStyle}" ContentTemplate="{DynamicResource notificationTemplate}" TabStripMargin="5,0,0,0" />
+                                </controls:MetroTabItem>
                 			</controls:MetroAnimatedSingleRowTabControl>
                 			<Button Width="Auto" Margin="63,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Command="{Binding OpenAccountListCommand}" Style="{DynamicResource iconButtonStyle}">
                 				<StackPanel Margin="0" Orientation="Horizontal">
@@ -313,33 +327,77 @@
             			VirtualizingPanel.VirtualizationMode="Standard"
             			VirtualizingPanel.ScrollUnit="Pixel"
             			BorderThickness="0" ItemsSource="{Binding Activities}"
-            			ItemContainerStyle="{DynamicResource activityStyle}" Grid.RowSpan="1" Grid.Row="1"/>
+            			ItemContainerStyle="{DynamicResource cardStyle}" Grid.RowSpan="1" Grid.Row="1"/>
             		<Border x:Name="border" HorizontalAlignment="Stretch" Grid.RowSpan="2" VerticalAlignment="Stretch" >
             			<controls:MetroProgressBar x:Name="metroProgressBar" VerticalAlignment="Top" IsIndeterminate="True" Foreground="{StaticResource AccentColorBrush}" />
             		</Border>
             	</Grid>
             </DataTemplate>
+            <DataTemplate x:Key="notificationTemplate" DataType="{x:Type vm:NotificationManagerViewModel}">
+                <Grid d:DesignWidth="400" d:DesignHeight="500">
+                	<i:Interaction.Behaviors>
+                		<ei:DataStateBehavior Binding="{Binding IsLoading}" Value="True" TrueState="ProggressBusy" FalseState="ProggressIddle"/>
+                	</i:Interaction.Behaviors>
+                	<VisualStateManager.VisualStateGroups>
+                		<VisualStateGroup x:Name="ProggressStates">
+                			<VisualState x:Name="ProggressIddle">
+                				<Storyboard>
+                					<DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Opacity)" Storyboard.TargetName="listBox">
+                						<EasingDoubleKeyFrame KeyTime="0" Value="0"/>
+                						<EasingDoubleKeyFrame KeyTime="0:0:0.3" Value="1"/>
+                					</DoubleAnimationUsingKeyFrames>
+                					<BooleanAnimationUsingKeyFrames Storyboard.TargetProperty="(ProgressBar.IsIndeterminate)" Storyboard.TargetName="metroProgressBar">
+                						<DiscreteBooleanKeyFrame KeyTime="0" Value="True"/>
+                						<DiscreteBooleanKeyFrame KeyTime="0:0:0.3" Value="False"/>
+                					</BooleanAnimationUsingKeyFrames>
+                					<ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Visibility)" Storyboard.TargetName="metroProgressBar">
+                						<DiscreteObjectKeyFrame KeyTime="0:0:0.3" Value="{x:Static Visibility.Collapsed}"/>
+                					</ObjectAnimationUsingKeyFrames>
+                					<DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Opacity)" Storyboard.TargetName="metroProgressBar">
+                						<EasingDoubleKeyFrame KeyTime="0" Value="0.995"/>
+                						<EasingDoubleKeyFrame KeyTime="0:0:0.3" Value="0"/>
+                					</DoubleAnimationUsingKeyFrames>
+                				</Storyboard>
+                			</VisualState>
+                			<VisualState x:Name="ProggressBusy">
+                				<Storyboard>
+                					<BooleanAnimationUsingKeyFrames Storyboard.TargetProperty="(ProgressBar.IsIndeterminate)" Storyboard.TargetName="metroProgressBar">
+                						<DiscreteBooleanKeyFrame KeyTime="0" Value="True"/>
+                					</BooleanAnimationUsingKeyFrames>
+                					<ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Visibility)" Storyboard.TargetName="metroProgressBar">
+                						<DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Visible}"/>
+                					</ObjectAnimationUsingKeyFrames>
+                					<DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Opacity)" Storyboard.TargetName="listBox">
+                						<EasingDoubleKeyFrame KeyTime="0" Value="0"/>
+                					</DoubleAnimationUsingKeyFrames>
+                				</Storyboard>
+                			</VisualState>
+                		</VisualStateGroup>
+                	</VisualStateManager.VisualStateGroups>
+                    <ListBox x:Name="listBox" Focusable="False" Grid.Row="0"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                             ScrollViewer.VerticalScrollBarVisibility="Visible"
+                             VirtualizingPanel.IsVirtualizing="True"
+                             VirtualizingPanel.VirtualizationMode="Standard"
+                             VirtualizingPanel.ScrollUnit="Pixel"
+                             ItemsSource="{Binding Items}"
+            			     ItemContainerStyle="{DynamicResource cardStyle}" Opacity="0" />
+                    <controls:MetroProgressBar x:Name="metroProgressBar" HorizontalAlignment="Stretch" VerticalAlignment="Top" Foreground="{StaticResource AccentColorBrush}"/>
+                    <TextBlock HorizontalAlignment="Center" TextWrapping="Wrap" Text="All caught up!" VerticalAlignment="Center" FontSize="18" Visibility="{Binding NoItem, Converter={StaticResource booleanToVisibilityConverter}}" Margin="0,-100,0,0" Foreground="LightGray"/>
+                </Grid>
+            </DataTemplate>
             <DataTemplate DataType="{x:Type vm:ActivityViewModel}">
                 <DataTemplate.Resources>
                     <ctl:IsExpandCommentCountToStringConverter x:Key="commentExpanderHeaderConverter" />
                 </DataTemplate.Resources>
-                <Border x:Name="cardBorder" BorderThickness="1" Margin="8,5" Padding="10" d:DataContext="{d:DesignData /SampleData/ActivityViewModelSampleData.xaml}">
-                    <i:Interaction.Triggers>
-                        <ei:DataTrigger Value="True" Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType={x:Type ListBoxItem}, Mode=FindAncestor}}">
-                            <ei:ChangePropertyAction Value="DarkGray" PropertyName="BorderBrush" TargetObject="{Binding ElementName=cardBorder}" />
-                        </ei:DataTrigger>
-                        <ei:DataTrigger Value="False" Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType={x:Type ListBoxItem}, Mode=FindAncestor}}">
-                            <ei:ChangePropertyAction Value="LightGray" PropertyName="BorderBrush" TargetObject="{Binding ElementName=cardBorder}" />
-                        </ei:DataTrigger>
-                    </i:Interaction.Triggers>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="45" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <Image Grid.Column="0" Width="40" Height="40" Margin="0,0,5,0" VerticalAlignment="Top" Source="{Binding ActorIcon}" />
-                        <StackPanel Grid.Column="1">
-                            <TextBlock Margin="0,0,5,5" VerticalAlignment="Center" Style="{StaticResource postTextStyle}">
+                <Grid d:DataContext="{d:DesignData /SampleData/ActivityViewModelSampleData.xaml}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="45" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Image Grid.Column="0" Width="40" Height="40" Margin="0,0,5,0" VerticalAlignment="Top" Source="{Binding ActorIcon}" />
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Margin="0,0,5,5" VerticalAlignment="Center" Style="{StaticResource postTextStyle}">
                                 <Run Text="{Binding PostUserName}" Style="{StaticResource userNameTextStyle}" />
                                 <Span Foreground="Gray">
                                     <Run Text="-"/>
@@ -358,25 +416,25 @@
                                         <Run Text="{Binding PostDate}" />
                                     </Hyperlink>
                                 </Span>
-                            </TextBlock>
-                            <TextBlock Margin="0,0,0,5" TextWrapping="Wrap" Style="{StaticResource postTextStyle}" >
+                        </TextBlock>
+                        <TextBlock Margin="0,0,0,5" TextWrapping="Wrap" Style="{StaticResource postTextStyle}" >
                             	<i:Interaction.Behaviors>
                             		<ctl:SetInlineBehavior Element="{Binding PostContentInline}"/>
                             	</i:Interaction.Behaviors>
-                            </TextBlock>
-                            <ContentPresenter Content="{Binding AttachedContent}" />
-                            <ctl:ExpandableListView ItemsSource="{Binding Comments}" HorizontalContentAlignment="Stretch">
-                                <ctl:ExpandableListView.Header>
-                                    <MultiBinding Converter="{StaticResource commentExpanderHeaderConverter}">
-                                        <Binding RelativeSource="{RelativeSource Self}" Path="IsExpand" />
-                                        <Binding RelativeSource="{RelativeSource Self}" Path="Items.Count" />
-                                    </MultiBinding>
-                                </ctl:ExpandableListView.Header>
-                            </ctl:ExpandableListView>
-                            <StackPanel FocusManager.IsFocusScope="True" KeyboardNavigation.TabNavigation="Local" FocusVisualStyle="{x:Null}">
-                                <Border BorderBrush="LightGray" BorderThickness="1,0,1,1">
-                                    <Grid>
-                                        <TextBlock Margin="4,0,4,0" FontSize="13" VerticalAlignment="Center" Foreground="LightGray" Text="コメントを追加...">
+                        </TextBlock>
+                        <ContentPresenter Content="{Binding AttachedContent}" />
+                        <ctl:ExpandableListView ItemsSource="{Binding Comments}" HorizontalContentAlignment="Stretch">
+                            <ctl:ExpandableListView.Header>
+                                <MultiBinding Converter="{StaticResource commentExpanderHeaderConverter}">
+                                    <Binding RelativeSource="{RelativeSource Self}" Path="IsExpand" />
+                                    <Binding RelativeSource="{RelativeSource Self}" Path="Items.Count" />
+                                </MultiBinding>
+                            </ctl:ExpandableListView.Header>
+                        </ctl:ExpandableListView>
+                        <StackPanel FocusManager.IsFocusScope="True" KeyboardNavigation.TabNavigation="Local" FocusVisualStyle="{x:Null}">
+                            <Border BorderBrush="LightGray" BorderThickness="1,0,1,1">
+                                <Grid>
+                                    <TextBlock Margin="4,0,4,0" FontSize="13" VerticalAlignment="Center" Foreground="LightGray" Text="コメントを追加...">
                                             <i:Interaction.Triggers>
                                                 <ei:DataTrigger Binding="{Binding ShareBoxStatus}" Value="Deactive">
                                                     <ei:ChangePropertyAction PropertyName="Opacity" Value="1.0" />
@@ -388,85 +446,84 @@
                                                     <ei:ChangePropertyAction PropertyName="Opacity" Value="0.0" />
                                                 </ei:DataTrigger>
                                             </i:Interaction.Triggers>
-                                        </TextBlock>
-                                        <TextBox AcceptsReturn="True" BorderThickness="0" Focusable="True" FontSize="13" KeyboardNavigation.IsTabStop="True"
+                                    </TextBlock>
+                                    <TextBox AcceptsReturn="True" BorderThickness="0" Focusable="True" FontSize="13" KeyboardNavigation.IsTabStop="True"
                                                  Text="{Binding PostCommentText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap" Opacity="0.0">
-                                            <i:Interaction.Triggers>
-                                                <i:EventTrigger EventName="PreviewMouseDown">
-                                                    <ei:ChangePropertyAction TargetObject="{Binding}" PropertyName="ShareBoxStatus" Value="Writing" />
-                                                </i:EventTrigger>
-                                                <ei:DataTrigger Binding="{Binding ShareBoxStatus}" Value="Deactive">
-                                                    <ei:ChangePropertyAction PropertyName="Padding" Value="0" />
-                                                    <ei:ChangePropertyAction PropertyName="IsEnabled" Value="True" />
-                                                    <ei:ChangePropertyAction PropertyName="Opacity" Value="0.0" />
-                                                </ei:DataTrigger>
-                                                <ei:DataTrigger Binding="{Binding ShareBoxStatus}" Value="Writing">
-                                                    <ei:ChangePropertyAction PropertyName="Padding" Value="0,0,0,15" />
-                                                    <ei:ChangePropertyAction PropertyName="IsEnabled" Value="True" />
-                                                    <ei:ChangePropertyAction PropertyName="Opacity" Value="1.0" />
-                                                </ei:DataTrigger>
-                                                <ei:DataTrigger Binding="{Binding ShareBoxStatus}" Value="Sending">
-                                                    <ei:ChangePropertyAction PropertyName="Padding" Value="0,0,0,15" />
-                                                    <ei:ChangePropertyAction PropertyName="IsEnabled" Value="False" />
-                                                    <ei:ChangePropertyAction PropertyName="Opacity" Value="1.0" />
-                                                </ei:DataTrigger>
-                                            </i:Interaction.Triggers>
-                                            <TextBox.InputBindings>
-                                                <KeyBinding Key="Enter" Modifiers="Shift" Command="{Binding SendCommentCommand}" />
-                                                <KeyBinding Key="Escape" Command="{Binding CancelCommentCommand}" />
-                                            </TextBox.InputBindings>
-                                        </TextBox>
-                                    </Grid>
-                                </Border>
-                                <StackPanel Margin="0,5,0,0" Visibility="Collapsed" Orientation="Horizontal">
+                                        <i:Interaction.Triggers>
+                                            <i:EventTrigger EventName="PreviewMouseDown">
+                                                <ei:ChangePropertyAction TargetObject="{Binding}" PropertyName="ShareBoxStatus" Value="Writing" />
+                                            </i:EventTrigger>
+                                            <ei:DataTrigger Binding="{Binding ShareBoxStatus}" Value="Deactive">
+                                                <ei:ChangePropertyAction PropertyName="Padding" Value="0" />
+                                                <ei:ChangePropertyAction PropertyName="IsEnabled" Value="True" />
+                                                <ei:ChangePropertyAction PropertyName="Opacity" Value="0.0" />
+                                            </ei:DataTrigger>
+                                            <ei:DataTrigger Binding="{Binding ShareBoxStatus}" Value="Writing">
+                                                <ei:ChangePropertyAction PropertyName="Padding" Value="0,0,0,15" />
+                                                <ei:ChangePropertyAction PropertyName="IsEnabled" Value="True" />
+                                                <ei:ChangePropertyAction PropertyName="Opacity" Value="1.0" />
+                                            </ei:DataTrigger>
+                                            <ei:DataTrigger Binding="{Binding ShareBoxStatus}" Value="Sending">
+                                                <ei:ChangePropertyAction PropertyName="Padding" Value="0,0,0,15" />
+                                                <ei:ChangePropertyAction PropertyName="IsEnabled" Value="False" />
+                                                <ei:ChangePropertyAction PropertyName="Opacity" Value="1.0" />
+                                            </ei:DataTrigger>
+                                        </i:Interaction.Triggers>
+                                        <TextBox.InputBindings>
+                                            <KeyBinding Key="Enter" Modifiers="Shift" Command="{Binding SendCommentCommand}" />
+                                            <KeyBinding Key="Escape" Command="{Binding CancelCommentCommand}" />
+                                        </TextBox.InputBindings>
+                                    </TextBox>
+                                </Grid>
+                            </Border>
+                            <StackPanel Margin="0,5,0,0" Visibility="Collapsed" Orientation="Horizontal">
+                                <i:Interaction.Triggers>
+                                    <ei:DataTrigger Binding="{Binding ShareBoxStatus}" Value="Deactive">
+                                        <ei:ChangePropertyAction PropertyName="Visibility" Value="Collapsed" />
+                                    </ei:DataTrigger>
+                                    <ei:DataTrigger Binding="{Binding ShareBoxStatus}" Value="Writing">
+                                        <ei:ChangePropertyAction PropertyName="Visibility" Value="Visible" />
+                                    </ei:DataTrigger>
+                                    <ei:DataTrigger Binding="{Binding ShareBoxStatus}" Value="Sending">
+                                        <ei:ChangePropertyAction PropertyName="Visibility" Value="Visible" />
+                                    </ei:DataTrigger>
+                                </i:Interaction.Triggers>
+                                <Button Padding="10,3,10,3" Margin="0,0,8,0" Content="コメントを投稿" Focusable="True" KeyboardNavigation.IsTabStop="True" Command="{Binding SendCommentCommand}">
                                     <i:Interaction.Triggers>
                                         <ei:DataTrigger Binding="{Binding ShareBoxStatus}" Value="Deactive">
-                                            <ei:ChangePropertyAction PropertyName="Visibility" Value="Collapsed" />
+                                            <ei:ChangePropertyAction PropertyName="IsEnabled" Value="True" />
                                         </ei:DataTrigger>
                                         <ei:DataTrigger Binding="{Binding ShareBoxStatus}" Value="Writing">
-                                            <ei:ChangePropertyAction PropertyName="Visibility" Value="Visible" />
+                                            <ei:ChangePropertyAction PropertyName="IsEnabled" Value="True" />
                                         </ei:DataTrigger>
                                         <ei:DataTrigger Binding="{Binding ShareBoxStatus}" Value="Sending">
-                                            <ei:ChangePropertyAction PropertyName="Visibility" Value="Visible" />
+                                            <ei:ChangePropertyAction PropertyName="IsEnabled" Value="False" />
                                         </ei:DataTrigger>
                                     </i:Interaction.Triggers>
-                                    <Button Padding="10,3,10,3" Margin="0,0,8,0" Content="コメントを投稿" Focusable="True" KeyboardNavigation.IsTabStop="True" Command="{Binding SendCommentCommand}">
-                                        <i:Interaction.Triggers>
-                                            <ei:DataTrigger Binding="{Binding ShareBoxStatus}" Value="Deactive">
-                                                <ei:ChangePropertyAction PropertyName="IsEnabled" Value="True" />
-                                            </ei:DataTrigger>
-                                            <ei:DataTrigger Binding="{Binding ShareBoxStatus}" Value="Writing">
-                                                <ei:ChangePropertyAction PropertyName="IsEnabled" Value="True" />
-                                            </ei:DataTrigger>
-                                            <ei:DataTrigger Binding="{Binding ShareBoxStatus}" Value="Sending">
-                                                <ei:ChangePropertyAction PropertyName="IsEnabled" Value="False" />
-                                            </ei:DataTrigger>
-                                        </i:Interaction.Triggers>
-                                        <Button.InputBindings>
-                                            <KeyBinding Key="Escape" Command="{Binding CancelCommentCommand}" />
-                                        </Button.InputBindings>
-                                    </Button>
-                                    <Button Padding="10,3,10,3" Margin="0,0,8,0" Content="キャンセル" Focusable="True" KeyboardNavigation.IsTabStop="True" Command="{Binding CancelCommentCommand}">
-                                        <i:Interaction.Triggers>
-                                            <ei:DataTrigger Binding="{Binding ShareBoxStatus}" Value="Deactive">
-                                                <ei:ChangePropertyAction PropertyName="IsEnabled" Value="True" />
-                                            </ei:DataTrigger>
-                                            <ei:DataTrigger Binding="{Binding ShareBoxStatus}" Value="Writing">
-                                                <ei:ChangePropertyAction PropertyName="IsEnabled" Value="True" />
-                                            </ei:DataTrigger>
-                                            <ei:DataTrigger Binding="{Binding ShareBoxStatus}" Value="Sending">
-                                                <ei:ChangePropertyAction PropertyName="IsEnabled" Value="False" />
-                                            </ei:DataTrigger>
-                                        </i:Interaction.Triggers>
-                                        <Button.InputBindings>
-                                            <KeyBinding Key="Escape" Command="{Binding CancelCommentCommand}" />
-                                        </Button.InputBindings>
-                                    </Button>
-                                </StackPanel>
+                                    <Button.InputBindings>
+                                        <KeyBinding Key="Escape" Command="{Binding CancelCommentCommand}" />
+                                    </Button.InputBindings>
+                                </Button>
+                                <Button Padding="10,3,10,3" Margin="0,0,8,0" Content="キャンセル" Focusable="True" KeyboardNavigation.IsTabStop="True" Command="{Binding CancelCommentCommand}">
+                                    <i:Interaction.Triggers>
+                                        <ei:DataTrigger Binding="{Binding ShareBoxStatus}" Value="Deactive">
+                                            <ei:ChangePropertyAction PropertyName="IsEnabled" Value="True" />
+                                        </ei:DataTrigger>
+                                        <ei:DataTrigger Binding="{Binding ShareBoxStatus}" Value="Writing">
+                                            <ei:ChangePropertyAction PropertyName="IsEnabled" Value="True" />
+                                        </ei:DataTrigger>
+                                        <ei:DataTrigger Binding="{Binding ShareBoxStatus}" Value="Sending">
+                                            <ei:ChangePropertyAction PropertyName="IsEnabled" Value="False" />
+                                        </ei:DataTrigger>
+                                    </i:Interaction.Triggers>
+                                    <Button.InputBindings>
+                                        <KeyBinding Key="Escape" Command="{Binding CancelCommentCommand}" />
+                                    </Button.InputBindings>
+                                </Button>
                             </StackPanel>
                         </StackPanel>
-                    </Grid>
-                </Border>
+                    </StackPanel>
+                </Grid>
             </DataTemplate>
             <DataTemplate DataType="{x:Type vm:CommentViewModel}">
                 <Border BorderBrush="LightGray" BorderThickness="0,0,0,1" Padding="0,5,5,5" d:DataContext="{d:DesignData /SampleData/CommentViewModelSampleData.xaml}">
@@ -496,7 +553,7 @@
                             <ColumnDefinition Width="auto" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <Image Grid.Column="0" Source="{Binding ThumnailUrl}" MaxWidth="100" MaxHeight="100" Stretch="Uniform" VerticalAlignment="Top" Margin="0,5,5,0" Visibility="{Binding ExistThumnailUrl, Converter={StaticResource booleanToVisibilityConverter}}" />
+                        <Image Grid.Column="0" Source="{Binding ThumnailUrl}" MaxWidth="100" MaxHeight="100" Stretch="Uniform" VerticalAlignment="Top" Margin="0,5,5,0" />
                         <TextBlock Grid.Column="1" Margin="0,8,0,0" TextWrapping="Wrap" Style="{StaticResource postTextStyle}">
                             <Hyperlink Focusable="False">
                                 <i:Interaction.Triggers>
@@ -644,6 +701,42 @@
                         </TextBlock>
                         <ContentPresenter Content="{Binding AttachedContent}" />
                     </StackPanel>
+                </Border>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type vm:NotificationWithActivityViewModel}">
+                <StackPanel d:DataContext="{d:DesignData /SampleData/NotificationWithActivityViewModelSampleData.xaml}" d:DesignWidth="400" d:DesignHeight="300">
+                    <Border BorderThickness="0,0,0,1" BorderBrush="LightGray" Padding="0,0,0,8" Margin="0,0,0,5">
+                        <TextBlock Text="{Binding NoticeText}" TextWrapping="Wrap" />
+                    </Border>
+                    <ContentPresenter Content="{Binding Target}" />
+                </StackPanel>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:NotificationWithProfileViewModel}">
+                <Border BorderBrush="LightGray" BorderThickness="0,1,0,0" d:DataContext="{d:DesignData /SampleData/NotificationWithProfileViewModelSampleData.xaml}" d:DesignWidth="360" d:DesignHeight="720">
+                    <StackPanel>
+                        <ItemsControl ItemsSource="{Binding Members}" />
+                    </StackPanel>
+                </Border>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:ProfileRegisterViewModel}">
+                <Border Margin="0,5,0,5" BorderBrush="LightGray" BorderThickness="1" d:DesignWidth="300" d:DesignHeight="150">
+                    <Grid>
+                        <StackPanel Margin="0">
+                            <TextBlock Margin="10,5,5,3" Text="{Binding Name}" />
+                            <Rectangle Height="65" Fill="Black" />
+                            <TextBlock Margin="10,5,5,8" Text="x人の共通の知り合い" />
+                        </StackPanel>
+                        <StackPanel HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,10,10,10">
+                            <Border BorderBrush="#fffafafa" BorderThickness="5" Width="90" Height="90" HorizontalAlignment="Right">
+                                <Image Source="{Binding ProfileIconUrl}" />
+                                <Border.Effect>
+                                    <DropShadowEffect Color="Black" Direction="315" Opacity="0.3" BlurRadius="5" ShadowDepth="0" />
+                                </Border.Effect>
+                            </Border>
+                            <Button HorizontalAlignment="Right" Margin="0,5,0,0" Padding="3">サークルに追加</Button>
+                        </StackPanel>
+                    </Grid>
                 </Border>
             </DataTemplate>
         </ResourceDictionary>

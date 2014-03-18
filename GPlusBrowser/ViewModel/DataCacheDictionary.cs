@@ -12,7 +12,11 @@ namespace GPlusBrowser
 {
     public static class DataCacheDictionary
     {
-        static DataCacheDictionary() { System.Net.ServicePointManager.DefaultConnectionLimit = 16; }
+        static DataCacheDictionary()
+        {
+            System.Net.ServicePointManager.DefaultConnectionLimit = 16;
+            _imgCacheDictionary.CacheOuted += _imgCacheDictionary_CacheOuted;
+        }
         static DateTime _lastCleanupTime = DateTime.UtcNow;
         static readonly HttpClient _defaultHttpClient = new HttpClient();
         static readonly CacheDictionary<Uri, ImageCache, Task<BitmapImage>> _imgCacheDictionary = new CacheDictionary<Uri, ImageCache, Task<BitmapImage>>(90, 30, false, tsk => new ImageCache() { Value = tsk });
@@ -40,7 +44,6 @@ namespace GPlusBrowser
                                 while ((recieveByte = await strm.ReadAsync(buff, 0, buff.Length)) > 0)
                                     mStrm.Write(buff, 0, recieveByte);
                             mStrm.Seek(0, System.IO.SeekOrigin.Begin);
-
                             img = new BitmapImage();
                             img.BeginInit();
                             img.CacheOption = BitmapCacheOption.OnLoad;
@@ -56,6 +59,8 @@ namespace GPlusBrowser
                     catch (NotSupportedException) { return null; }
                 });
         }
+        static void _imgCacheDictionary_CacheOuted(object sender, CacheoutEventArgs<Task<BitmapImage>> e)
+        { e.Value.Dispose(); }
     }
     public class ImageCache : ICacheInfo<Task<BitmapImage>>
     { public Task<BitmapImage> Value { get; set; } }
