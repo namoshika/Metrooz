@@ -104,20 +104,34 @@ namespace GPlusBrowser.ViewModel
 
                 SelectedIndex = 0;
                 IsLoading = true;
-                await _accountModel.Activate().ConfigureAwait(false);
-                UserName = _accountModel.MyProfile.Name;
-                UserIconUrl = await DataCacheDictionary.DownloadImage(
-                    new Uri(_accountModel.Builder.IconUrl
-                        .Replace("$SIZE_SEGMENT", "s38-c-k")
-                        .Replace("$SIZE_NUM", "80"))).ConfigureAwait(false);
-            }
-            catch (FailToOperationException)
-            {
+                try
+                {
+                    await _accountModel.Activate().ConfigureAwait(false);
+                    UserName = _accountModel.MyProfile.Name;
+                    UserIconUrl = await DataCacheDictionary.DownloadImage(
+                        new Uri(_accountModel.Builder.IconUrl
+                            .Replace("$SIZE_SEGMENT", "s38-c-k")
+                            .Replace("$SIZE_NUM", "80"))).ConfigureAwait(false);
+                    return;
+                }
+                catch (FailToOperationException) { }
+
+                //例外発生時はreturnされずにここまで実行される
                 var message = new DialogOptionInfo(
                     "Error", "ストリームの初期化に失敗しました。ネットワークの設定を確認して下さい。",
-                    setting: new MetroDialogSettings() { AffirmativeButtonText = "再接続" });
+                    style: MessageDialogStyle.AffirmativeAndNegative,
+                    setting: new MetroDialogSettings() { AffirmativeButtonText = "再接続", NegativeButtonText = "別のアカウントを使う" });
                 Messenger.Default.Send(message);
-                var tmp = message.CallbackTask.ContinueWith(tsk => Activate());
+                switch(await message.CallbackTask.ConfigureAwait(false))
+                {
+                    case MessageDialogResult.Affirmative:
+                        var tsk = Activate();
+                        break;
+                    case MessageDialogResult.Negative:
+                        _manager.IsAccountSelectorMode = true;
+                        _manager.SelectedPageIndex = -1;
+                        break;
+                }
             }
             finally
             {

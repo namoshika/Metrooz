@@ -127,6 +127,11 @@
     </ApplicationDefinition>
     <Compile Include="Controls\InlineBehavior.cs" />
     <Compile Include="Controls\WheelScrollKillBehavior.cs" />
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
     <Compile Include="ViewModel\DataCacheDictionary.cs" />
     <Compile Include="Controls\ExpandableListView.cs" />
     <Compile Include="Model\NotificationManager.cs" />
@@ -180,6 +185,10 @@
     </Compile>
     <None Include="packages.config" />
     <AppDesigner Include="Properties\" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
     <Resource Include="Resources\Entypo.ttf" />
   </ItemGroup>
   <ItemGroup>

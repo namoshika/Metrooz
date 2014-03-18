@@ -132,7 +132,7 @@
             </Style>
 
             <DataTemplate x:Key="accountListTemplate" DataType="{x:Type vm:MainViewModel}">
-                <ListBox DockPanel.Dock="Left" Margin="5,10,0,0" Background="Transparent" DataContext="{Binding Main, Source={StaticResource Locator}}" SelectedIndex="{Binding SelectedPageIndex, Mode=TwoWay}" ItemsSource="{Binding Pages}" ItemTemplate="{DynamicResource accountListItemTemplate}" d:DataContext="{d:DesignData /SampleData/MainViewModelSampleData.xaml}" d:DesignWidth="300" d:DesignHeight="350" />
+                <ListBox DockPanel.Dock="Left" Margin="5,10,0,0" Background="Transparent" DataContext="{Binding Main, Source={StaticResource Locator}}" SelectedIndex="{Binding SelectedAccountIndex, Mode=TwoWay}" ItemsSource="{Binding Accounts}" ItemTemplate="{DynamicResource accountListItemTemplate}" d:DataContext="{d:DesignData /SampleData/MainViewModelSampleData.xaml}" d:DesignWidth="300" d:DesignHeight="350" />
             </DataTemplate>
             <DataTemplate x:Key="accountListItemTemplate" DataType="{x:Type vm:AccountViewModel}">
                 <Button Command="{Binding ActivateCommand}" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch" Style="{StaticResource iconButtonStyle}">

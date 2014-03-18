@@ -27,6 +27,13 @@ namespace GPlusBrowser.Model
                 var account = new Account(item);
                 Accounts.Add(account);
             }
+            OnInitialized(new EventArgs());
+        }
+        public event EventHandler Initialized;
+        protected virtual void OnInitialized(EventArgs e)
+        {
+            if (Initialized != null)
+                Initialized(this, e);
         }
     }
 }
