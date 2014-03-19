@@ -1,5 +1,0 @@
-﻿<ViewModel:AttachedLinkViewModel xmlns:ViewModel="clr-namespace:GPlusBrowser.ViewModel" xmlns:Imaging="clr-namespace:System.Windows.Media.Imaging;assembly=PresentationCore" xmlns:Windows="clr-namespace:System.Windows;assembly=WindowsBase" xmlns:Cache="clr-namespace:System.Net.Cache;assembly=System" AncourIntroductionText="Aliquam cras vestibulum" AncourTitle="Aenean nam">
-	<ViewModel:AttachedLinkViewModel.ThumnailUrl>
-        <Imaging:BitmapImage UriSource="Files\pic00.jpg" />
-    </ViewModel:AttachedLinkViewModel.ThumnailUrl>
-</ViewModel:AttachedLinkViewModel>
