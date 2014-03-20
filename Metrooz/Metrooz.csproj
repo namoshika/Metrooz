@@ -128,6 +128,8 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Controls\FixedDataStateBehavior.cs" />
+    <Compile Include="Controls\ScrollBehavior.cs" />
     <Compile Include="Controls\InlineBehavior.cs" />
     <Compile Include="Controls\WheelScrollKillBehavior.cs" />
     <Compile Include="Properties\Settings.Designer.cs">
@@ -157,6 +159,7 @@
     <Compile Include="Model\Stream\StreamManager.cs" />
     <Compile Include="ViewModel\Stream\ActivityViewModel.cs" />
     <Compile Include="ViewModel\AccountViewModel.cs" />
+    <Compile Include="ViewModel\Stream\AttachedYouTubeViewModel.cs" />
     <Compile Include="ViewModel\Stream\StreamViewModel.cs" />
     <Compile Include="ViewModel\Stream\CommentViewModel.cs" />
     <Compile Include="ViewModel\Stream\StreamManagerViewModel.cs" />
@@ -219,6 +222,7 @@
     <DesignData Include="SampleData\MainViewModelSampleData.xaml" />
     <DesignData Include="SampleData\NotificationWithActivityViewModelSampleData.xaml" />
     <DesignData Include="SampleData\NotificationWithProfileViewModelSampleData.xaml" />
+    <DesignData Include="SampleData\ResumeStreamButtonViewModelSampleData.xaml" />
   </ItemGroup>
   <ItemGroup>
     <DesignData Include="SampleData\Files\accountIcon00.png" />

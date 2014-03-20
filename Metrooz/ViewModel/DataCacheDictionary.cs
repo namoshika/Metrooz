@@ -60,7 +60,16 @@ namespace Metrooz
                 });
         }
         static void _imgCacheDictionary_CacheOuted(object sender, CacheoutEventArgs<Task<BitmapImage>> e)
-        { e.Value.Dispose(); }
+        {
+            switch(e.Value.Status)
+            {
+                case TaskStatus.RanToCompletion:
+                case TaskStatus.Faulted:
+                case TaskStatus.Canceled:
+                    e.Value.Dispose();
+                    break;
+            }
+        }
     }
     public class ImageCache : ICacheInfo<Task<BitmapImage>>
     { public Task<BitmapImage> Value { get; set; } }

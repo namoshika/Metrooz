@@ -107,6 +107,7 @@ namespace Metrooz.ViewModel
             _streamModel = model;
             Items = new ObservableCollection<NotificationViewModel>();
 
+            model.ChangedStatus += model_ChangedStatus;
             model.Items.CollectionChanged += Items_CollectionChanged;
             PropertyChanged += NotificationManagerViewModel_PropertyChanged;
         }
@@ -140,17 +141,9 @@ namespace Metrooz.ViewModel
         {
             if (IsActive == false)
                 return;
-            try
-            {
-                IsLoading = true;
-                await _streamModel.Update();
-            }
+            try { await _streamModel.Update(); }
             catch (FailToOperationException) { }
-            finally
-            {
-                NoItem = _streamModel.Items.Count == 0;
-                IsLoading = false;
-            }
+            finally { NoItem = _streamModel.Items.Count == 0; }
         }
         public async override void Cleanup()
         {
@@ -158,6 +151,7 @@ namespace Metrooz.ViewModel
             try
             {
                 await _syncerItems.WaitAsync().ConfigureAwait(false);
+                _streamModel.ChangedStatus -= model_ChangedStatus;
                 _streamModel.Items.CollectionChanged -= Items_CollectionChanged;
                 PropertyChanged -= NotificationManagerViewModel_PropertyChanged;
 
@@ -211,6 +205,17 @@ namespace Metrooz.ViewModel
                         });
                     break;
             }
+        }
+        async void model_ChangedStatus(object sender, EventArgs e)
+        {
+            try
+            {
+                var status = _streamModel.Status;
+                await _syncerItems.WaitAsync().ConfigureAwait(false);
+                IsLoading = status == StreamStateType.Loading;
+            }
+            finally
+            { _syncerItems.Release(); }
         }
         async void Items_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {

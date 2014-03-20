@@ -59,22 +59,24 @@ namespace Metrooz.Model
             lock (Comments)
             {
                 var item = Comments.FirstOrDefault(cmme => cmme.CommentInfo.Id == comment.Id);
+                var itemIdx = Comments.IndexOf(item);
                 switch (comment.Status)
                 {
                     case PostStatusType.Removed:
                         if (item != null)
-                            Comments.Remove(item);
+                            Comments.RemoveAt(itemIdx);
                         break;
                     case PostStatusType.First:
                     case PostStatusType.Edited:
+                        var idx = 0;
+                        while (idx < Comments.Count && comment.PostDate > Comments[idx].CommentInfo.PostDate) idx++;
                         if (item != null)
-                            item.Refresh(comment);
-                        else
                         {
-                            var idx = Comments.Count - 1;
-                            for (; idx >= 0 && Comments[idx].CommentInfo.PostDate > comment.PostDate; idx--) ;
-                            Comments.Insert(idx + 1, new Comment(comment));
+                            item.Refresh(comment);
+                            Comments.Move(itemIdx, idx);
                         }
+                        else
+                            Comments.Insert(idx, new Comment(comment));
                         break;
                 }
             }

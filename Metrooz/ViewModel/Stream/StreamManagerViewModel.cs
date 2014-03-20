@@ -22,13 +22,20 @@ namespace Metrooz.ViewModel
             _streams = new ObservableCollection<StreamViewModel>();
 
             _streamManagerModel.Streams.CollectionChanged += _stream_ChangedDisplayStreams;
+            PropertyChanged += StreamManagerViewModel_PropertyChanged;
         }
-        int _selectedCircleIndex;
+        bool _isActive;
+        int _selectedCircleIndex, _subSelectedCircleIndex;
         Account _accountModel;
         StreamManager _streamManagerModel;
         ObservableCollection<StreamViewModel> _streams;
         readonly System.Threading.SemaphoreSlim _syncerStreams = new System.Threading.SemaphoreSlim(1, 1);
 
+        public bool IsActive
+        {
+            get { return _isActive; }
+            set { Set(() => IsActive, ref _isActive, value); }
+        }
         public int SelectedIndex
         {
             get { return _selectedCircleIndex; }
@@ -84,6 +91,21 @@ namespace Metrooz.ViewModel
                     SelectedIndex = -1;
             }
             finally { _syncerStreams.Release(); }
+        }
+        void StreamManagerViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            switch(e.PropertyName)
+            {
+                case "IsActive":
+                    if (IsActive == false)
+                    {
+                        _subSelectedCircleIndex = _selectedCircleIndex;
+                        SelectedIndex = -1;
+                    }
+                    else
+                        SelectedIndex = _subSelectedCircleIndex;
+                    break;
+            }
         }
     }
 }

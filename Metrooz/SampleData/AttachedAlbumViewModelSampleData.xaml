@@ -1,4 +1,4 @@
-﻿<ViewModel:AttachedAlbumViewModel xmlns:ViewModel="clr-namespace:Metrooz.ViewModel" xmlns:Imaging="clr-namespace:System.Windows.Media.Imaging;assembly=PresentationCore" xmlns:Windows="clr-namespace:System.Windows;assembly=WindowsBase" xmlns:Cache="clr-namespace:System.Net.Cache;assembly=System" Title="Class curae aenean vestibulum maecenas">
+﻿<ViewModel:AttachedAlbumViewModel xmlns:ViewModel="clr-namespace:Metrooz.ViewModel" xmlns:Imaging="clr-namespace:System.Windows.Media.Imaging;assembly=PresentationCore" xmlns:Windows="clr-namespace:System.Windows;assembly=WindowsBase" xmlns:Cache="clr-namespace:System.Net.Cache;assembly=System" Title="Class curae aenean vestibulum maecenas" Width="640" Height="480">
 	<ViewModel:AttachedAlbumViewModel.LargeImage>
         <Imaging:BitmapImage UriSource="Files\pic00.jpg" />
     </ViewModel:AttachedAlbumViewModel.LargeImage>

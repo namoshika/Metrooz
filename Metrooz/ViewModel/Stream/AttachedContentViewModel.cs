@@ -26,6 +26,9 @@ namespace Metrooz.ViewModel
                 case ContentType.InteractiveLink:
                     var attachedLink = (AttachedLink)model;
                     return await AttachedLinkViewModel.Create(attachedLink).ConfigureAwait(false);
+                case ContentType.YouTube:
+                    var attachedYouTube = (AttachedYouTube)model;
+                    return await AttachedYouTubeViewModel.Create(attachedYouTube).ConfigureAwait(false);
                 case ContentType.Reshare:
                     var attachedActivity = (AttachedPost)model;
                     return await AttachedActivityViewModel.Create(attachedActivity).ConfigureAwait(false);

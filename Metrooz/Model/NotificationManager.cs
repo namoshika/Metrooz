@@ -88,6 +88,7 @@ namespace Metrooz.Model
                         },
                         exp => _notificationTrigger = null);
             }
+            catch (FailToOperationException) { System.Diagnostics.Debug.Fail("通知APIとの通信でエラー発生。"); }
             finally { _syncer.Release(); }
         }
         public async void Dispose()
@@ -133,7 +134,11 @@ namespace Metrooz.Model
             {
                 await _syncer.WaitAsync();
                 if (DateTime.UtcNow - _latestUpdateDate < _updateIntervalRegulation)
+                {
+                    Status = StreamStateType.Successful;
+                    OnChangedStatus(new EventArgs());
                     return;
+                }
 
                 _latestUpdateDate = DateTime.UtcNow;
                 Status = StreamStateType.Loading;

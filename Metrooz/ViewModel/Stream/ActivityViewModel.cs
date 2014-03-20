@@ -34,6 +34,7 @@ namespace Metrooz.ViewModel
         Uri _activityUrl;
         bool _isEnableCommentsHeader, _isCheckedCommentsHeader;
         bool _isOpenedCommentList, _isLoadingCommentList;
+        int _commentLength;
         string _postUserName;
         string _postDate;
         string _postText;
@@ -73,6 +74,11 @@ namespace Metrooz.ViewModel
         {
             get { return _isLoadingCommentList; }
             set { Set(() => IsLoadingCommentList, ref _isLoadingCommentList, value); }
+        }
+        public int CommentLength
+        {
+            get { return _commentLength; }
+            set { Set(() => CommentLength, ref _commentLength, value); }
         }
         public string PostUserName
         {
@@ -140,7 +146,8 @@ namespace Metrooz.ViewModel
                             _model.Comments.Select(item => new CommentViewModel(item)));
                         _model.Comments.CollectionChanged += _activity_Comments_CollectionChanged;
                         Comments = commes;
-                        IsEnableCommentsHeader = _comments.Count > 2;
+                        CommentLength = _model.CoreInfo.CommentLength;
+                        IsEnableCommentsHeader = _model.CoreInfo.CommentLength > 2;
 
                         if (_model.CoreInfo.AttachedContent != null)
                             AttachedContent = await AttachedContentViewModel.Create(_model.CoreInfo.AttachedContent).ConfigureAwait(false);
@@ -176,20 +183,21 @@ namespace Metrooz.ViewModel
                 {
                     case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
                         foreach (var item in e.NewItems)
-                            await _comments.AddOnDispatcher(new CommentViewModel((Comment)item)).ConfigureAwait(false);
+                            await _comments.InsertOnDispatcher(e.NewStartingIndex, new CommentViewModel((Comment)item)).ConfigureAwait(false);
                         break;
                     case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
                         for (var i = 0; i < e.OldItems.Count; i++)
-                        {
-                            var tmp = _comments.First(vm => vm.Id == ((Comment)e.OldItems[i]).CommentInfo.Id);
-                            await _comments.RemoveOnDispatcher(tmp).ConfigureAwait(false);
-                        }
+                            await _comments.RemoveAtOnDispatcher(e.OldStartingIndex + i).ConfigureAwait(false);
+                        break;
+                    case System.Collections.Specialized.NotifyCollectionChangedAction.Move:
+                        await _comments.MoveOnDispatcher(e.OldStartingIndex, e.NewStartingIndex);
                         break;
                     case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:
                         await _comments.ClearOnDispatcher().ConfigureAwait(false);
                         break;
                 }
-                IsEnableCommentsHeader = _comments.Count > 2;
+                CommentLength = _model.CoreInfo.CommentLength;
+                IsEnableCommentsHeader = _model.CoreInfo.CommentLength > 2;
             }
             finally { _activitySyncer.Release(); }
         }
@@ -207,7 +215,6 @@ namespace Metrooz.ViewModel
                                     await _loadingSyncer.WaitAsync();
                                     IsLoadingCommentList = true;
                                     await _model.CoreInfo.UpdateGetActivityAsync(false, ActivityUpdateApiFlag.GetActivity);
-                                    await Refresh();
                                     IsLoadingCommentList = false;
                                     IsOpenedCommentList = true;
                                 }
