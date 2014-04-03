@@ -19,7 +19,8 @@ namespace Metrooz.ViewModel
 
     public class NotificationWithActivityViewModel : NotificationViewModel
     {
-        public NotificationWithActivityViewModel(NotificationInfoWithActivity model, Activity activityModel)
+        public NotificationWithActivityViewModel(NotificationInfoWithActivity model, Activity activityModel, DateTime insertTime)
+            : base(insertTime)
         {
             _target = new ActivityViewModel(activityModel);
             _targetModel = activityModel;
@@ -69,11 +70,11 @@ namespace Metrooz.ViewModel
                 _notificationModel.NoticedDate > DateTime.Today ? "HH:mm" : "yyyy:MM:dd");
         }
 
-        public async static Task<NotificationWithActivityViewModel> Create(NotificationInfoWithActivity model)
+        public async static Task<NotificationWithActivityViewModel> Create(NotificationInfoWithActivity model, DateTime insertTime)
         {
             await model.Activity.UpdateGetActivityAsync(false, ActivityUpdateApiFlag.GetActivities);
             var activity = model.Activity.PostStatus != PostStatusType.Removed ? new Activity(model.Activity) : null;
-            return new NotificationWithActivityViewModel(model, activity);
+            return new NotificationWithActivityViewModel(model, activity, insertTime);
         }
     }
 }

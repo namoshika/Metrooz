@@ -368,10 +368,6 @@
                 		<VisualStateGroup x:Name="ProggressStates">
                 			<VisualState x:Name="ProggressIddle">
                 				<Storyboard>
-                					<DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Opacity)" Storyboard.TargetName="listBox">
-                						<EasingDoubleKeyFrame KeyTime="0" Value="0"/>
-                						<EasingDoubleKeyFrame KeyTime="0:0:0.3" Value="1"/>
-                					</DoubleAnimationUsingKeyFrames>
                 					<BooleanAnimationUsingKeyFrames Storyboard.TargetProperty="(ProgressBar.IsIndeterminate)" Storyboard.TargetName="metroProgressBar">
                 						<DiscreteBooleanKeyFrame KeyTime="0" Value="True"/>
                 						<DiscreteBooleanKeyFrame KeyTime="0:0:0.3" Value="False"/>
@@ -393,9 +389,6 @@
                 					<ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Visibility)" Storyboard.TargetName="metroProgressBar">
                 						<DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Visible}"/>
                 					</ObjectAnimationUsingKeyFrames>
-                					<DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Opacity)" Storyboard.TargetName="listBox">
-                						<EasingDoubleKeyFrame KeyTime="0" Value="0"/>
-                					</DoubleAnimationUsingKeyFrames>
                 				</Storyboard>
                 			</VisualState>
                 		</VisualStateGroup>
@@ -407,7 +400,7 @@
                              VirtualizingPanel.VirtualizationMode="Standard"
                              VirtualizingPanel.ScrollUnit="Pixel"
                              ItemsSource="{Binding Items}"
-            			     ItemContainerStyle="{DynamicResource cardStyle}" Opacity="0" />
+            			     ItemContainerStyle="{DynamicResource cardStyle}" />
                     <controls:MetroProgressBar x:Name="metroProgressBar" HorizontalAlignment="Stretch" VerticalAlignment="Top" Foreground="{StaticResource AccentColorBrush}"/>
                     <TextBlock HorizontalAlignment="Center" TextWrapping="Wrap" Text="All caught up!" VerticalAlignment="Center" FontSize="18" Visibility="{Binding NoItem, Converter={StaticResource booleanToVisibilityConverter}}" Margin="0,-100,0,0" Foreground="LightGray"/>
                 </Grid>
@@ -765,7 +758,27 @@
                 </Border>
             </DataTemplate>
             <DataTemplate DataType="{x:Type vm:NotificationWithActivityViewModel}">
-                <StackPanel Margin="10" d:DataContext="{d:DesignData /SampleData/NotificationWithActivityViewModelSampleData.xaml}" d:DesignWidth="400" d:DesignHeight="300">
+                <StackPanel x:Name="stackPanel" Margin="10" d:DataContext="{d:DesignData /SampleData/NotificationWithActivityViewModelSampleData.xaml}" d:DesignWidth="400" d:DesignHeight="300">
+                    <StackPanel.Resources>
+                        <Storyboard x:Key="feedinAnimeStoryboard">
+            			<DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Opacity)" Storyboard.TargetName="stackPanel">
+            				<EasingDoubleKeyFrame KeyTime="0" Value="0"/>
+            				<EasingDoubleKeyFrame KeyTime="0:0:0.3" Value="1"/>
+            			</DoubleAnimationUsingKeyFrames>
+            		</Storyboard>
+                    </StackPanel.Resources>
+                	<i:Interaction.Triggers>
+                		<i:EventTrigger>
+                			<i:Interaction.Behaviors>
+                				<ei:ConditionBehavior>
+                					<ei:ConditionalExpression>
+                						<ei:ComparisonCondition LeftOperand="{Binding IsEnableInsertAnime}" RightOperand="True"/>
+                					</ei:ConditionalExpression>
+                				</ei:ConditionBehavior>
+                			</i:Interaction.Behaviors>
+                			<ei:ControlStoryboardAction Storyboard="{StaticResource feedinAnimeStoryboard}"/>
+                		</i:EventTrigger>
+                	</i:Interaction.Triggers>
                     <Border BorderThickness="0,0,0,1" BorderBrush="LightGray" Padding="0,0,0,8" Margin="0,0,0,5">
                         <TextBlock Text="{Binding NoticeText}" TextWrapping="Wrap" />
                     </Border>
@@ -773,7 +786,27 @@
                 </StackPanel>
             </DataTemplate>
             <DataTemplate DataType="{x:Type vm:NotificationWithProfileViewModel}">
-                <Border Margin="10" BorderBrush="LightGray" BorderThickness="0,1,0,0" d:DataContext="{d:DesignData /SampleData/NotificationWithProfileViewModelSampleData.xaml}" d:DesignWidth="360" d:DesignHeight="720">
+                <Border Name="border" Margin="10" BorderBrush="LightGray" BorderThickness="0,1,0,0" d:DataContext="{d:DesignData /SampleData/NotificationWithProfileViewModelSampleData.xaml}" d:DesignWidth="360" d:DesignHeight="720">
+                    <Border.Resources>
+                        <Storyboard x:Key="feedinAnimeStoryboard">
+            			    <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Opacity)" Storyboard.TargetName="border">
+            				    <EasingDoubleKeyFrame KeyTime="0" Value="0"/>
+            				    <EasingDoubleKeyFrame KeyTime="0:0:0.3" Value="1"/>
+            			    </DoubleAnimationUsingKeyFrames>
+            		    </Storyboard>
+                    </Border.Resources>
+                	<i:Interaction.Triggers>
+                		<i:EventTrigger>
+                			<i:Interaction.Behaviors>
+                				<ei:ConditionBehavior>
+                					<ei:ConditionalExpression>
+                						<ei:ComparisonCondition LeftOperand="{Binding IsEnableInsertAnime}" RightOperand="True"/>
+                					</ei:ConditionalExpression>
+                				</ei:ConditionBehavior>
+                			</i:Interaction.Behaviors>
+                			<ei:ControlStoryboardAction Storyboard="{StaticResource feedinAnimeStoryboard}"/>
+                		</i:EventTrigger>
+                	</i:Interaction.Triggers>
                     <StackPanel>
                         <ItemsControl ItemsSource="{Binding Members}" />
                     </StackPanel>

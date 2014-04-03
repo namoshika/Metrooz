@@ -19,7 +19,8 @@ namespace Metrooz.ViewModel
 
     public class NotificationWithProfileViewModel : NotificationViewModel
     {
-        public NotificationWithProfileViewModel(NotificationInfoWithActor model)
+        public NotificationWithProfileViewModel(NotificationInfoWithActor model, DateTime insertTime)
+            : base(insertTime)
         {
             _notificationModel = model;
             model_Updated(this, null);

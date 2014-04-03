@@ -163,13 +163,13 @@ namespace Metrooz.ViewModel
             finally
             { _syncerItems.Release(); }
         }
-        async Task<NotificationViewModel> WrapViewModel(NotificationInfo item)
+        async Task<NotificationViewModel> WrapViewModel(NotificationInfo item, DateTime insertTime)
         {
             NotificationViewModel itemVM = null;
             if ((int)(item.Type & (NotificationFlag.Mension | NotificationFlag.Response | NotificationFlag.Followup | NotificationFlag.PlusOne)) > 0)
-                itemVM = await NotificationWithActivityViewModel.Create((NotificationInfoWithActivity)item);
+                itemVM = await NotificationWithActivityViewModel.Create((NotificationInfoWithActivity)item, insertTime);
             else if ((int)(item.Type & NotificationFlag.CircleIn) > 0)
-                itemVM = new NotificationWithProfileViewModel((NotificationInfoWithActor)item);
+                itemVM = new NotificationWithProfileViewModel((NotificationInfoWithActor)item, insertTime);
             return itemVM;
         }
 
@@ -188,7 +188,7 @@ namespace Metrooz.ViewModel
                                     //新しい要素として追加し直す
                                     IsLoading = true;
                                     if (_streamModel.Items.Count > 0)
-                                        foreach (var item in await Task.WhenAll(_streamModel.Items.Select(inf => WrapViewModel(inf))))
+                                        foreach (var item in await Task.WhenAll(_streamModel.Items.Select(inf => WrapViewModel(inf, DateTime.UtcNow))))
                                             await Items.AddOnDispatcher(item).ConfigureAwait(false);
                                     await Update().ConfigureAwait(false);
                                 }
@@ -230,7 +230,7 @@ namespace Metrooz.ViewModel
                         for (var i = e.NewItems.Count - 1; i >= 0; i--)
                         {
                             var idx = e.NewStartingIndex + i;
-                            var viewModel = await WrapViewModel((NotificationInfo)e.NewItems[i]);
+                            var viewModel = await WrapViewModel((NotificationInfo)e.NewItems[i], DateTime.UtcNow);
                             await Items.InsertOnDispatcher(idx, viewModel).ConfigureAwait(false);
                         }
                         break;

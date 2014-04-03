@@ -17,8 +17,17 @@ namespace Metrooz.ViewModel
 {
     public abstract class NotificationViewModel : ViewModelBase
     {
-        public NotificationViewModel() { }
+        public NotificationViewModel(DateTime insertTime) { _insertTime = insertTime; }
+        DateTime _insertTime;
         ImageSource _displayIconUrl;
+        public bool IsEnableInsertAnime
+        {
+            get
+            {
+                var aa = DateTime.UtcNow - _insertTime < TimeSpan.FromMilliseconds(1000);
+                return aa;
+            }
+        }
         public ImageSource DisplayIconUrl
         {
             get { return _displayIconUrl; }
