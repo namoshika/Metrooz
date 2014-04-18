@@ -7,6 +7,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Hal.CookieGetterSharp;
 
 namespace Metrooz.Model
 {
@@ -22,7 +23,8 @@ namespace Metrooz.Model
         {
             await Task.WhenAll(Accounts.Select(item => item.Deactivate()).ToArray());
             Accounts.Clear();
-            foreach (var item in await PlatformClient.Factory.ImportFromIE().ConfigureAwait(false))
+            foreach (var item in await PlatformClient.Factory
+                .ImportFrom(CookieGetter.CreateInstance(BrowserType.GoogleChrome)).ConfigureAwait(false))
             {
                 var account = new Account(item);
                 Accounts.Add(account);
