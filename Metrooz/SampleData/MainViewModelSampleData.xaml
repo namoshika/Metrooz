@@ -1,0 +1,19 @@
+﻿<ViewModel:MainViewModel xmlns:ViewModel="clr-namespace:Metrooz.ViewModel" xmlns:Imaging="clr-namespace:System.Windows.Media.Imaging;assembly=PresentationCore" xmlns:Windows="clr-namespace:System.Windows;assembly=WindowsBase" xmlns:Cache="clr-namespace:System.Net.Cache;assembly=System" IsAccountSelectorMode="True" SelectedPageIndex="0">
+	<ViewModel:MainViewModel.Pages>
+		<ViewModel:AccountViewModel IsActive="False" UserMailAddress="hoge@gmail.com" UserName="Curae vestibulum">
+            <ViewModel:AccountViewModel.UserIconUrl>
+                <Imaging:BitmapImage UriSource="Files\accountIcon00.png" />
+            </ViewModel:AccountViewModel.UserIconUrl>
+        </ViewModel:AccountViewModel>
+        <ViewModel:AccountViewModel IsActive="False" UserMailAddress="hoge@gmail.com" UserName="Ametconsequat">
+            <ViewModel:AccountViewModel.UserIconUrl>
+                <Imaging:BitmapImage UriSource="Files\accountIcon00.png" />
+            </ViewModel:AccountViewModel.UserIconUrl>
+        </ViewModel:AccountViewModel>
+        <ViewModel:AccountViewModel IsActive="False" UserMailAddress="hoge@gmail.com" UserName="fringilla">
+            <ViewModel:AccountViewModel.UserIconUrl>
+                <Imaging:BitmapImage UriSource="Files\accountIcon00.png" />
+            </ViewModel:AccountViewModel.UserIconUrl>
+        </ViewModel:AccountViewModel>
+    </ViewModel:MainViewModel.Pages>
+</ViewModel:MainViewModel>

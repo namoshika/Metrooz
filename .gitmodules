@@ -1,3 +1,3 @@
-[submodule "snklib.web.googleplus-2.0"]
-	path = snklib.web.googleplus-2.0
-	url = git@bitbucket.org:namoshika/snklib.web.googleplus-2.0.git
+[submodule "SnkLib.Web.GooglePlus"]
+	path = SnkLib.Web.GooglePlus
+	url = https://github.com/namoshika/SnkLib.Web.GooglePlus.git

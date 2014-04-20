@@ -1,0 +1,46 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.30110.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Metrooz", "Metrooz\Metrooz.csproj", "{B8E10142-1522-419C-A8A9-20FBEFCA2382}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SnkLib.MainLibrary", "SnkLib.Web.GooglePlus\SnkLib.MainLibrary\SnkLib.MainLibrary.csproj", "{A19C98E5-7048-43E2-98F0-689A3FFE2A82}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SnkLib.Platform", "SnkLib.Web.GooglePlus\SnkLib.Platform\SnkLib.Platform.csproj", "{37846C4E-2F87-46E9-B036-9569F422BF63}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CookieGetterSharp", "SnkLib.Web.GooglePlus\CookieGetterSharp\CookieGetterSharp\CookieGetterSharp.csproj", "{ACB84F0E-B482-46B0-8C29-1FAC6C85D622}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B8E10142-1522-419C-A8A9-20FBEFCA2382}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{B8E10142-1522-419C-A8A9-20FBEFCA2382}.Debug|Any CPU.Build.0 = Debug|x86
+		{B8E10142-1522-419C-A8A9-20FBEFCA2382}.Release|Any CPU.ActiveCfg = Release|x86
+		{B8E10142-1522-419C-A8A9-20FBEFCA2382}.Release|Any CPU.Build.0 = Release|x86
+		{A19C98E5-7048-43E2-98F0-689A3FFE2A82}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A19C98E5-7048-43E2-98F0-689A3FFE2A82}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A19C98E5-7048-43E2-98F0-689A3FFE2A82}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A19C98E5-7048-43E2-98F0-689A3FFE2A82}.Release|Any CPU.Build.0 = Release|Any CPU
+		{37846C4E-2F87-46E9-B036-9569F422BF63}.Debug|Any CPU.ActiveCfg = win.Debug|Any CPU
+		{37846C4E-2F87-46E9-B036-9569F422BF63}.Debug|Any CPU.Build.0 = win.Debug|Any CPU
+		{37846C4E-2F87-46E9-B036-9569F422BF63}.Release|Any CPU.ActiveCfg = win.Release|Any CPU
+		{37846C4E-2F87-46E9-B036-9569F422BF63}.Release|Any CPU.Build.0 = win.Release|Any CPU
+		{ACB84F0E-B482-46B0-8C29-1FAC6C85D622}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ACB84F0E-B482-46B0-8C29-1FAC6C85D622}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ACB84F0E-B482-46B0-8C29-1FAC6C85D622}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ACB84F0E-B482-46B0-8C29-1FAC6C85D622}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		EnterpriseLibraryConfigurationToolBinariesPath = packages\Unity.2.1.505.2\lib\NET35
+	EndGlobalSection
+	GlobalSection(TestCaseManagementSettings) = postSolution
+		CategoryFile = GooglePlusAutoImageDownloader.vsmdi
+	EndGlobalSection
+EndGlobal

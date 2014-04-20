@@ -1,0 +1,65 @@
+﻿<ViewModel:AccountViewModel xmlns:ViewModel="clr-namespace:Metrooz.ViewModel" xmlns:Imaging="clr-namespace:System.Windows.Media.Imaging;assembly=PresentationCore" xmlns:Windows="clr-namespace:System.Windows;assembly=WindowsBase" xmlns:Cache="clr-namespace:System.Net.Cache;assembly=System" IsActive="True" UserMailAddress="hoge@gmail.com" UserName="Sed phasellus">
+	<ViewModel:AccountViewModel.Stream>
+		<ViewModel:StreamManagerViewModel SelectedIndex="0">
+			<ViewModel:StreamManagerViewModel.Items>
+				<ViewModel:StreamViewModel Name="Aenean nunc" IsActive="True">
+					<ViewModel:StreamViewModel.Activities>
+                        <ViewModel:ActivityViewModel PostCommentText="Vivamus mauris" PostDate="00:00" PostUserName="Curae integer" PostText="Praesent accumsan dis consequat donec" ShareBoxStatus="Sending"/>
+                        <ViewModel:ActivityViewModel PostCommentText="Blandit fusce vestibulum commodo" PostDate="00:00" PostUserName="Etiam vestibulum nullam convallis" PostText="Elementum aliquet aptent parturient" ShareBoxStatus="Deactive"/>
+                        <ViewModel:ActivityViewModel PostCommentText="Conubia fermentum" PostDate="00:00" PostUserName="Vestibulum adipiscing lorem" PostText="Auctor facilisis vestibulum dictumst nulla" ShareBoxStatus="Writing"/>
+                        <ViewModel:ActivityViewModel PostCommentText="Diam faucibus dapibus" PostDate="00:00" PostUserName="Ante vestibulum est" PostText="Proin congue cursus hac facilisi" ShareBoxStatus="Writing"/>
+                        <ViewModel:ActivityViewModel PostCommentText="Per augue dolor" PostDate="00:00" PostUserName="Habitasse habitant leo hendrerit inceptos" PostText="Egestas nec vestibulum non euismod" ShareBoxStatus="Writing"/>
+					</ViewModel:StreamViewModel.Activities>
+				</ViewModel:StreamViewModel>
+				<ViewModel:StreamViewModel Name="Elitfames" IsActive="False">
+					<ViewModel:StreamViewModel.Activities>
+						<ViewModel:ActivityViewModel PostCommentText="Malesuada ipsum nisi" PostDate="00:00" PostUserName="Adipiscing" PostText="Dictum felis eros nibh" ShareBoxStatus="Deactive"/>
+                        <ViewModel:ActivityViewModel PostCommentText="Tincidunt lacus" PostDate="00:00" PostUserName="Sed justo" PostText="Nascetur nunc penatibus porttitor vel" ShareBoxStatus="Writing"/>
+                        <ViewModel:ActivityViewModel PostCommentText="Lectus libero orci vestibulum adipiscing" PostDate="00:00" PostUserName="Odio tristique lacinia" PostText="Nam vestibulum" ShareBoxStatus="Sending"/>
+                        <ViewModel:ActivityViewModel PostCommentText="Sed magna adipiscing magnis quam" PostDate="00:00" PostUserName="Ligula litora pharetra lorem" PostText="Luctus vestibulum vestibulum laoreet" ShareBoxStatus="Writing"/>
+                        <ViewModel:ActivityViewModel PostCommentText="Quis urna natoque adipiscing posuere" PostDate="00:00" PostUserName="Parturient curabitur vestibulum placerat" PostText="Pulvinar neque vestibulum" ShareBoxStatus="Sending"/>
+					</ViewModel:StreamViewModel.Activities>
+				</ViewModel:StreamViewModel>
+                <ViewModel:StreamViewModel Name="Cras duis" IsActive="False">
+					<ViewModel:StreamViewModel.Activities>
+						<ViewModel:ActivityViewModel PostCommentText="Senectus sociosqu viverra aliquam amet" PostDate="00:00" PostUserName="Phasellus consequat pretium" PostText="Rhoncus sodales vestibulum" ShareBoxStatus="Sending"/>
+						<ViewModel:ActivityViewModel PostCommentText="Est vestibulum convallis" PostDate="00:00" PostUserName="Ante integer dis" PostText="Quisque diam vivamus eget purus" ShareBoxStatus="Deactive"/>
+						<ViewModel:ActivityViewModel PostCommentText="Elit enim" PostDate="00:00" PostUserName="Hac risus torquent velit" PostText="Parturient vestibulum" ShareBoxStatus="Writing"/>
+						<ViewModel:ActivityViewModel PostCommentText="Ultrices erat class" PostDate="00:00" PostUserName="Mus dignissim nec aliquam" PostText="Platea per aliquet primis rutrum" ShareBoxStatus="Writing"/>
+						<ViewModel:ActivityViewModel PostCommentText="Elementum maecenas nibh sit vel" PostDate="00:00" PostUserName="Sapien vehicula eros sed sem" PostText="Vestibulum sociis taciti commodo adipiscing" ShareBoxStatus="Writing"/>
+					</ViewModel:StreamViewModel.Activities>
+				</ViewModel:StreamViewModel>
+                <ViewModel:StreamViewModel Name="Conubia" IsActive="False">
+					<ViewModel:StreamViewModel.Activities>
+						<ViewModel:ActivityViewModel PostCommentText="Egestas vestibulum" PostDate="00:00" PostUserName="Sed praesent" PostText="Cubilia fermentum dapibus parturient nisl" ShareBoxStatus="Deactive"/>
+						<ViewModel:ActivityViewModel PostCommentText="Est facilisi himenaeos tellus" PostDate="00:00" PostUserName="Bibendum vestibulum fringilla dictumst habitasse" PostText="Etiam euismod eleifend" ShareBoxStatus="Deactive"/>
+						<ViewModel:ActivityViewModel PostCommentText="Iaculis tortor imperdiet" PostDate="00:00" PostUserName="Nunc adipiscing odio" PostText="Gravida tempus fusce" ShareBoxStatus="Sending"/>
+						<ViewModel:ActivityViewModel PostCommentText="Parturient aenean" PostDate="00:00" PostUserName="Turpis malesuada parturient vestibulum lacinia" PostText="Vestibulum adipiscing hac" ShareBoxStatus="Deactive"/>
+						<ViewModel:ActivityViewModel PostCommentText="Pretium habitant" PostDate="00:00" PostUserName="Vestibulum lorem morbi" PostText="Posuere vestibulum leo potenti" ShareBoxStatus="Deactive"/>
+					</ViewModel:StreamViewModel.Activities>
+				</ViewModel:StreamViewModel>
+                <ViewModel:StreamViewModel Name="Inceptos mus" IsActive="False">
+					<ViewModel:StreamViewModel.Activities>
+						<ViewModel:ActivityViewModel PostCommentText="Non tristique aptent augue duis" PostDate="00:00" PostUserName="Pede quam adipiscing interdum nec" PostText="Quis urna tincidunt sodales cras" ShareBoxStatus="Deactive"/>
+						<ViewModel:ActivityViewModel PostCommentText="Curabitur sed lobortis" PostDate="00:00" PostUserName="Vestibulum ultricies dolor venenatis fames" PostText="Felis ipsum adipiscing per" ShareBoxStatus="Sending"/>
+						<ViewModel:ActivityViewModel PostCommentText="Lectus integer" PostDate="00:00" PostUserName="Justo phasellus nascetur congue lacus" PostText="Dictum magna sem aliquam" ShareBoxStatus="Deactive"/>
+						<ViewModel:ActivityViewModel PostCommentText="Metus sit adipiscing vel" PostDate="00:00" PostUserName="Vestibulum amet consequat" PostText="Convallis vestibulum libero pharetra arcu" ShareBoxStatus="Deactive"/>
+						<ViewModel:ActivityViewModel PostCommentText="Nulla vestibulum porta erat" PostDate="00:00" PostUserName="Parturient ligula diam nam eget" PostText="Vestibulum netus placerat enim dignissim" ShareBoxStatus="Sending"/>
+					</ViewModel:StreamViewModel.Activities>
+				</ViewModel:StreamViewModel>
+                <ViewModel:StreamViewModel Name="Adipiscing" IsActive="False">
+                    <ViewModel:StreamViewModel.Activities>
+                        <ViewModel:ActivityViewModel PostCommentText="Vivamus aliquam est nisi" PostDate="00:00" PostUserName="Vestibulum luctus" PostText="Eros dis fermentum nibh" ShareBoxStatus="Sending"/>
+                        <ViewModel:ActivityViewModel PostCommentText="Himenaeos non nunc" PostDate="00:00" PostUserName="Hac magnis nisl risus" PostText="Sagittis mus nec hendrerit" ShareBoxStatus="Deactive"/>
+                        <ViewModel:ActivityViewModel PostCommentText="Sit adipiscing conubia cubilia" PostDate="00:00" PostUserName="Odio per sed" PostText="Sem sociosqu" ShareBoxStatus="Deactive"/>
+                        <ViewModel:ActivityViewModel PostCommentText="Penatibus quam vel porttitor parturient" PostDate="00:00" PostUserName="Suscipit pede vitae" PostText="Malesuada dapibus mauris" ShareBoxStatus="Sending"/>
+                        <ViewModel:ActivityViewModel PostCommentText="Nostra tristique ultricies donec" PostDate="00:00" PostUserName="Tincidunt quis vestibulum" PostText="Montes egestas adipiscing" ShareBoxStatus="Deactive"/>
+                    </ViewModel:StreamViewModel.Activities>
+                </ViewModel:StreamViewModel>
+            </ViewModel:StreamManagerViewModel.Items>
+		</ViewModel:StreamManagerViewModel>
+	</ViewModel:AccountViewModel.Stream>
+	<ViewModel:AccountViewModel.UserIconUrl>
+        <Imaging:BitmapImage UriSource="Files\accountIcon00.png" />
+    </ViewModel:AccountViewModel.UserIconUrl>
+</ViewModel:AccountViewModel>
