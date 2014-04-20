@@ -5,11 +5,11 @@ VisualStudioVersion = 12.0.30110.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Metrooz", "Metrooz\Metrooz.csproj", "{B8E10142-1522-419C-A8A9-20FBEFCA2382}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SnkLib.MainLibrary", "snklib.web.googleplus-2.0\SnkLib.MainLibrary\SnkLib.MainLibrary.csproj", "{A19C98E5-7048-43E2-98F0-689A3FFE2A82}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SnkLib.MainLibrary", "SnkLib.Web.GooglePlus\SnkLib.MainLibrary\SnkLib.MainLibrary.csproj", "{A19C98E5-7048-43E2-98F0-689A3FFE2A82}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SnkLib.Platform", "snklib.web.googleplus-2.0\SnkLib.Platform\SnkLib.Platform.csproj", "{37846C4E-2F87-46E9-B036-9569F422BF63}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SnkLib.Platform", "SnkLib.Web.GooglePlus\SnkLib.Platform\SnkLib.Platform.csproj", "{37846C4E-2F87-46E9-B036-9569F422BF63}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CookieGetterSharp", "snklib.web.googleplus-2.0\CookieGetterSharp\CookieGetterSharp\CookieGetterSharp.csproj", "{ACB84F0E-B482-46B0-8C29-1FAC6C85D622}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CookieGetterSharp", "SnkLib.Web.GooglePlus\CookieGetterSharp\CookieGetterSharp\CookieGetterSharp.csproj", "{ACB84F0E-B482-46B0-8C29-1FAC6C85D622}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
