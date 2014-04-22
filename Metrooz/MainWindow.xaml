@@ -203,7 +203,7 @@
                                 <controls:MetroTabItem Padding="0,0,6,0" DataContext="{Binding Notification}" IsSelected="{Binding IsActive}">
                                     <controls:MetroTabItem.Header>
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="Notification" FontSize="26.67" />
+                                            <TextBlock Text="Notification" FontSize="26.67" Foreground="{Binding (TextElement.Foreground), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ContentPresenter}}}" />
                                             <TextBlock Text="{Binding UnreadItemCount}" FontSize="18" Foreground="{StaticResource AccentColorBrush}" Visibility="{Binding ExistUnreadItem, Converter={StaticResource booleanToVisibilityConverter}}" />
                                         </StackPanel>
                                     </controls:MetroTabItem.Header>

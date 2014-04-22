@@ -16,4 +16,21 @@
             </ViewModel:AccountViewModel.UserIconUrl>
         </ViewModel:AccountViewModel>
     </ViewModel:MainViewModel.Pages>
+    <ViewModel:MainViewModel.Accounts>
+        <ViewModel:AccountViewModel IsActive="False" UserMailAddress="hoge@gmail.com" UserName="Curae vestibulum">
+            <ViewModel:AccountViewModel.UserIconUrl>
+                <Imaging:BitmapImage UriSource="Files\accountIcon00.png" />
+            </ViewModel:AccountViewModel.UserIconUrl>
+        </ViewModel:AccountViewModel>
+        <ViewModel:AccountViewModel IsActive="False" UserMailAddress="hoge@gmail.com" UserName="Ametconsequat">
+            <ViewModel:AccountViewModel.UserIconUrl>
+                <Imaging:BitmapImage UriSource="Files\accountIcon00.png" />
+            </ViewModel:AccountViewModel.UserIconUrl>
+        </ViewModel:AccountViewModel>
+        <ViewModel:AccountViewModel IsActive="False" UserMailAddress="hoge@gmail.com" UserName="fringilla">
+            <ViewModel:AccountViewModel.UserIconUrl>
+                <Imaging:BitmapImage UriSource="Files\accountIcon00.png" />
+            </ViewModel:AccountViewModel.UserIconUrl>
+        </ViewModel:AccountViewModel>
+    </ViewModel:MainViewModel.Accounts>
 </ViewModel:MainViewModel>

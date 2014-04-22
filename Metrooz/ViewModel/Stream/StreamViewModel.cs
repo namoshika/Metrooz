@@ -27,15 +27,16 @@ namespace Metrooz.ViewModel
             _isConnected = true;
             _activities = new ObservableCollection<ViewModelBase>();
             ReconnectCommand = new RelayCommand(ReconnectCommand_Executed);
-            ResumeCommand = new RelayCommand(ResumeCommand_Executed);
+            ResumeCommand = new RelayCommand(ReconnectCommand_Executed);
 
             _resumeButton = new ResumeButtonViewModel(ResumeCommand);
             _circleModel.ChangedStatus += _circleModel_ChangedStatus;
+            _circleModel.ChangedChangedActivityCount += _circleModel_ChangedChangedActivityCount;
             PropertyChanged += StreamViewModel_PropertyChanged;
         }
         readonly System.Threading.SemaphoreSlim _syncerActivities = new System.Threading.SemaphoreSlim(1, 1);
-        bool _isPaused, _isActive, _isLoading, _isIniting, _isConnected;
-        double _scrollOffset, _scrollOffsetPauseStream = 500;
+        bool _isActive, _isLoading, _isIniting, _isConnected;
+        double _scrollOffset, _scrollOffsetPauseStream = 150;
         string _name;
         Stream _circleModel;
         Account _accountModel;
@@ -43,11 +44,6 @@ namespace Metrooz.ViewModel
         ObservableCollection<ViewModelBase> _activities;
         ResumeButtonViewModel _resumeButton;
 
-        public bool IsPaused
-        {
-            get { return _isPaused; }
-            set { Set(() => IsPaused, ref _isPaused, value); }
-        }
         public bool IsActive
         {
             get { return _isActive; }
@@ -88,13 +84,20 @@ namespace Metrooz.ViewModel
 
         public async Task Activate()
         {
-            if (_circleModel.Status < StreamStateType.Loading)
-                try { await _circleModel.Connect(); }
-                catch (FailToOperationException) { }
+            switch(_circleModel.Status)
+            {
+                case StreamStateType.UnLoaded:
+                case StreamStateType.Paused:
+                    try { await _circleModel.Connect(); }
+                    catch (FailToOperationException) { }
+                    break;
+            }
         }
         public override void Cleanup()
         {
             base.Cleanup();
+            _circleModel.ChangedStatus -= _circleModel_ChangedStatus;
+            _circleModel.ChangedChangedActivityCount -= _circleModel_ChangedChangedActivityCount;
             PropertyChanged -= StreamViewModel_PropertyChanged;
             foreach (var item in _activities)
                 item.Cleanup();
@@ -113,7 +116,6 @@ namespace Metrooz.ViewModel
                 //新しい要素を追加
                 if (_isActive == false)
                     return;
-                _isPaused = false;
                 _resumeButton.NewItemCount = 0;
                 _circleModel.Activities.CollectionChanged += _circleModel_ActivitiesCollectionChanged;
                 foreach (var item in _circleModel.Activities)
@@ -131,22 +133,14 @@ namespace Metrooz.ViewModel
         {
             switch (e.PropertyName)
             {
-                case "IsPaused":
-                    Task.Run(async () =>
-                        {
-                            if (IsPaused == false)
-                            {
-                                IsIniting = true;
-                                await Task.Delay(150);
-                                await Refresh();
-                                IsIniting = false;
-                            }
-                            else if (Activities.FirstOrDefault() is ResumeButtonViewModel == false)
-                                await Activities.InsertOnDispatcher(0, _resumeButton);
-                        });
-                    break;
                 case "IsActive":
                     Task.Run(async () => await Refresh());
+                    break;
+                case "ScrollOffset":
+                    if (ScrollOffset > _scrollOffsetPauseStream)
+                        Task.Run(async () => await _circleModel.Pause());
+                    else if (_circleModel.Status == StreamStateType.Connected)
+                        Task.Run(async () => await _circleModel.Connect());
                     break;
             }
         }
@@ -155,18 +149,8 @@ namespace Metrooz.ViewModel
             try
             {
                 await _syncerActivities.WaitAsync().ConfigureAwait(false);
-                //アクティブ化されていない場合はスルー
-                //休止状態の場合もスルー。先頭に再始動用VMが挿入されていない場合は挿入
                 if (IsActive == false)
                     return;
-                if (IsPaused || ScrollOffset > _scrollOffsetPauseStream)
-                {
-                    IsPaused = true;
-                    if (e.Action == NotifyCollectionChangedAction.Add)
-                        _resumeButton.NewItemCount++;
-                    return;
-                }
-                //Model同期
                 switch (e.Action)
                 {
                     case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
@@ -174,18 +158,19 @@ namespace Metrooz.ViewModel
                         {
                             var idx = e.NewStartingIndex + i;
                             var viewModel = new ActivityViewModel((Activity)e.NewItems[i]);
-                            if (Activities.Any(vm => vm is ActivityViewModel ? ((ActivityViewModel)vm).ActivityUrl == viewModel.ActivityUrl : false))
-                                continue;
                             await Activities.InsertOnDispatcher(idx, viewModel).ConfigureAwait(false);
                         }
                         break;
                     case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
                         for (var i = 0; i < e.OldItems.Count; i++)
                         {
-                            var viewModel = Activities[Math.Min(e.OldStartingIndex + i, Activities.Count - 1)];
+                            var viewModel = Activities[e.OldStartingIndex + i];
                             await Activities.RemoveAtOnDispatcher(e.OldStartingIndex + i).ConfigureAwait(false);
                             viewModel.Cleanup();
                         }
+                        break;
+                    case NotifyCollectionChangedAction.Move:
+                        await Activities.MoveOnDispatcher(e.OldStartingIndex, e.NewStartingIndex);
                         break;
                     case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:
                         for (var i = 0; i < Activities.Count; i++)
@@ -212,16 +197,15 @@ namespace Metrooz.ViewModel
                     case StreamStateType.Initing:
                         IsIniting = true;
                         await Task.Delay(150);
-                        if (IsPaused)
-                        {
-                            await Activities.RemoveOnDispatcher(_resumeButton);
-                            _isPaused = false;
-                            _resumeButton.NewItemCount = 0;
-                        }
+                        await Activities.RemoveOnDispatcher(_resumeButton);
                         break;
-                    case StreamStateType.Successful:
+                    case StreamStateType.Connected:
                         IsIniting = false;
                         IsLoading = false;
+                        await Activities.RemoveOnDispatcher(_resumeButton);
+                        break;
+                    case StreamStateType.Paused:
+                        await Activities.InsertOnDispatcher(0, _resumeButton);
                         break;
                     case StreamStateType.UnLoaded:
                         await Task.Delay(1000);
@@ -234,8 +218,9 @@ namespace Metrooz.ViewModel
             finally
             { _syncerActivities.Release(); }
         }
+        void _circleModel_ChangedChangedActivityCount(object sender, EventArgs e)
+        { _resumeButton.NewItemCount = _circleModel.ChangedActivityCount; }
         void ReconnectCommand_Executed() { Task.Run(async () => await Activate()); }
-        void ResumeCommand_Executed() { IsPaused = false; }
     }
     public class ResumeButtonViewModel : ViewModelBase
     {

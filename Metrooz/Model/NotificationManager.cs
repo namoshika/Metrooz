@@ -135,7 +135,7 @@ namespace Metrooz.Model
                 await _syncer.WaitAsync();
                 if (DateTime.UtcNow - _latestUpdateDate < _updateIntervalRegulation)
                 {
-                    Status = StreamStateType.Successful;
+                    Status = StreamStateType.Connected;
                     OnChangedStatus(new EventArgs());
                     return;
                 }
@@ -167,7 +167,7 @@ namespace Metrooz.Model
                     Items.RemoveAt(i);
 
                 IgnoreItemCount = _notificationModel.Notifications.Count - Items.Count;
-                Status = StreamStateType.Successful;
+                Status = StreamStateType.Connected;
                 OnChangedStatus(new EventArgs());
             }
             catch(FailToOperationException)
