@@ -22,6 +22,11 @@
             <BooleanToVisibilityConverter x:Key="booleanToVisibilityConverter" />
             <vm:IntToVisibilityConverter x:Key="intToVisibilityConverter" />
             <vm:IntToIntConverter x:Key="intToIntConverter" />
+            <VisualBrush x:Key="settingIconBrushKey" Visual="{DynamicResource appbar_settings}" />
+            <VisualBrush x:Key="playIconBrushKey" Visual="{DynamicResource appbar_control_play}" />
+            <Style TargetType="{x:Type Button}">
+            	<Setter Property="FontWeight" Value="Bold" />
+            </Style>
             <Style x:Key="pageSwitcherStyle" TargetType="{x:Type TabControl}">
                 <Setter Property="Padding" Value="0"/>
                 <Setter Property="HorizontalContentAlignment" Value="Center"/>
@@ -43,14 +48,14 @@
                 </Setter>
             </Style>
             <Style x:Key="iconButtonStyle" TargetType="{x:Type Button}">
-            	<Style.Triggers>
-            		<Trigger Property="IsMouseOver" Value="True">
-            			<Setter Property="Opacity" Value="0.8"/>
+                <Style.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="Opacity" Value="0.8"/>
                     </Trigger>
-            		<Trigger Property="IsMouseOver" Value="False">
-            			<Setter Property="Opacity" Value="1.0"/>
-            		</Trigger>
-            	</Style.Triggers>
+                    <Trigger Property="IsMouseOver" Value="False">
+                        <Setter Property="Opacity" Value="1.0"/>
+                    </Trigger>
+                </Style.Triggers>
                 <Setter Property="Background" Value="Transparent" />
                 <Setter Property="BorderThickness" Value="0"/>
                 <Setter Property="HorizontalContentAlignment" Value="Center"/>
@@ -66,37 +71,12 @@
                     </Setter.Value>
                 </Setter>
             </Style>
-            <Style x:Key="silhouetteStyle" TargetType="{x:Type ContentControl}">
-                <Setter Property="Background" Value="Transparent"/>
-                <Setter Property="HorizontalContentAlignment" Value="Center"/>
-                <Setter Property="VerticalContentAlignment" Value="Center"/>
-                <Setter Property="Template">
-                    <Setter.Value>
-                        <ControlTemplate TargetType="{x:Type ContentControl}">
-                            <Grid d:DesignWidth="50" d:DesignHeight="50">
-                                <Border Background="{TemplateBinding Foreground}" Margin="{TemplateBinding Padding}">
-                                    <Border.OpacityMask>
-                                        <VisualBrush>
-                                            <VisualBrush.Visual>
-                                                <ContentPresenter x:Name="content" ContentTemplate="{TemplateBinding ContentTemplate}" Content="{TemplateBinding Content}" ContentStringFormat="{TemplateBinding ContentStringFormat}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" RecognizesAccessKey="True" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
-                                            </VisualBrush.Visual>
-                                        </VisualBrush>
-                                    </Border.OpacityMask>
-                                </Border>
-                            </Grid>
-                        </ControlTemplate>
-                    </Setter.Value>
-                </Setter>
-            </Style>
             <Style x:Key="userNameTextStyle" TargetType="{x:Type Run}">
                 <Setter Property="FontWeight" Value="Bold" />
             </Style>
             <Style x:Key="postTextStyle" TargetType="{x:Type TextBlock}">
                 <Setter Property="FontSize" Value="13" />
                 <Setter Property="LineHeight" Value="18.2" />
-            </Style>
-            <Style TargetType="{x:Type Button}">
-                <Setter Property="FontWeight" Value="Bold" />
             </Style>
 
             <Style x:Key="accountStyle" TargetType="{x:Type TabItem}">
@@ -213,7 +193,7 @@
                 			<Button Width="Auto" Margin="63,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Command="{Binding OpenAccountListCommand}" Style="{DynamicResource iconButtonStyle}">
                 				<StackPanel Margin="0" Orientation="Horizontal">
                 					<TextBlock Foreground="DarkGray" Style="{DynamicResource postTextStyle}" MinWidth="50" Margin="0,0,2,0" Text="{Binding UserName}" />
-                					<ContentControl Content="{DynamicResource appbar_settings}" Style="{DynamicResource silhouetteStyle}" Height="12" Width="12" Foreground="DarkGray"/>
+                                    <Rectangle OpacityMask="{DynamicResource settingIconBrushKey}" Height="12" Width="12" Fill="DarkGray"/>
                 				</StackPanel>
                 			</Button>
                 		</Grid>
@@ -619,7 +599,7 @@
                                 <ei:LaunchUriOrFileAction Path="{Binding AncourUrl}" />
                             </i:EventTrigger>
                         </i:Interaction.Triggers>
-            			<ContentControl Content="{DynamicResource appbar_play}" HorizontalAlignment="Left" VerticalAlignment="Top" Width="25" Height="25" Style="{DynamicResource silhouetteStyle}"/>
+                        <Rectangle OpacityMask="{DynamicResource playIconBrushKey}" HorizontalAlignment="Center" VerticalAlignment="Center" Width="25" Height="25" Fill="White" />
             		</Button>
                 </Grid>
             </DataTemplate>
