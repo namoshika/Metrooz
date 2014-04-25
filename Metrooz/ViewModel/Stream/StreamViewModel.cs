@@ -88,8 +88,7 @@ namespace Metrooz.ViewModel
             {
                 case StreamStateType.UnLoaded:
                 case StreamStateType.Paused:
-                    try { await _circleModel.Connect(); }
-                    catch (FailToOperationException) { }
+                    await _circleModel.Connect();
                     break;
             }
         }

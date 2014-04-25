@@ -92,16 +92,11 @@ namespace Metrooz.ViewModel
         {
             Task.Run(async () =>
                 {
-                    try
+                    if (IsInDesignMode)
                     {
-                        if (IsInDesignMode)
-                        {
-                            // Code runs in Blend --> create design time data.
-                        }
-                        else
-                            await _accountManagerModel.Initialize().ConfigureAwait(false);
+                        // Code runs in Blend --> create design time data.
                     }
-                    catch (FailToOperationException)
+                    else if (await _accountManagerModel.Initialize().ConfigureAwait(false) == false)
                     {
                         var message = new DialogOptionInfo(
                             "Error", "アカウント一覧の読み込みに失敗しました。ネットワークの設定を確認して下さい。",

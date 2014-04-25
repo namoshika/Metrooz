@@ -13,23 +13,30 @@ namespace Metrooz.Model
 {
     public class AccountManager
     {
-        public AccountManager()
-        {
-            Accounts = new ObservableCollection<Account>();
-        }
+        public AccountManager() { Accounts = new ObservableCollection<Account>(); }
         public ObservableCollection<Account> Accounts { get; private set; }
 
-        public async Task Initialize()
+        public async Task<bool> Initialize()
         {
             await Task.WhenAll(Accounts.Select(item => item.Deactivate()).ToArray());
             Accounts.Clear();
-            foreach (var item in await PlatformClient.Factory
-                .ImportFrom(CookieGetter.CreateInstance(BrowserType.GoogleChrome)).ConfigureAwait(false))
+            try
             {
-                var account = new Account(item);
-                Accounts.Add(account);
+                foreach (var item in await PlatformClient.Factory.ImportFrom(
+                    CookieGetter.CreateInstance(BrowserType.GoogleChrome)).ConfigureAwait(false))
+                {
+                    var account = new Account(item);
+                    Accounts.Add(account);
+                }
+                OnInitialized(new EventArgs());
+                return true;
             }
-            OnInitialized(new EventArgs());
+            catch (FailToOperationException)
+            {
+                if (System.Diagnostics.Debugger.IsAttached)
+                    System.Diagnostics.Debugger.Break();
+                return false;
+            }
         }
         public event EventHandler Initialized;
         protected virtual void OnInitialized(EventArgs e)

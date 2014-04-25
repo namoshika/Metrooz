@@ -21,17 +21,24 @@ namespace Metrooz.Model
         Account _accountModel;
 
         public ObservableCollection<Stream> Streams { get; private set; }
-        public async Task Activate()
+        public async Task<bool> Activate()
         {
             await Deactivate();
-            await _accountModel.PlusClient.People.UpdateCirclesAndBlockAsync(false, CircleUpdateLevel.Loaded);
             try
             {
+                await _accountModel.PlusClient.People.UpdateCirclesAndBlockAsync(false, CircleUpdateLevel.Loaded);
                 await _streamSyncer.WaitAsync();
 
                 Streams.Add(new Stream(_accountModel.PlusClient.People.YourCircle, this));
                 foreach(var item in _accountModel.PlusClient.People.Circles)
                     Streams.Add(new Stream(item, this));
+                return true;
+            }
+            catch (FailToOperationException)
+            {
+                if (System.Diagnostics.Debugger.IsAttached)
+                    System.Diagnostics.Debugger.Break();
+                return false;
             }
             finally { _streamSyncer.Release(); }
         }

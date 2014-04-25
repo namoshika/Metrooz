@@ -25,13 +25,13 @@ namespace Metrooz.Model
         public StreamManager Stream { get; private set; }
         public NotificationManager Notification { get; private set; }
 
-        public async Task Activate()
+        public async Task<bool> Activate()
         {
             try
             {
                 await _initSyncer.WaitAsync().ConfigureAwait(false);
                 if (_isActivated)
-                    return;
+                    return true;
 
                 //G+APIライブラリの初期化を行う
                 PlusClient = await Builder.Build().ConfigureAwait(false);
@@ -39,8 +39,16 @@ namespace Metrooz.Model
 
                 //各モジュールの初期化を行う
                 await Notification.Activate().ConfigureAwait(false);
-                await Stream.Activate().ConfigureAwait(false);
+                if (await Stream.Activate().ConfigureAwait(false) == false)
+                    return false;
                 _isActivated = true;
+                return true;
+            }
+            catch (FailToOperationException)
+            {
+                if (System.Diagnostics.Debugger.IsAttached)
+                    System.Diagnostics.Debugger.Break();
+                return false;
             }
             finally { _initSyncer.Release(); }
         }

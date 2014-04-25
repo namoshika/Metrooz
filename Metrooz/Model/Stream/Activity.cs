@@ -30,11 +30,7 @@ namespace Metrooz.Model
         }
         public async Task<bool> CommentPost(string content)
         {
-            try
-            {
-                await CoreInfo.PostComment(content).ConfigureAwait(false);
-                return true;
-            }
+            try { return await CoreInfo.PostComment(content).ConfigureAwait(false); }
             catch (FailToOperationException)
             {
                 if (System.Diagnostics.Debugger.IsAttached)

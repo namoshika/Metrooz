@@ -104,33 +104,32 @@ namespace Metrooz.ViewModel
 
                 SelectedIndex = 0;
                 IsLoading = true;
-                try
+                if (await _accountModel.Activate().ConfigureAwait(false))
                 {
-                    await _accountModel.Activate().ConfigureAwait(false);
                     UserName = _accountModel.MyProfile.Name;
                     UserIconUrl = await DataCacheDictionary.DownloadImage(
                         new Uri(_accountModel.Builder.IconUrl
                             .Replace("$SIZE_SEGMENT", "s38-c-k")
                             .Replace("$SIZE_NUM", "80"))).ConfigureAwait(false);
-                    return;
                 }
-                catch (FailToOperationException) { }
-
-                //例外発生時はreturnされずにここまで実行される
-                var message = new DialogOptionInfo(
-                    "Error", "ストリームの初期化に失敗しました。ネットワークの設定を確認して下さい。",
-                    style: MessageDialogStyle.AffirmativeAndNegative,
-                    setting: new MetroDialogSettings() { AffirmativeButtonText = "再接続", NegativeButtonText = "別のアカウントを使う" });
-                Messenger.Default.Send(message);
-                switch(await message.CallbackTask.ConfigureAwait(false))
+                else
                 {
-                    case MessageDialogResult.Affirmative:
-                        var tsk = Activate();
-                        break;
-                    case MessageDialogResult.Negative:
-                        _manager.IsAccountSelectorMode = true;
-                        _manager.SelectedPageIndex = -1;
-                        break;
+                    //例外発生時はreturnされずにここまで実行される
+                    var message = new DialogOptionInfo(
+                        "Error", "ストリームの初期化に失敗しました。ネットワークの設定を確認して下さい。",
+                        style: MessageDialogStyle.AffirmativeAndNegative,
+                        setting: new MetroDialogSettings() { AffirmativeButtonText = "再接続", NegativeButtonText = "別のアカウントを使う" });
+                    Messenger.Default.Send(message);
+                    switch (await message.CallbackTask.ConfigureAwait(false))
+                    {
+                        case MessageDialogResult.Affirmative:
+                            var tsk = Activate();
+                            break;
+                        case MessageDialogResult.Negative:
+                            _manager.IsAccountSelectorMode = true;
+                            _manager.SelectedPageIndex = -1;
+                            break;
+                    }
                 }
             }
             finally

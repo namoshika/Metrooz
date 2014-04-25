@@ -141,9 +141,8 @@ namespace Metrooz.ViewModel
         {
             if (IsActive == false)
                 return;
-            try { await _streamModel.Update(); }
-            catch (FailToOperationException) { }
-            finally { NoItem = _streamModel.Items.Count == 0; }
+            await _streamModel.Update();
+            NoItem = _streamModel.Items.Count == 0;
         }
         public async override void Cleanup()
         {

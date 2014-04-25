@@ -26,7 +26,7 @@ namespace Metrooz
             if (imageUrl == null)
                 return Task.FromResult((BitmapImage)null);
             client = client ?? _defaultHttpClient;
-            return _imgCacheDictionary.Update(imageUrl, () => PrivateDownloadImage(imageUrl, client)).Value;
+            return _imgCacheDictionary.Update(null, imageUrl, () => PrivateDownloadImage(imageUrl, client)).Value;
         }
         static Task<BitmapImage> PrivateDownloadImage(Uri imageUrl, HttpClient client = null)
         {

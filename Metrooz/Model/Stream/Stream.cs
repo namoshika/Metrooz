@@ -62,7 +62,7 @@ namespace Metrooz.Model
             }
         }
 
-        public async Task Connect()
+        public async Task<bool> Connect()
         {
             try
             {
@@ -169,11 +169,12 @@ namespace Metrooz.Model
                         _hiddenActivities = null;
                         break;
                 }
+                return true;
             }
             catch (FailToOperationException)
             {
                 Status = StreamStateType.UnLoaded;
-                throw;
+                return false;
             }
             finally { _syncer.Release(); }
         }

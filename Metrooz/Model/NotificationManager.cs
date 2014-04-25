@@ -58,10 +58,10 @@ namespace Metrooz.Model
             }
             finally { _syncer.Release(); }
         }
-        public async Task AllMarkAsRead()
+        public async Task<bool> AllMarkAsRead()
         {
-            await UnreadedStream.AllMarkAsRead();
             UnreadItemCount = 0;
+            return await UnreadedStream.AllMarkAsRead();
         }
         async Task Connect()
         {
@@ -121,14 +121,14 @@ namespace Metrooz.Model
         readonly int _minItemCount = 10;
         readonly SemaphoreSlim _syncer = new SemaphoreSlim(1, 1);
         readonly TimeSpan _updateIntervalRegulation = TimeSpan.FromSeconds(15);
+        readonly Account _account;
+        readonly NotificationInfoContainer _notificationModel;
         DateTime _latestUpdateDate = DateTime.MinValue;
-        Account _account;
-        NotificationInfoContainer _notificationModel;
         public int IgnoreItemCount { get; private set; }
         public StreamStateType Status { get; private set; }
         public ObservableCollection<NotificationInfo> Items { get; private set; }
 
-        public async Task Update()
+        public async Task<bool> Update()
         {
             try
             {
@@ -137,7 +137,7 @@ namespace Metrooz.Model
                 {
                     Status = StreamStateType.Connected;
                     OnChangedStatus(new EventArgs());
-                    return;
+                    return true;
                 }
 
                 _latestUpdateDate = DateTime.UtcNow;
@@ -169,20 +169,34 @@ namespace Metrooz.Model
                 IgnoreItemCount = _notificationModel.Notifications.Count - Items.Count;
                 Status = StreamStateType.Connected;
                 OnChangedStatus(new EventArgs());
+                return true;
             }
             catch(FailToOperationException)
             {
                 Status = StreamStateType.UnLoaded;
                 OnChangedStatus(new EventArgs());
-                throw;
+
+                if (System.Diagnostics.Debugger.IsAttached)
+                    System.Diagnostics.Debugger.Break();
+                return false;
             }
             finally { _syncer.Release(); }
         }
-        public async Task AllMarkAsRead()
+        public async Task<bool> AllMarkAsRead()
         {
-            _latestUpdateDate = DateTime.MinValue;
-            foreach (var item in Items.ToArray())
-                await item.MarkAsReadAsync();
+            try
+            {
+                _latestUpdateDate = DateTime.MinValue;
+                foreach (var item in Items.ToArray())
+                    await item.MarkAsReadAsync();
+                return true;
+            }
+            catch (FailToOperationException)
+            {
+                if (System.Diagnostics.Debugger.IsAttached)
+                    System.Diagnostics.Debugger.Break();
+                return false;
+            }
         }
         public event EventHandler ChangedStatus;
         protected virtual void OnChangedStatus(EventArgs e)
