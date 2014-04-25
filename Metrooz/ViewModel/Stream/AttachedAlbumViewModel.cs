@@ -1,5 +1,7 @@
 ﻿using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
+using SunokoLibrary.Web.GooglePlus;
+using SunokoLibrary.Web.GooglePlus.Primitive;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -11,9 +13,6 @@ using System.Windows.Media;
 
 namespace Metrooz.ViewModel
 {
-    using SunokoLibrary.Web.GooglePlus;
-    using SunokoLibrary.Web.GooglePlus.Primitive;
-
     public class AttachedAlbumViewModel : AttachedContentViewModel
     {
         public AttachedAlbumViewModel(string title, AttachedAlbum attachedAlbumModel, AttachedImageViewModel[] thumbnailImages, ImageSource largeImage)

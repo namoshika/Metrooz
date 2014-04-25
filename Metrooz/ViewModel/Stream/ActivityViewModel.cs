@@ -1,5 +1,8 @@
 ﻿using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
+using SunokoLibrary.Collections.ObjectModel;
+using SunokoLibrary.Web.GooglePlus;
+using SunokoLibrary.Web.GooglePlus.Primitive;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -9,8 +12,6 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
-using SunokoLibrary.Web.GooglePlus;
-using SunokoLibrary.Web.GooglePlus.Primitive;
 
 namespace Metrooz.ViewModel
 {
@@ -21,15 +22,19 @@ namespace Metrooz.ViewModel
         public ActivityViewModel(Activity activity)
         {
             _model = activity;
-            Comments = new ObservableCollection<CommentViewModel>();
+            _comments = new ObservableCollection<CommentViewModel>();
             SendCommentCommand = new RelayCommand(SendCommentCommand_Executed);
             CancelCommentCommand = new RelayCommand(CancelCommentCommand_Executed);
 
             var tsk = Refresh();
             PropertyChanged += ActivityViewModel_PropertyChanged;
         }
+        readonly System.Threading.SemaphoreSlim _activitySemaph = new System.Threading.SemaphoreSlim(1, 1);
+        readonly System.Threading.SemaphoreSlim _loadingSemaph = new System.Threading.SemaphoreSlim(1, 1);
+        readonly Activity _model;
+        readonly ObservableCollection<CommentViewModel> _comments;
+        IDisposable _activitySyncer;
         CommentPostBoxState _shareBoxStatus;
-        Activity _model;
         ImageSource _actorIcon;
         Uri _activityUrl;
         bool _isEnableCommentsHeader, _isCheckedCommentsHeader;
@@ -40,10 +45,7 @@ namespace Metrooz.ViewModel
         string _postText;
         string _postCommentText;
         AttachedContentViewModel _attachedContent;
-        ObservableCollection<CommentViewModel> _comments;
         StyleElement _postContentInline;
-        readonly System.Threading.SemaphoreSlim _activitySyncer = new System.Threading.SemaphoreSlim(1, 1);
-        readonly System.Threading.SemaphoreSlim _loadingSyncer = new System.Threading.SemaphoreSlim(1, 1);
 
         public ImageSource ActorIcon
         {
@@ -106,10 +108,7 @@ namespace Metrooz.ViewModel
             set { Set(() => AttachedContent, ref _attachedContent, value); }
         }
         public ObservableCollection<CommentViewModel> Comments
-        {
-            get { return _comments; }
-            set { Set(() => Comments, ref _comments, value); }
-        }
+        { get { return _comments; } }
         public StyleElement PostContentInline
         {
             get { return _postContentInline; }
@@ -140,12 +139,10 @@ namespace Metrooz.ViewModel
                 {
                     try
                     {
-                        await _activitySyncer.WaitAsync();
-                        _model.Comments.CollectionChanged -= _activity_Comments_CollectionChanged;
-                        var commes = new ObservableCollection<CommentViewModel>(
-                            _model.Comments.Select(item => new CommentViewModel(item)));
-                        _model.Comments.CollectionChanged += _activity_Comments_CollectionChanged;
-                        Comments = commes;
+                        await _activitySemaph.WaitAsync();
+                        if (_activitySyncer != null)
+                            _activitySyncer.Dispose();
+                        _activitySyncer = _model.Comments.SyncWith(_comments, item => new CommentViewModel(item), _activity_Comments_CollectionChanged, item => item.Cleanup(), App.Current.Dispatcher);
                         CommentLength = _model.CoreInfo.CommentLength;
                         IsEnableCommentsHeader = _model.CoreInfo.CommentLength > 2;
 
@@ -155,7 +152,7 @@ namespace Metrooz.ViewModel
                             .DownloadImage(new Uri(_model.CoreInfo.PostUser.IconImageUrl.Replace("$SIZE_SEGMENT", "s40-c-k").Replace("$SIZE_NUM", "80")))
                             .ConfigureAwait(false);
                     }
-                    finally { _activitySyncer.Release(); }
+                    finally { _activitySemaph.Release(); }
                 });
                 _model.Updated += _activity_Refreshed;
             }
@@ -164,42 +161,27 @@ namespace Metrooz.ViewModel
         {
             try
             {
-                await _activitySyncer.WaitAsync();
+                await _activitySemaph.WaitAsync();
                 base.Cleanup();
                 _model.Updated -= _activity_Refreshed;
-                _model.Comments.CollectionChanged -= _activity_Comments_CollectionChanged;
+                if (_activitySyncer != null)
+                    _activitySyncer.Dispose();
                 foreach (var item in _comments)
                     item.Cleanup();
             }
-            finally { _activitySyncer.Release(); }
+            finally { _activitySemaph.Release(); }
         }
 
-        async void _activity_Comments_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        async void _activity_Comments_CollectionChanged(Func<Task> syncProc, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
             try
             {
-                await _activitySyncer.WaitAsync();
-                switch (e.Action)
-                {
-                    case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
-                        foreach (var item in e.NewItems)
-                            await _comments.InsertOnDispatcher(e.NewStartingIndex, new CommentViewModel((Comment)item)).ConfigureAwait(false);
-                        break;
-                    case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
-                        for (var i = 0; i < e.OldItems.Count; i++)
-                            await _comments.RemoveAtOnDispatcher(e.OldStartingIndex + i).ConfigureAwait(false);
-                        break;
-                    case System.Collections.Specialized.NotifyCollectionChangedAction.Move:
-                        await _comments.MoveOnDispatcher(e.OldStartingIndex, e.NewStartingIndex);
-                        break;
-                    case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:
-                        await _comments.ClearOnDispatcher().ConfigureAwait(false);
-                        break;
-                }
+                await _activitySemaph.WaitAsync();
+                await syncProc();
                 CommentLength = _model.CoreInfo.CommentLength;
                 IsEnableCommentsHeader = _model.CoreInfo.CommentLength > 2;
             }
-            finally { _activitySyncer.Release(); }
+            finally { _activitySemaph.Release(); }
         }
         void _activity_Refreshed(object sender, EventArgs e) { var tsk = Refresh().ConfigureAwait(false); }
         void ActivityViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -212,13 +194,13 @@ namespace Metrooz.ViewModel
                             if (IsCheckedCommentsHeader)
                                 try
                                 {
-                                    await _loadingSyncer.WaitAsync();
+                                    await _loadingSemaph.WaitAsync();
                                     IsLoadingCommentList = true;
                                     await _model.CoreInfo.UpdateGetActivityAsync(false, ActivityUpdateApiFlag.GetActivity);
                                     IsLoadingCommentList = false;
                                     IsOpenedCommentList = true;
                                 }
-                                finally { _loadingSyncer.Release(); }
+                                finally { _loadingSemaph.Release(); }
                             else
                             {
                                 IsOpenedCommentList = false;

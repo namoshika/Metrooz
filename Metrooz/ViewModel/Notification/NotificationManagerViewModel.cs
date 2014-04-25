@@ -1,4 +1,7 @@
 ﻿using GalaSoft.MvvmLight;
+using SunokoLibrary.Collections.ObjectModel;
+using SunokoLibrary.Web.GooglePlus;
+using SunokoLibrary.Web.GooglePlus.Primitive;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -10,8 +13,6 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
-using SunokoLibrary.Web.GooglePlus;
-using SunokoLibrary.Web.GooglePlus.Primitive;
 
 namespace Metrooz.ViewModel
 {
@@ -64,15 +65,15 @@ namespace Metrooz.ViewModel
                         {
                             if (IsActive)
                             {
-                                await Items.AddOnDispatcher(new NotificationStreamViewModel("新着", _managerModel.UnreadedStream)).ConfigureAwait(false);
-                                await Items.AddOnDispatcher(new NotificationStreamViewModel("既読通知", _managerModel.ReadedStream)).ConfigureAwait(false);
+                                await Items.AddOnDispatcher(new NotificationStreamViewModel("新着", _managerModel.UnreadedStream), App.Current.Dispatcher).ConfigureAwait(false);
+                                await Items.AddOnDispatcher(new NotificationStreamViewModel("既読通知", _managerModel.ReadedStream), App.Current.Dispatcher).ConfigureAwait(false);
                                 SelectedIndex = 0;
                             }
                             else
                             {
                                 SelectedIndex = -1;
                                 var tmp = Items.ToArray();
-                                await Items.ClearOnDispatcher();
+                                await Items.ClearOnDispatcher(App.Current.Dispatcher);
                                 foreach (var item in tmp)
                                     item.Cleanup();
 
@@ -155,7 +156,7 @@ namespace Metrooz.ViewModel
                 PropertyChanged -= NotificationManagerViewModel_PropertyChanged;
 
                 var tmp = Items.ToArray();
-                await Items.ClearOnDispatcher().ConfigureAwait(false);
+                await Items.ClearOnDispatcher(App.Current.Dispatcher).ConfigureAwait(false);
                 foreach (var item in tmp)
                     item.Cleanup();
             }
@@ -188,14 +189,14 @@ namespace Metrooz.ViewModel
                                     IsLoading = true;
                                     if (_streamModel.Items.Count > 0)
                                         foreach (var item in await Task.WhenAll(_streamModel.Items.Select(inf => WrapViewModel(inf, DateTime.UtcNow))))
-                                            await Items.AddOnDispatcher(item).ConfigureAwait(false);
+                                            await Items.AddOnDispatcher(item, App.Current.Dispatcher).ConfigureAwait(false);
                                     await Update().ConfigureAwait(false);
                                 }
                                 else
                                 {
                                     //古い要素を削除
                                     var tmp = Items.ToArray();
-                                    await Items.ClearOnDispatcher();
+                                    await Items.ClearOnDispatcher(App.Current.Dispatcher);
                                     foreach (var item in tmp)
                                         item.Cleanup();
                                 }
@@ -230,24 +231,24 @@ namespace Metrooz.ViewModel
                         {
                             var idx = e.NewStartingIndex + i;
                             var viewModel = await WrapViewModel((NotificationInfo)e.NewItems[i], DateTime.UtcNow);
-                            await Items.InsertOnDispatcher(idx, viewModel).ConfigureAwait(false);
+                            await Items.InsertOnDispatcher(idx, viewModel, App.Current.Dispatcher).ConfigureAwait(false);
                         }
                         break;
                     case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
                         for (var i = 0; i < e.OldItems.Count; i++)
                         {
                             var viewModel = Items[Math.Min(e.OldStartingIndex + i, Items.Count - 1)];
-                            await Items.RemoveAtOnDispatcher(e.OldStartingIndex + i).ConfigureAwait(false);
+                            await Items.RemoveAtOnDispatcher(e.OldStartingIndex + i, App.Current.Dispatcher).ConfigureAwait(false);
                             viewModel.Cleanup();
                         }
                         break;
                     case NotifyCollectionChangedAction.Move:
-                        await Items.MoveOnDispatcher(e.OldStartingIndex, e.NewStartingIndex);
+                        await Items.MoveOnDispatcher(e.OldStartingIndex, e.NewStartingIndex, App.Current.Dispatcher);
                         break;
                     case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:
                         for (var i = 0; i < Items.Count; i++)
                             Items[i].Cleanup();
-                        await Items.ClearOnDispatcher().ConfigureAwait(false);
+                        await Items.ClearOnDispatcher(App.Current.Dispatcher).ConfigureAwait(false);
                         break;
                 }
             }

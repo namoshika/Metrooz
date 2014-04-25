@@ -2,6 +2,8 @@
 using GalaSoft.MvvmLight.Messaging;
 using GalaSoft.MvvmLight.Ioc;
 using MahApps.Metro.Controls.Dialogs;
+using SunokoLibrary.Web.GooglePlus;
+using SunokoLibrary.Collections.ObjectModel;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -11,7 +13,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Threading;
-using SunokoLibrary.Web.GooglePlus;
 
 namespace Metrooz.ViewModel
 {
@@ -150,15 +151,15 @@ namespace Metrooz.ViewModel
                         {
                             var accountModel = (Account)e.NewItems[i];
                             var account = new AccountViewModel(accountModel, this);
-                            await Accounts.InsertOnDispatcher(e.NewStartingIndex + i, account).ConfigureAwait(false);
-                            await Pages.InsertOnDispatcher(1 + e.NewStartingIndex + i, account).ConfigureAwait(false);
+                            await Accounts.InsertOnDispatcher(e.NewStartingIndex + i, account, App.Current.Dispatcher).ConfigureAwait(false);
+                            await Pages.InsertOnDispatcher(1 + e.NewStartingIndex + i, account, App.Current.Dispatcher).ConfigureAwait(false);
                         }
                         break;
                     case NotifyCollectionChangedAction.Remove:
                         for (var i = 0; i < e.OldItems.Count; i++)
                         {
-                            await Accounts.RemoveAtOnDispatcher(e.OldStartingIndex).ConfigureAwait(false);
-                            await Pages.RemoveAtOnDispatcher(1 + e.OldStartingIndex).ConfigureAwait(false);
+                            await Accounts.RemoveAtOnDispatcher(e.OldStartingIndex, App.Current.Dispatcher).ConfigureAwait(false);
+                            await Pages.RemoveAtOnDispatcher(1 + e.OldStartingIndex, App.Current.Dispatcher).ConfigureAwait(false);
                             if (Pages.Count == 0)
                                 SelectedPageIndex = 0;
                         }
@@ -166,9 +167,9 @@ namespace Metrooz.ViewModel
                     case NotifyCollectionChangedAction.Reset:
                         if (Pages.Count > 0)
                         {
-                            await Accounts.ClearOnDispatcher().ConfigureAwait(false);
-                            await Pages.ClearOnDispatcher().ConfigureAwait(false);
-                            await Pages.AddOnDispatcher(null).ConfigureAwait(false);
+                            await Accounts.ClearOnDispatcher(App.Current.Dispatcher).ConfigureAwait(false);
+                            await Pages.ClearOnDispatcher(App.Current.Dispatcher).ConfigureAwait(false);
+                            await Pages.AddOnDispatcher(null, App.Current.Dispatcher).ConfigureAwait(false);
                             SelectedPageIndex = 0;
                         }
                         break;

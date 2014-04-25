@@ -1,5 +1,6 @@
 ﻿using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
+using SunokoLibrary.Collections.ObjectModel;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -20,16 +21,18 @@ namespace Metrooz.ViewModel
             _accountModel = account;
             _streamManagerModel = account.Stream;
             _streams = new ObservableCollection<StreamViewModel>();
-
-            _streamManagerModel.Streams.CollectionChanged += _stream_ChangedDisplayStreams;
+            _streamSyncer = _streamManagerModel.Streams.SyncWith(
+                _streams, item => new StreamViewModel(item, _accountModel, _streamManagerModel),
+                _stream_ChangedDisplayStreams, item => item.Cleanup(), App.Current.Dispatcher);
             PropertyChanged += StreamManagerViewModel_PropertyChanged;
         }
+        readonly Account _accountModel;
+        readonly StreamManager _streamManagerModel;
+        readonly ObservableCollection<StreamViewModel> _streams;
+        readonly System.Threading.SemaphoreSlim _syncerStreams = new System.Threading.SemaphoreSlim(1, 1);
         bool _isActive;
         int _selectedCircleIndex, _subSelectedCircleIndex;
-        Account _accountModel;
-        StreamManager _streamManagerModel;
-        ObservableCollection<StreamViewModel> _streams;
-        readonly System.Threading.SemaphoreSlim _syncerStreams = new System.Threading.SemaphoreSlim(1, 1);
+        IDisposable _streamSyncer;
 
         public bool IsActive
         {
@@ -41,50 +44,27 @@ namespace Metrooz.ViewModel
             get { return _selectedCircleIndex; }
             set { Set(() => SelectedIndex, ref _selectedCircleIndex, value); }
         }
-        public ObservableCollection<StreamViewModel> Items
-        {
-            get { return _streams; }
-            set { Set(() => Items, ref _streams, value); }
-        }
+        public ObservableCollection<StreamViewModel> Items { get { return _streams; } }
         public async override void Cleanup()
         {
             try
             {
                 await _syncerStreams.WaitAsync();
                 base.Cleanup();
-                _streamManagerModel.Streams.CollectionChanged -= _stream_ChangedDisplayStreams;
+                if (_streamSyncer != null)
+                    _streamSyncer.Dispose();
                 foreach (var item in Items)
                     item.Cleanup();
             }
             finally { _syncerStreams.Release(); }
         }
 
-        async void _stream_ChangedDisplayStreams(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        async void _stream_ChangedDisplayStreams(Func<System.Threading.Tasks.Task> syncProc, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
             try
             {
                 await _syncerStreams.WaitAsync().ConfigureAwait(false);
-                switch (e.Action)
-                {
-                    case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
-                        for (var i = 0; i < e.NewItems.Count; i++)
-                        {
-                            var circle = (Stream)e.NewItems[i];
-                            var circleVm = new StreamViewModel(circle, _accountModel, _streamManagerModel);
-                            await Items.InsertOnDispatcher(e.NewStartingIndex + i, circleVm).ConfigureAwait(false);
-                        }
-                        break;
-                    case System.Collections.Specialized.NotifyCollectionChangedAction.Move:
-                        await Items.MoveOnDispatcher(e.OldStartingIndex, e.NewStartingIndex).ConfigureAwait(false);
-                        break;
-                    case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
-                        for (var i = 0; i < e.OldItems.Count; i++)
-                            await Items.RemoveAtOnDispatcher(e.OldStartingIndex).ConfigureAwait(false);
-                        break;
-                    case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:
-                        await Items.ClearOnDispatcher().ConfigureAwait(false);
-                        break;
-                }
+                await syncProc();
                 if (SelectedIndex < 0 && _streams.Count > 0)
                     SelectedIndex = 0;
                 else if (_streams.Count == 0)

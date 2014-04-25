@@ -1,4 +1,4 @@
-﻿using SunokoLibrary.Collection.Generic;
+﻿using SunokoLibrary.Collections.Generic;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 
-namespace Metrooz
+namespace Metrooz.ViewModel
 {
     public static class DataCacheDictionary
     {

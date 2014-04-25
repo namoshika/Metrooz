@@ -1,12 +1,12 @@
-﻿using System;
+﻿using SunokoLibrary.Web.GooglePlus;
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
 using System.Threading;
-using SunokoLibrary.Web.GooglePlus;
 
 namespace Metrooz.Model
 {

@@ -1,13 +1,13 @@
 ﻿using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
+using SunokoLibrary.Web.GooglePlus;
+using SunokoLibrary.Web.GooglePlus.Primitive;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Windows.Media;
 using System.Threading.Tasks;
-using SunokoLibrary.Web.GooglePlus;
-using SunokoLibrary.Web.GooglePlus.Primitive;
+using System.Windows.Media;
 
 namespace Metrooz.ViewModel
 {

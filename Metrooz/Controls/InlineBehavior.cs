@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SunokoLibrary.Web.GooglePlus;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,7 +11,6 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Windows.Interactivity;
-using SunokoLibrary.Web.GooglePlus;
 //using Microsoft.Expression.Interactivity.Core;
 
 namespace Metrooz.Controls

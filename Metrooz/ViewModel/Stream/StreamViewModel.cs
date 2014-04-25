@@ -1,6 +1,8 @@
 ﻿using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using GalaSoft.MvvmLight.Messaging;
+using SunokoLibrary.Collections.ObjectModel;
+using SunokoLibrary.Web.GooglePlus;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -10,7 +12,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Windows.Threading;
-using SunokoLibrary.Web.GooglePlus;
 
 namespace Metrooz.ViewModel
 {
@@ -34,15 +35,16 @@ namespace Metrooz.ViewModel
             _circleModel.ChangedChangedActivityCount += _circleModel_ChangedChangedActivityCount;
             PropertyChanged += StreamViewModel_PropertyChanged;
         }
-        readonly System.Threading.SemaphoreSlim _syncerActivities = new System.Threading.SemaphoreSlim(1, 1);
+        readonly System.Threading.SemaphoreSlim _activitiesSemaph = new System.Threading.SemaphoreSlim(1, 1);
+        readonly Stream _circleModel;
+        readonly Account _accountModel;
+        readonly StreamManager _circleManagerModel;
+        readonly ResumeButtonViewModel _resumeButton;
+        readonly ObservableCollection<ViewModelBase> _activities;
         bool _isActive, _isLoading, _isIniting, _isConnected;
         double _scrollOffset, _scrollOffsetPauseStream = 150;
         string _name;
-        Stream _circleModel;
-        Account _accountModel;
-        StreamManager _circleManagerModel;
-        ObservableCollection<ViewModelBase> _activities;
-        ResumeButtonViewModel _resumeButton;
+        IDisposable _activitiesSyncer;
 
         public bool IsActive
         {
@@ -74,11 +76,7 @@ namespace Metrooz.ViewModel
             get { return _name; }
             set { Set(() => Name, ref _name, value); }
         }
-        public ObservableCollection<ViewModelBase> Activities
-        {
-            get { return _activities; }
-            set { Set(() => Activities, ref _activities, value); }
-        }
+        public ObservableCollection<ViewModelBase> Activities { get { return _activities; } }
         public ICommand ReconnectCommand { get; private set; }
         public ICommand ResumeCommand { get; private set; }
 
@@ -105,26 +103,24 @@ namespace Metrooz.ViewModel
         {
             try
             {
-                await _syncerActivities.WaitAsync().ConfigureAwait(false);
+                await _activitiesSemaph.WaitAsync().ConfigureAwait(false);
                 //古い要素を削除
-                _circleModel.Activities.CollectionChanged -= _circleModel_ActivitiesCollectionChanged;
+                if(_activitiesSyncer != null)
+                    _activitiesSyncer.Dispose();
                 foreach (var item in _activities)
                     item.Cleanup();
-                await _activities.ClearOnDispatcher().ConfigureAwait(false);
+                await _activities.ClearOnDispatcher(App.Current.Dispatcher).ConfigureAwait(false);
 
                 //新しい要素を追加
                 if (_isActive == false)
                     return;
                 _resumeButton.NewItemCount = 0;
-                _circleModel.Activities.CollectionChanged += _circleModel_ActivitiesCollectionChanged;
-                foreach (var item in _circleModel.Activities)
-                {
-                    var activity = new ActivityViewModel(item);
-                    await _activities.AddOnDispatcher(activity).ConfigureAwait(false);
-                }
+                _activitiesSyncer = _circleModel.Activities.SyncWith(
+                    _activities, item => new ActivityViewModel(item),
+                    _circleModel_ActivitiesCollectionChanged, item => item.Cleanup(), App.Current.Dispatcher);
             }
             finally
-            { _syncerActivities.Release(); }
+            { _activitiesSemaph.Release(); }
             await Activate().ConfigureAwait(false);
         }
 
@@ -143,50 +139,24 @@ namespace Metrooz.ViewModel
                     break;
             }
         }
-        async void _circleModel_ActivitiesCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        async void _circleModel_ActivitiesCollectionChanged(Func<Task> syncProc, NotifyCollectionChangedEventArgs e)
         {
             try
             {
-                await _syncerActivities.WaitAsync().ConfigureAwait(false);
+                await _activitiesSemaph.WaitAsync().ConfigureAwait(false);
                 if (IsActive == false)
                     return;
-                switch (e.Action)
-                {
-                    case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
-                        for (var i = e.NewItems.Count - 1; i >= 0; i--)
-                        {
-                            var idx = e.NewStartingIndex + i;
-                            var viewModel = new ActivityViewModel((Activity)e.NewItems[i]);
-                            await Activities.InsertOnDispatcher(idx, viewModel).ConfigureAwait(false);
-                        }
-                        break;
-                    case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
-                        for (var i = 0; i < e.OldItems.Count; i++)
-                        {
-                            var viewModel = Activities[e.OldStartingIndex + i];
-                            await Activities.RemoveAtOnDispatcher(e.OldStartingIndex + i).ConfigureAwait(false);
-                            viewModel.Cleanup();
-                        }
-                        break;
-                    case NotifyCollectionChangedAction.Move:
-                        await Activities.MoveOnDispatcher(e.OldStartingIndex, e.NewStartingIndex);
-                        break;
-                    case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:
-                        for (var i = 0; i < Activities.Count; i++)
-                            Activities[i].Cleanup();
-                        await Activities.ClearOnDispatcher().ConfigureAwait(false);
-                        break;
-                }
+                await syncProc();
             }
             finally
-            { _syncerActivities.Release(); }
+            { _activitiesSemaph.Release(); }
         }
         async void _circleModel_ChangedStatus(object sender, EventArgs e)
         {
             try
             {
                 var status = _circleModel.Status;
-                await _syncerActivities.WaitAsync().ConfigureAwait(false);
+                await _activitiesSemaph.WaitAsync().ConfigureAwait(false);
                 switch (status)
                 {
                     case StreamStateType.Loading:
@@ -196,15 +166,15 @@ namespace Metrooz.ViewModel
                     case StreamStateType.Initing:
                         IsIniting = true;
                         await Task.Delay(150);
-                        await Activities.RemoveOnDispatcher(_resumeButton);
+                        await Activities.RemoveOnDispatcher(_resumeButton, App.Current.Dispatcher);
                         break;
                     case StreamStateType.Connected:
                         IsIniting = false;
                         IsLoading = false;
-                        await Activities.RemoveOnDispatcher(_resumeButton);
+                        await Activities.RemoveOnDispatcher(_resumeButton, App.Current.Dispatcher);
                         break;
                     case StreamStateType.Paused:
-                        await Activities.InsertOnDispatcher(0, _resumeButton);
+                        await Activities.InsertOnDispatcher(0, _resumeButton, App.Current.Dispatcher);
                         break;
                     case StreamStateType.UnLoaded:
                         await Task.Delay(1000);
@@ -215,7 +185,7 @@ namespace Metrooz.ViewModel
                 }
             }
             finally
-            { _syncerActivities.Release(); }
+            { _activitiesSemaph.Release(); }
         }
         void _circleModel_ChangedChangedActivityCount(object sender, EventArgs e)
         { _resumeButton.NewItemCount = _circleModel.ChangedActivityCount; }
