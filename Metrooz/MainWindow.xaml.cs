@@ -26,8 +26,8 @@ namespace Metrooz
     {
         public MainWindow()
         {
-            InitializeComponent();
             Messenger.Default.Register<DialogOptionInfo>(this, Recieved_DialogMessage);
+            InitializeComponent();
         }
 
         protected override void OnClosed(EventArgs e)

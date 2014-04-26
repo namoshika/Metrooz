@@ -22,8 +22,10 @@ namespace Metrooz.Model
             Accounts.Clear();
             try
             {
-                foreach (var item in await PlatformClient.Factory.ImportFrom(
-                    CookieGetter.CreateInstance(BrowserType.GoogleChrome)).ConfigureAwait(false))
+                var cookieGetter = CookieGetter.CreateInstance(BrowserType.GoogleChrome);
+                if (cookieGetter.Status.IsAvailable == false)
+                    return false;
+                foreach (var item in await PlatformClient.Factory.ImportFrom(cookieGetter).ConfigureAwait(false))
                 {
                     var account = new Account(item);
                     Accounts.Add(account);
