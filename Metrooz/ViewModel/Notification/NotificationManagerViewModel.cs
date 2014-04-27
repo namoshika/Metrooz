@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
+using System.Reactive;
+using System.Reactive.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -22,13 +24,22 @@ namespace Metrooz.ViewModel
         public NotificationManagerViewModel(NotificationManager model)
         {
             _managerModel = model;
-            _managerModel.RecievedSignal += _managerModel_RecievedSignal;
+            //更新シグナル受信と定時通信によってある程度自動更新
+            _updater = Observable.Merge(
+                Observable.FromEvent<EventHandler, EventArgs>(
+                    act => (sender, e) => act(e),
+                    handler => _managerModel.RecievedSignal += handler,
+                    handler => _managerModel.RecievedSignal -= handler).Select(e => Unit.Default),
+                Observable.Interval(TimeSpan.FromMinutes(5)).Select(num => Unit.Default))
+                .Throttle(TimeSpan.FromSeconds(15))
+                .Subscribe(_managerModel_RecievedSignal);
             Items = new ObservableCollection<NotificationStreamViewModel>();
             PropertyChanged += NotificationManagerViewModel_PropertyChanged;
         }
         readonly TimeSpan _markAsReadDelaySpan = TimeSpan.FromSeconds(3);
         NotificationManager _managerModel;
         DateTime _deactiveDate;
+        IDisposable _updater;
         bool _isActive, _existUnreadItem;
         int _unreadItemCount;
         int _selectedIndex;
@@ -90,7 +101,7 @@ namespace Metrooz.ViewModel
                     break;
             }
         }
-        async void _managerModel_RecievedSignal(object sender, EventArgs e)
+        async void _managerModel_RecievedSignal(Unit empty)
         {
             UnreadItemCount = _managerModel.UnreadItemCount;
             ExistUnreadItem = _managerModel.UnreadItemCount > 0;
