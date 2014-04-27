@@ -28,17 +28,21 @@ namespace Metrooz.ViewModel
             _notificationModel_Updated(null, null);
             _notificationModel.Updated += _notificationModel_Updated;
         }
-        NotificationInfoWithActivity _notificationModel;
-        Activity _targetModel;
+        readonly NotificationInfoWithActivity _notificationModel;
+        readonly Activity _targetModel;
         ActivityViewModel _target;
-        string _noticeDate;
-        string _noticeText;
+        string _noticeDate, _noticeTitle, _noticeText;
 
         public ICommand MuteCommand { get; private set; }
         public string NoticeDate
         {
             get { return _noticeDate; }
             set { Set(() => NoticeDate, ref _noticeDate, value); }
+        }
+        public string NoticeTitle
+        {
+            get { return _noticeTitle; }
+            set { Set(() => NoticeTitle, ref _noticeTitle, value); }
         }
         public string NoticeText
         {
@@ -58,12 +62,8 @@ namespace Metrooz.ViewModel
         }
         async void _notificationModel_Updated(object sender, EventArgs e)
         {
-            var count = 0;
-            NoticeText = string.Format("{0}{1}が投稿にコメントしました。",
-                string.Join(", ", _notificationModel.ActionLogs.Reverse().TakeWhile(model => count++ < 3).Select(notification => notification.Actor.Name)),
-                _notificationModel.ActionLogs.Count > count
-                    ? string.Format("他{0}人", _notificationModel.ActionLogs.Count - count)
-                    : string.Empty);
+            NoticeTitle = _notificationModel.Title;
+            NoticeText = (string.Empty + _notificationModel.Summary).Replace("\r", "").Replace("\n", "");
             DisplayIconUrl = await DataCacheDictionary.DownloadImage(new Uri(_notificationModel.ActionLogs.Last()
                 .Actor.IconImageUrl.Replace("$SIZE_SEGMENT", "s35-c-k"))).ConfigureAwait(false);
             NoticeDate = _notificationModel.NoticedDate.ToString(

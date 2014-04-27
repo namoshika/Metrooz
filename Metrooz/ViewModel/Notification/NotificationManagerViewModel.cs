@@ -164,11 +164,11 @@ namespace Metrooz.ViewModel
             { _syncerItems.Release(); }
         }
         async Task<NotificationViewModel> WrapViewModel(NotificationInfo item, DateTime insertTime)
-        {
+        {        
             NotificationViewModel itemVM = null;
-            if ((int)(item.Type & (NotificationFlag.Mension | NotificationFlag.Response | NotificationFlag.Followup | NotificationFlag.PlusOne)) > 0)
+            if ((int)(item.Type & (NotificationFlag.DirectMessage | NotificationFlag.Followup | NotificationFlag.Mension | NotificationFlag.PlusOne | NotificationFlag.Reshare | NotificationFlag.Response)) > 0)
                 itemVM = await NotificationWithActivityViewModel.Create((NotificationInfoWithActivity)item, insertTime);
-            else if ((int)(item.Type & NotificationFlag.CircleIn) > 0)
+            else if ((int)(item.Type & (NotificationFlag.CircleIn | NotificationFlag.CircleAddBack)) > 0)
                 itemVM = new NotificationWithProfileViewModel((NotificationInfoWithActor)item, insertTime);
             return itemVM;
         }

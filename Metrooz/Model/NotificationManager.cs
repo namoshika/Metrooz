@@ -156,8 +156,8 @@ namespace Metrooz.Model
                     if (srcIdx > -1)
                         Items.Move(srcIdx, itemsIdx);
                     else if ((srcItem.Type & (
-                        NotificationFlag.CircleIn | NotificationFlag.Followup |
-                        NotificationFlag.Mension | NotificationFlag.PlusOne | NotificationFlag.Response)) > 0)
+                        NotificationFlag.CircleIn | NotificationFlag.CircleAddBack | NotificationFlag.DirectMessage | NotificationFlag.Followup |
+                        NotificationFlag.Mension | NotificationFlag.PlusOne | NotificationFlag.Reshare | NotificationFlag.Response)) > 0)
                         Items.Insert(itemsIdx, srcItem);
                     else
                         continue;

@@ -759,8 +759,12 @@
                 			<ei:ControlStoryboardAction Storyboard="{StaticResource feedinAnimeStoryboard}"/>
                 		</i:EventTrigger>
                 	</i:Interaction.Triggers>
-                    <Border BorderThickness="0,0,0,1" BorderBrush="LightGray" Padding="0,0,0,8" Margin="0,0,0,5">
-                        <TextBlock Text="{Binding NoticeText}" TextWrapping="Wrap" />
+                    <Border BorderThickness="0,0,0,1" BorderBrush="LightGray" Padding="0,0,0,5" Margin="0,0,0,5">
+                        <TextBlock>
+                            <Run FontWeight="Bold" Text="{Binding NoticeTitle}" />
+                            <LineBreak />
+                            <Run Text="{Binding NoticeText}" />
+                        </TextBlock>
                     </Border>
                     <ContentPresenter Content="{Binding Target}" />
                 </StackPanel>
@@ -807,7 +811,13 @@
                                     <DropShadowEffect Color="Black" Direction="315" Opacity="0.3" BlurRadius="5" ShadowDepth="0" />
                                 </Border.Effect>
                             </Border>
-                            <Button HorizontalAlignment="Right" Margin="0,5,0,0" Padding="3">サークルに追加</Button>
+                            <Button HorizontalAlignment="Right" Margin="0,5,0,0" Padding="3" Content="プロフィールへ移動">
+                            	<i:Interaction.Triggers>
+                            		<i:EventTrigger EventName="Click">
+                            			<ei:LaunchUriOrFileAction Path="{Binding LinkUrl}"/>
+                            		</i:EventTrigger>
+                            	</i:Interaction.Triggers>
+                            </Button>
                         </StackPanel>
                     </Grid>
                 </Border>

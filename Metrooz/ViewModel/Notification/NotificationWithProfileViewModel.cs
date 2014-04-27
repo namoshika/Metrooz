@@ -55,16 +55,23 @@ namespace Metrooz.ViewModel
         public ProfileRegisterViewModel(NotificationItemInfo model)
         {
             _name = model.Actor.Name;
+            _linkUrl = model.Actor.ProfileUrl;
             DataCacheDictionary.DownloadImage(new Uri(model.Actor.IconImageUrl.Replace("$SIZE_SEGMENT", "s80-c-k")))
                 .ContinueWith(tsk => _profileIconUrl = tsk.Result);
         }
         string _name;
+        Uri _linkUrl;
         ImageSource _profileIconUrl;
 
         public string Name
         {
             get { return _name; }
             set { Set(() => Name, ref _name, value); }
+        }
+        public Uri LinkUrl
+        {
+            get { return _linkUrl; }
+            set { Set(() => LinkUrl, ref _linkUrl, value); }
         }
         public ImageSource ProfileIconUrl
         {
