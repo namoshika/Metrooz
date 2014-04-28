@@ -176,10 +176,12 @@ namespace Metrooz.ViewModel
         async Task<NotificationViewModel> WrapViewModel(NotificationInfo item, DateTime insertTime)
         {        
             NotificationViewModel itemVM = null;
-            if ((int)(item.Type & (NotificationFlag.DirectMessage | NotificationFlag.Followup | NotificationFlag.Mension | NotificationFlag.PlusOne | NotificationFlag.Reshare | NotificationFlag.Response)) > 0)
+            if (item is NotificationInfoWithActivity)
                 itemVM = await NotificationWithActivityViewModel.Create((NotificationInfoWithActivity)item, insertTime);
-            else if ((int)(item.Type & (NotificationFlag.CircleIn | NotificationFlag.CircleAddBack)) > 0)
+            else if (item is NotificationInfoWithActor)
                 itemVM = new NotificationWithProfileViewModel((NotificationInfoWithActor)item, insertTime);
+            else
+                throw new ArgumentException(string.Format("引数itemは型:{0}に対応していません。", item.GetType()));
             return itemVM;
         }
 

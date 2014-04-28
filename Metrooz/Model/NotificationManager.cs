@@ -62,6 +62,16 @@ namespace Metrooz.Model
             UnreadItemCount = 0;
             return await UnreadedStream.AllMarkAsRead();
         }
+        public async void Dispose()
+        {
+            try
+            {
+                await _syncer.WaitAsync().ConfigureAwait(false);
+                if (_notificationTrigger != null)
+                    _notificationTrigger.Dispose();
+            }
+            finally { _syncer.Release(); }
+        }
         async Task Connect()
         {
             try
@@ -88,16 +98,6 @@ namespace Metrooz.Model
                         exp => _notificationTrigger = null);
             }
             catch (FailToOperationException) { System.Diagnostics.Debug.Fail("通知APIとの通信でエラー発生。"); }
-            finally { _syncer.Release(); }
-        }
-        public async void Dispose()
-        {
-            try
-            {
-                await _syncer.WaitAsync().ConfigureAwait(false);
-                if (_notificationTrigger != null)
-                    _notificationTrigger.Dispose();
-            }
             finally { _syncer.Release(); }
         }
 
@@ -156,7 +156,7 @@ namespace Metrooz.Model
                         Items.Move(srcIdx, itemsIdx);
                     else if ((srcItem.Type & (
                         NotificationFlag.CircleIn | NotificationFlag.CircleAddBack | NotificationFlag.DirectMessage | NotificationFlag.Followup |
-                        NotificationFlag.Mension | NotificationFlag.PlusOne | NotificationFlag.Reshare | NotificationFlag.Response)) > 0)
+                        NotificationFlag.Mension | NotificationFlag.SubscriptionCommunitiy | NotificationFlag.PlusOne | NotificationFlag.Reshare | NotificationFlag.Response)) > 0)
                         Items.Insert(itemsIdx, srcItem);
                     else
                         continue;

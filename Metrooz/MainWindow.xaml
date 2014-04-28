@@ -761,42 +761,43 @@
                 			<ei:ControlStoryboardAction Storyboard="{StaticResource feedinAnimeStoryboard}"/>
                 		</i:EventTrigger>
                 	</i:Interaction.Triggers>
-                    <Border BorderThickness="0,0,0,1" BorderBrush="LightGray" Padding="0,0,0,5" Margin="0,0,0,5">
-                        <TextBlock>
+                    <Border BorderThickness="0,0,0,1" BorderBrush="LightGray" Padding="0,0,0,3" Margin="0">
+                        <TextBlock Style="{DynamicResource postTextStyle}">
                             <Run FontWeight="Bold" Text="{Binding NoticeTitle}" />
                             <LineBreak />
                             <Run Text="{Binding NoticeText}" />
                         </TextBlock>
                     </Border>
-                    <ContentPresenter Content="{Binding Target}" />
+                    <ContentPresenter Content="{Binding Target}" Margin="-10,0" />
                 </StackPanel>
             </DataTemplate>
             <DataTemplate DataType="{x:Type vm:NotificationWithProfileViewModel}">
-                <Border Name="border" Margin="10" BorderBrush="LightGray" BorderThickness="0,1,0,0" d:DataContext="{d:DesignData /SampleData/NotificationWithProfileViewModelSampleData.xaml}" d:DesignWidth="360" d:DesignHeight="720">
-                    <Border.Resources>
-                        <Storyboard x:Key="feedinAnimeStoryboard">
-            			    <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Opacity)" Storyboard.TargetName="border">
-            				    <EasingDoubleKeyFrame KeyTime="0" Value="0"/>
-            				    <EasingDoubleKeyFrame KeyTime="0:0:0.3" Value="1"/>
-            			    </DoubleAnimationUsingKeyFrames>
-            		    </Storyboard>
-                    </Border.Resources>
-                	<i:Interaction.Triggers>
-                		<i:EventTrigger>
-                			<i:Interaction.Behaviors>
-                				<ei:ConditionBehavior>
-                					<ei:ConditionalExpression>
-                						<ei:ComparisonCondition LeftOperand="{Binding IsEnableInsertAnime}" RightOperand="True"/>
-                					</ei:ConditionalExpression>
-                				</ei:ConditionBehavior>
-                			</i:Interaction.Behaviors>
-                			<ei:ControlStoryboardAction Storyboard="{StaticResource feedinAnimeStoryboard}"/>
-                		</i:EventTrigger>
-                	</i:Interaction.Triggers>
-                    <StackPanel>
-                        <ItemsControl ItemsSource="{Binding Members}" />
-                    </StackPanel>
-                </Border>
+                <StackPanel x:Name="border" Margin="10" d:DataContext="{d:DesignData /SampleData/NotificationWithProfileViewModelSampleData.xaml}" d:DesignWidth="360" d:DesignHeight="720">
+            	    <StackPanel.Resources>
+            			<Storyboard x:Key="feedinAnimeStoryboard">
+            				<DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Opacity)" Storyboard.TargetName="border">
+            					<EasingDoubleKeyFrame KeyTime="0" Value="0"/>
+            					<EasingDoubleKeyFrame KeyTime="0:0:0.3" Value="1"/>
+            				</DoubleAnimationUsingKeyFrames>
+            			</Storyboard>
+            		</StackPanel.Resources>
+            		<i:Interaction.Triggers>
+            			<i:EventTrigger>
+            				<i:Interaction.Behaviors>
+            					<ei:ConditionBehavior>
+            						<ei:ConditionalExpression>
+            							<ei:ComparisonCondition LeftOperand="{Binding IsEnableInsertAnime}" RightOperand="True"/>
+            						</ei:ConditionalExpression>
+            					</ei:ConditionBehavior>
+            				</i:Interaction.Behaviors>
+            				<ei:ControlStoryboardAction Storyboard="{StaticResource feedinAnimeStoryboard}"/>
+            			</i:EventTrigger>
+            		</i:Interaction.Triggers>
+            		<Border BorderThickness="0,0,0,1" BorderBrush="LightGray" Padding="0,0,0,3" Margin="0">
+            			<TextBlock Style="{DynamicResource postTextStyle}"><Run FontWeight="Bold" Text="{Binding NoticeTitle}" /><LineBreak /><Run Text="{Binding NoticeText}" /></TextBlock>
+            		</Border>
+            		<ItemsControl ItemsSource="{Binding Members}" />
+            	</StackPanel>
             </DataTemplate>
             <DataTemplate DataType="{x:Type vm:ProfileRegisterViewModel}">
                 <Border Margin="0,5,0,5" BorderBrush="LightGray" BorderThickness="1" d:DesignWidth="300" d:DesignHeight="150">

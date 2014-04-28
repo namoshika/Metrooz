@@ -25,8 +25,8 @@ namespace Metrooz.ViewModel
             model_Updated(this, null);
             model.Updated += model_Updated;
         }
-
         int _memberCount;
+        string _noticeTitle, _noticeText;
         NotificationInfoWithActor _notificationModel;
         ProfileRegisterViewModel[] _members;
 
@@ -34,6 +34,16 @@ namespace Metrooz.ViewModel
         {
             get { return _memberCount; }
             set { Set(() => MemberCount, ref _memberCount, value); }
+        }
+        public string NoticeTitle
+        {
+            get { return _noticeTitle; }
+            set { Set(() => NoticeTitle, ref _noticeTitle, value); }
+        }
+        public string NoticeText
+        {
+            get { return _noticeText; }
+            set { Set(() => NoticeText, ref _noticeText, value); }
         }
         public ProfileRegisterViewModel[] Members
         {
@@ -43,8 +53,10 @@ namespace Metrooz.ViewModel
 
         void model_Updated(object sender, EventArgs e)
         {
-            _memberCount = _notificationModel.ActionLogs.Count;
-            _members = _notificationModel.ActionLogs
+            MemberCount = _notificationModel.ActionLogs.Count;
+            NoticeTitle = _notificationModel.Title;
+            NoticeText = (string.Empty + _notificationModel.Summary).Replace("\r", "").Replace("\n", "");
+            Members = _notificationModel.ActionLogs
                 .Select(obj => new ProfileRegisterViewModel(obj))
                 .ToArray();
         }
