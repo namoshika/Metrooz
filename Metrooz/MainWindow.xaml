@@ -497,7 +497,7 @@
                                 </Grid>
                             </ToggleButton>
                         </Border>
-                        <ctl:ExpandableListView x:Name="commentList" IsExpand="{Binding IsOpenedCommentList}" ItemsSource="{Binding Comments}" HorizontalContentAlignment="Stretch" />
+                        <ctl:ExpandableListView x:Name="commentList" IsExpanded="{Binding IsOpenedCommentList}" ItemsSource="{Binding Comments}" HorizontalContentAlignment="Stretch" />
                         <StackPanel x:Name="shareBoxPanel" FocusManager.IsFocusScope="True" KeyboardNavigation.TabNavigation="Local" FocusVisualStyle="{x:Null}">
                             <Border BorderBrush="LightGray" BorderThickness="1,0,1,1">
                                 <Grid>
