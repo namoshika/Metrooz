@@ -68,7 +68,7 @@ namespace Metrooz.ViewModel
             _name = model.Actor.Name;
             _linkUrl = model.Actor.ProfileUrl;
             DataCacheDictionary.DownloadImage(new Uri(model.Actor.IconImageUrl.Replace("$SIZE_SEGMENT", "s80-c-k")))
-                .ContinueWith(tsk => _profileIconUrl = tsk.Result);
+                .ContinueWith(tsk => ProfileIconUrl = tsk.Result);
         }
         string _name;
         Uri _linkUrl;
