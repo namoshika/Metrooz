@@ -7,6 +7,7 @@ using System.Reactive.Threading.Tasks;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 
 namespace Metrooz.ViewModel
 {
@@ -51,6 +52,12 @@ namespace Metrooz.ViewModel
                             img.StreamSource = mStrm;
                             img.EndInit();
                             img.Freeze();
+
+                            //メモリーリーク対策として駆動スレッドのDispatcherを毎回破棄するようにする
+                            //参考資料:
+                            // [バックグラウンド スレッドで UI 要素を作るとメモリリークする (WPF)]
+                            // http://grabacr.net/archives/1851
+                            Dispatcher.CurrentDispatcher.InvokeShutdown();
 
                             return img;
                         }
