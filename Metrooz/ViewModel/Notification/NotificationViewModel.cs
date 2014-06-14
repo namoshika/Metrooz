@@ -1,6 +1,5 @@
 ﻿using GalaSoft.MvvmLight;
 using SunokoLibrary.Web.GooglePlus;
-using SunokoLibrary.Web.GooglePlus.Primitive;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;

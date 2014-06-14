@@ -1,6 +1,5 @@
 ﻿using SunokoLibrary.Threading;
 using SunokoLibrary.Web.GooglePlus;
-using SunokoLibrary.Web.GooglePlus.Primitive;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +8,9 @@ using System.Threading.Tasks;
 
 namespace Metrooz.Model
 {
+    using SunokoLibrary.Web.GooglePlus.Primitive;
+    using SunokoLibrary.Web.GooglePlus.Utility;
+
     public class Account
     {
         public Account(IPlatformClientBuilder setting)
@@ -34,7 +36,11 @@ namespace Metrooz.Model
                     return true;
 
                 //G+APIライブラリの初期化を行う
-                PlusClient = await Builder.Build().ConfigureAwait(false);
+#if DEBUG
+                PlusClient = await Builder.Build(new[] { new DefaultAccessor(new ApiWrapperWithLogger()) }).ConfigureAwait(false);
+#else
+                PlusClient = await Builder.Build(new[] { new DefaultAccessor(new ApiWrapper()) }).ConfigureAwait(false);
+#endif
                 MyProfile = await PlusClient.People.GetProfileOfMeAsync(false).ConfigureAwait(false);
 
                 //各モジュールの初期化を行う

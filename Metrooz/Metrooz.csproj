@@ -235,6 +235,10 @@
       <Project>{37846c4e-2f87-46e9-b036-9569f422bf63}</Project>
       <Name>SnkLib.Platform</Name>
     </ProjectReference>
+    <ProjectReference Include="..\SnkLib.Web.GooglePlus\SnkLib.Utility\SnkLib.Utility.csproj">
+      <Project>{ace83677-56b2-4b3f-818a-ccf20dd28bcc}</Project>
+      <Name>SnkLib.Utility</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\WindowsIcons-license.txt" />

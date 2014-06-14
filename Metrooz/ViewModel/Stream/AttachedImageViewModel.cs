@@ -1,7 +1,6 @@
 ﻿using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using SunokoLibrary.Web.GooglePlus;
-using SunokoLibrary.Web.GooglePlus.Primitive;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -51,7 +50,7 @@ namespace Metrooz.ViewModel
         {
             var img = await DataCacheDictionary.DownloadImage(
                 new Uri(attachedAlbumModel.Image.ImageUrl.Replace("$SIZE_SEGMENT", option))).ConfigureAwait(false);
-            return new AttachedImageViewModel(attachedAlbumModel, img);
+            return img != null ? new AttachedImageViewModel(attachedAlbumModel, img) : null;
         }
     }
 }
