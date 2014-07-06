@@ -154,12 +154,8 @@ namespace Metrooz.Model
                     var srcIdx = Items.IndexOf(srcItem);
                     if (srcIdx > -1)
                         Items.Move(srcIdx, itemsIdx);
-                    else if ((srcItem.Type & (
-                        NotificationFlag.CircleIn | NotificationFlag.CircleAddBack | NotificationFlag.DirectMessage | NotificationFlag.Followup |
-                        NotificationFlag.Mension | NotificationFlag.SubscriptionCommunitiy | NotificationFlag.PlusOne | NotificationFlag.Reshare | NotificationFlag.Response)) > 0)
-                        Items.Insert(itemsIdx, srcItem);
                     else
-                        continue;
+                        Items.Insert(itemsIdx, srcItem);
                     itemsIdx++;
                 }
                 for (var i = itemsIdx; i < Items.Count; i++)
@@ -186,7 +182,9 @@ namespace Metrooz.Model
             try
             {
                 _latestUpdateDate = DateTime.MinValue;
-                foreach (var item in Items.ToArray())
+                foreach (var item in Items.ToArray().Where(inf => (inf.Type & (
+                    NotificationFlag.CircleIn | NotificationFlag.CircleAddBack | NotificationFlag.DirectMessage | NotificationFlag.Followup |
+                    NotificationFlag.Mension | NotificationFlag.SubscriptionCommunitiy | NotificationFlag.PlusOne | NotificationFlag.Reshare | NotificationFlag.Response)) != 0))
                     await item.MarkAsReadAsync();
                 return true;
             }

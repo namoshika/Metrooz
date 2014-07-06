@@ -181,7 +181,7 @@ namespace Metrooz.ViewModel
             else if (item is NotificationInfoWithActor)
                 itemVM = new NotificationWithProfileViewModel((NotificationInfoWithActor)item, insertTime);
             else
-                throw new ArgumentException(string.Format("引数itemは型:{0}に対応していません。", item.GetType()));
+                itemVM = new UnknownTypeNotificationViewModel(item, insertTime);
             return itemVM;
         }
 

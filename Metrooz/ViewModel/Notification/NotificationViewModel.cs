@@ -33,4 +33,10 @@ namespace Metrooz.ViewModel
             set { Set(() => DisplayIconUrl, ref _displayIconUrl, value); }
         }
     }
+    public class UnknownTypeNotificationViewModel : NotificationViewModel
+    {
+        public UnknownTypeNotificationViewModel(NotificationInfo info, DateTime insertTime) : base(insertTime)
+        { _model = info; }
+        NotificationInfo _model;
+    }
 }
