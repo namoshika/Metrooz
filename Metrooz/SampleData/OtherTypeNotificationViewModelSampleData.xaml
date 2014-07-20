@@ -1,0 +1,1 @@
+﻿<ViewModel:OtherTypeNotificationViewModel xmlns:ViewModel="clr-namespace:Metrooz.ViewModel" IsEnableInsertAnime="False" IsInDesignMode="False" IsInDesignModeStatic="True" Message="未対応通知。ブラウザで確認して下さい。"/>

@@ -799,30 +799,30 @@
             		<ItemsControl ItemsSource="{Binding Members}" />
             	</StackPanel>
             </DataTemplate>
-            <DataTemplate DataType="{x:Type vm:UnknownTypeNotificationViewModel}">
-                <Grid x:Name="border" Margin="10">
-                    <Grid.Resources>
-                        <Storyboard x:Key="feedinAnimeStoryboard">
-                            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Opacity)" Storyboard.TargetName="border">
-                                <EasingDoubleKeyFrame KeyTime="0" Value="0"/>
-                                <EasingDoubleKeyFrame KeyTime="0:0:0.3" Value="1"/>
-                            </DoubleAnimationUsingKeyFrames>
-                        </Storyboard>
-                    </Grid.Resources>
-                    <i:Interaction.Triggers>
-                        <i:EventTrigger>
-                            <i:Interaction.Behaviors>
-                                <ei:ConditionBehavior>
-                                    <ei:ConditionalExpression>
-                                        <ei:ComparisonCondition LeftOperand="{Binding IsEnableInsertAnime}" RightOperand="True"/>
-                                    </ei:ConditionalExpression>
-                                </ei:ConditionBehavior>
-                            </i:Interaction.Behaviors>
-                            <ei:ControlStoryboardAction Storyboard="{StaticResource feedinAnimeStoryboard}"/>
-                        </i:EventTrigger>
-                    </i:Interaction.Triggers>
-                    <TextBlock Foreground="Gray">未対応通知。ブラウザで確認して下さい。</TextBlock>
-                </Grid>
+            <DataTemplate DataType="{x:Type vm:OtherTypeNotificationViewModel}">
+                <Grid x:Name="border" Margin="10" d:DataContext="{d:DesignData /SampleData/OtherTypeNotificationViewModelSampleData.xaml}">
+            		<Grid.Resources>
+            			<Storyboard x:Key="feedinAnimeStoryboard">
+            				<DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Opacity)" Storyboard.TargetName="border">
+            					<EasingDoubleKeyFrame KeyTime="0" Value="0"/>
+            					<EasingDoubleKeyFrame KeyTime="0:0:0.3" Value="1"/>
+            				</DoubleAnimationUsingKeyFrames>
+            			</Storyboard>
+            		</Grid.Resources>
+            		<i:Interaction.Triggers>
+            			<i:EventTrigger>
+            				<i:Interaction.Behaviors>
+            					<ei:ConditionBehavior>
+            						<ei:ConditionalExpression>
+            							<ei:ComparisonCondition LeftOperand="{Binding IsEnableInsertAnime}" RightOperand="True"/>
+            						</ei:ConditionalExpression>
+            					</ei:ConditionBehavior>
+            				</i:Interaction.Behaviors>
+            				<ei:ControlStoryboardAction Storyboard="{StaticResource feedinAnimeStoryboard}"/>
+            			</i:EventTrigger>
+            		</i:Interaction.Triggers>
+            		<TextBlock x:Name="textBlock" Foreground="Gray" Text="{Binding Message}"><Run Text="AAAAAA"/></TextBlock>
+            	</Grid>
             </DataTemplate>
             <DataTemplate DataType="{x:Type vm:ProfileRegisterViewModel}">
                 <Border Margin="0,5,0,5" BorderBrush="LightGray" BorderThickness="1" d:DesignWidth="300" d:DesignHeight="150">

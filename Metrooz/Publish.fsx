@@ -8,6 +8,7 @@ if isReleaseBuild then
     let binDir = prjDir + "\\bin\\Release"
     let pubDir = prjDir + "\\Publish"
     let appName = "Metrooz"
+    let dirSepChar = Path.DirectorySeparatorChar.ToString()
 
     //Cleaning Dir
     let pdbAndXmlFiles =
@@ -25,7 +26,7 @@ if isReleaseBuild then
         use zipArch = new ZipArchive(zipStrm, ZipArchiveMode.Create)
         targetFilePaths |> Seq.iter(fun path ->
             use fileStrm = File.OpenRead(path)
-            let entryPath = path.Substring((targetDirPath + Path.DirectorySeparatorChar.ToString()).Length)
+            let entryPath = appName + dirSepChar + path.Substring((targetDirPath + dirSepChar).Length)
             let entry = zipArch.CreateEntry(entryPath)
             use entryStrm = entry.Open()
             fileStrm.CopyTo(entryStrm)
@@ -33,4 +34,4 @@ if isReleaseBuild then
     ignore(Directory.CreateDirectory(pubDir))
     Directory.EnumerateFiles(binDir, "*", SearchOption.AllDirectories)
     |> Seq.where(fun path -> path.Contains(".vshost.exe") = false)
-    |> dirToZip (pubDir + "\\" + appName + ".zip") binDir
+    |> dirToZip (pubDir + dirSepChar + appName + ".zip") binDir

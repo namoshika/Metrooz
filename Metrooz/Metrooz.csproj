@@ -16,7 +16,7 @@
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <WarningLevel>4</WarningLevel>
-    <ExpressionBlendVersion>12.0.41212.0</ExpressionBlendVersion>
+    <ExpressionBlendVersion>12.0.50429.0</ExpressionBlendVersion>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -228,6 +228,7 @@
     <DesignData Include="SampleData\MainViewModelSampleData.xaml" />
     <DesignData Include="SampleData\NotificationWithActivityViewModelSampleData.xaml" />
     <DesignData Include="SampleData\NotificationWithProfileViewModelSampleData.xaml" />
+    <DesignData Include="SampleData\OtherTypeNotificationViewModelSampleData.xaml" />
     <DesignData Include="SampleData\ResumeStreamButtonViewModelSampleData.xaml" />
   </ItemGroup>
   <ItemGroup>
