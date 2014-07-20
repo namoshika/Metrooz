@@ -1,4 +1,4 @@
-﻿using GalaSoft.MvvmLight.Messaging;
+﻿using Livet.Messaging;
 using MahApps.Metro.Controls;
 using MahApps.Metro.Controls.Dialogs;
 using SunokoLibrary.Web.GooglePlus;
@@ -17,7 +17,7 @@ using System.Windows.Shapes;
 
 namespace Metrooz
 {
-    using Metrooz.ViewModel;
+    using Metrooz.ViewModels;
 
     /// <summary>
     /// MainWindow.xaml の相互作用ロジック
@@ -26,22 +26,7 @@ namespace Metrooz
     {
         public MainWindow()
         {
-            Messenger.Default.Register<DialogOptionInfo>(this, Recieved_DialogMessage);
             InitializeComponent();
-        }
-
-        protected override void OnClosed(EventArgs e)
-        {
-            ViewModel.ViewModelLocator.Cleanup();
-            base.OnClosed(e);
-        }
-        void Recieved_DialogMessage(DialogOptionInfo message)
-        {
-            Dispatcher.InvokeAsync(async () =>
-                {
-                    var res = await this.ShowMessageAsync(message.Title, message.Message, message.Style, message.Settings);
-                    message.CallbackTaskSource.SetResult(res);
-                });
         }
     }
 }

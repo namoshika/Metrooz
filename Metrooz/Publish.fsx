@@ -11,6 +11,7 @@ if isReleaseBuild then
     let dirSepChar = Path.DirectorySeparatorChar.ToString()
 
     //Cleaning Dir
+    //Debug
     let pdbAndXmlFiles =
         [yield! Directory.EnumerateFiles(binDir, "*.dll", SearchOption.AllDirectories)
          yield! Directory.EnumerateFiles(binDir, "*.exe", SearchOption.AllDirectories)]
@@ -19,6 +20,8 @@ if isReleaseBuild then
         |> Seq.where(fun path -> File.Exists(path))
     for filePath in pdbAndXmlFiles do
         File.Delete(filePath)
+    //Blend
+    Directory.Delete(binDir + "\\SampleData", true)
 
     //Publish
     let rec dirToZip zipPath targetDirPath targetFilePaths=

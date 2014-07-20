@@ -76,26 +76,15 @@
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="GalaSoft.MvvmLight, Version=4.4.32.26491, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Portable.MvvmLightLibs.4.4.32.1\lib\net45\GalaSoft.MvvmLight.dll</HintPath>
-    </Reference>
-    <Reference Include="GalaSoft.MvvmLight.Extras, Version=4.4.32.26494, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Portable.MvvmLightLibs.4.4.32.1\lib\net45\GalaSoft.MvvmLight.Extras.dll</HintPath>
-    </Reference>
-    <Reference Include="GalaSoft.MvvmLight.Platform, Version=4.4.32.26493, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Portable.MvvmLightLibs.4.4.32.1\lib\net45\GalaSoft.MvvmLight.Platform.dll</HintPath>
+    <Reference Include="Livet">
+      <HintPath>..\packages\LivetCask.1.1.0.0\lib\net45\Livet.dll</HintPath>
     </Reference>
     <Reference Include="MahApps.Metro, Version=0.13.1.0, Culture=neutral, PublicKeyToken=f4fb5a3c4d1e5b4f, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\MahApps.Metro.0.13.1.0\lib\net45\MahApps.Metro.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.Expression.Interactions, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
-    <Reference Include="Microsoft.Practices.ServiceLocation, Version=1.3.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\CommonServiceLocator.1.3\lib\portable-net4+sl5+netcore45+wpa81+wp8\Microsoft.Practices.ServiceLocation.dll</HintPath>
+    <Reference Include="Microsoft.Expression.Interactions, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\LivetCask.1.1.0.0\lib\net45\Microsoft.Expression.Interactions.dll</HintPath>
     </Reference>
     <Reference Include="PresentationFramework.Aero" />
     <Reference Include="System" />
@@ -127,7 +116,7 @@
       <HintPath>..\packages\Rx-PlatformServices.2.2.4\lib\net45\System.Reactive.PlatformServices.dll</HintPath>
     </Reference>
     <Reference Include="System.Windows.Interactivity, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\MahApps.Metro.0.13.1.0\lib\net45\System.Windows.Interactivity.dll</HintPath>
+      <HintPath>..\packages\LivetCask.1.1.0.0\lib\net45\System.Windows.Interactivity.dll</HintPath>
     </Reference>
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
@@ -147,6 +136,8 @@
     </ApplicationDefinition>
     <Compile Include="Controls\ExpandableListView.cs" />
     <Compile Include="Controls\FixedDataStateBehavior.cs" />
+    <Compile Include="Controls\NeoLivetDataTrigger.cs" />
+    <Compile Include="Controls\MetroDialogMessageAction.cs" />
     <Compile Include="Controls\ScrollBehavior.cs" />
     <Compile Include="Controls\InlineBehavior.cs" />
     <Compile Include="Controls\WheelScrollKillBehavior.cs" />
@@ -155,32 +146,33 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
-    <Compile Include="ViewModel\DataCacheDictionary.cs" />
-    <Compile Include="Model\NotificationManager.cs" />
-    <Compile Include="ViewModel\Notification\NotificationViewModel.cs" />
-    <Compile Include="ViewModel\Notification\NotificationWithProfileViewModel.cs" />
-    <Compile Include="ViewModel\Notification\NotificationWithActivityViewModel.cs" />
-    <Compile Include="ViewModel\ObservableCollectionEx.cs" />
-    <Compile Include="Model\AccountManager.cs" />
-    <Compile Include="Model\Stream\Activity.cs" />
-    <Compile Include="Model\Account.cs" />
-    <Compile Include="ViewModel\MainViewModel.cs" />
-    <Compile Include="ViewModel\Stream\AttachedActivityViewModel.cs" />
-    <Compile Include="ViewModel\Stream\AttachedAlbumViewModel.cs" />
-    <Compile Include="ViewModel\Notification\NotificationManagerViewModel.cs" />
-    <Compile Include="ViewModel\Stream\AttachedContentViewModel.cs" />
-    <Compile Include="ViewModel\Stream\AttachedImageViewModel.cs" />
-    <Compile Include="ViewModel\Stream\AttachedLinkViewModel.cs" />
-    <Compile Include="Model\Stream\Comment.cs" />
-    <Compile Include="Model\Stream\Stream.cs" />
-    <Compile Include="Model\Stream\StreamManager.cs" />
-    <Compile Include="ViewModel\Stream\ActivityViewModel.cs" />
-    <Compile Include="ViewModel\AccountViewModel.cs" />
-    <Compile Include="ViewModel\Stream\AttachedYouTubeViewModel.cs" />
-    <Compile Include="ViewModel\Stream\StreamViewModel.cs" />
-    <Compile Include="ViewModel\Stream\CommentViewModel.cs" />
-    <Compile Include="ViewModel\Stream\StreamManagerViewModel.cs" />
-    <Compile Include="ViewModel\ViewModelLocator.cs" />
+    <Compile Include="SampleData\DataLoader.cs" />
+    <Compile Include="ViewModels\DataCacheDictionary.cs" />
+    <Compile Include="Models\NotificationManager.cs" />
+    <Compile Include="ViewModels\Notification\NotificationViewModel.cs" />
+    <Compile Include="ViewModels\Notification\NotificationWithProfileViewModel.cs" />
+    <Compile Include="ViewModels\Notification\NotificationWithActivityViewModel.cs" />
+    <Compile Include="ViewModels\ObservableCollectionEx.cs" />
+    <Compile Include="Models\AccountManager.cs" />
+    <Compile Include="Models\Stream\Activity.cs" />
+    <Compile Include="Models\Account.cs" />
+    <Compile Include="ViewModels\MainViewModel.cs" />
+    <Compile Include="ViewModels\Stream\AttachedActivityViewModel.cs" />
+    <Compile Include="ViewModels\Stream\AttachedAlbumViewModel.cs" />
+    <Compile Include="ViewModels\Notification\NotificationManagerViewModel.cs" />
+    <Compile Include="ViewModels\Stream\AttachedContentViewModel.cs" />
+    <Compile Include="ViewModels\Stream\AttachedImageViewModel.cs" />
+    <Compile Include="ViewModels\Stream\AttachedLinkViewModel.cs" />
+    <Compile Include="Models\Stream\Comment.cs" />
+    <Compile Include="Models\Stream\Stream.cs" />
+    <Compile Include="Models\Stream\StreamManager.cs" />
+    <Compile Include="ViewModels\Stream\ActivityViewModel.cs" />
+    <Compile Include="ViewModels\AccountViewModel.cs" />
+    <Compile Include="ViewModels\Stream\AttachedYouTubeViewModel.cs" />
+    <Compile Include="ViewModels\Stream\StreamViewModel.cs" />
+    <Compile Include="ViewModels\Stream\CommentViewModel.cs" />
+    <Compile Include="ViewModels\Stream\StreamManagerViewModel.cs" />
+    <Compile Include="ViewModels\ViewModelUtility.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -217,22 +209,20 @@
     <Resource Include="Resources\Entypo.ttf" />
   </ItemGroup>
   <ItemGroup>
-    <DesignData Include="SampleData\AccountViewModelSampleData.xaml" />
-    <DesignData Include="SampleData\ActivityViewModelSampleData.xaml" />
-    <DesignData Include="SampleData\AttachedAlbumViewModelSampleData.xaml" />
-    <DesignData Include="SampleData\AttachedLinkViewModelSampleData.xaml" />
-    <DesignData Include="SampleData\CommentViewModelSampleData.xaml" />
-    <DesignData Include="SampleData\Files\pic00.jpg" />
-    <DesignData Include="SampleData\Files\pic01.jpg" />
-    <DesignData Include="SampleData\Files\pic02.jpg" />
-    <DesignData Include="SampleData\MainViewModelSampleData.xaml" />
-    <DesignData Include="SampleData\NotificationWithActivityViewModelSampleData.xaml" />
-    <DesignData Include="SampleData\NotificationWithProfileViewModelSampleData.xaml" />
-    <DesignData Include="SampleData\OtherTypeNotificationViewModelSampleData.xaml" />
-    <DesignData Include="SampleData\ResumeStreamButtonViewModelSampleData.xaml" />
+    <None Include="SampleData\Files\pic00.jpg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="SampleData\Files\pic01.jpg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="SampleData\Files\pic02.jpg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
-    <DesignData Include="SampleData\Files\accountIcon00.png" />
+    <None Include="SampleData\Files\accountIcon00.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\app.ico" />

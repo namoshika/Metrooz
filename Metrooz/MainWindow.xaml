@@ -1,16 +1,21 @@
-﻿<controls:MetroWindow xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+﻿<metro:MetroWindow xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
         xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions"
-        xmlns:vm="clr-namespace:Metrooz.ViewModel"
+        xmlns:livet="http://schemas.livet-mvvm.net/2011/wpf"
+        xmlns:vm="clr-namespace:Metrooz.ViewModels"
         xmlns:ctl="clr-namespace:Metrooz.Controls"
-        xmlns:controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+        xmlns:metro="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008" mc:Ignorable="d"
         x:Class="Metrooz.MainWindow"
-        Title="Metrooz" TitleCaps="False" Height="700" Width="530" x:Name="mainWindow"
-        GlowBrush="{StaticResource AccentColorBrush}" Style="{DynamicResource CleanWindowStyleKey}" WindowTransitionsEnabled="False"
-        DataContext="{Binding Main, Source={StaticResource Locator}}">
+        Title="Metrooz" TitleCaps="False" Height="700" Width="530" x:Name="mainWindow" DataContext="{StaticResource mainVM}"
+        GlowBrush="{StaticResource AccentColorBrush}" Style="{DynamicResource CleanWindowStyleKey}" WindowTransitionsEnabled="False">
+    <i:Interaction.Triggers>
+        <i:EventTrigger EventName="Loaded">
+            <livet:LivetCallMethodAction MethodName="Activate" MethodTarget="{Binding}" />
+        </i:EventTrigger>
+    </i:Interaction.Triggers>
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -18,10 +23,9 @@
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/FlatButton.xaml" />
                 <ResourceDictionary Source="Resources/Icons.xaml"/>
             </ResourceDictionary.MergedDictionaries>
-
+            
             <BooleanToVisibilityConverter x:Key="booleanToVisibilityConverter" />
             <vm:IntToVisibilityConverter x:Key="intToVisibilityConverter" />
-            <vm:IntToIntConverter x:Key="intToIntConverter" />
             <VisualBrush x:Key="settingIconBrushKey" Visual="{DynamicResource appbar_settings}" />
             <VisualBrush x:Key="playIconBrushKey" Visual="{DynamicResource appbar_control_play}" />
             <Style TargetType="{x:Type Button}">
@@ -105,18 +109,18 @@
                 <Setter Property="IsSelected" Value="{Binding IsActive, Mode=OneWayToSource}" />
                 <Setter Property="Background" Value="Transparent" />
                 <Setter Property="Header" Value="{Binding Name}" />
-                <Setter Property="controls:ControlsHelper.HeaderFontSize" Value="13" />
+                <Setter Property="metro:ControlsHelper.HeaderFontSize" Value="13" />
             </Style>
             <Style x:Key="notificationStyle" TargetType="{x:Type TabItem}">
                 <Setter Property="IsSelected" Value="{Binding IsActive, Mode=OneWayToSource}" />
             </Style>
 
             <DataTemplate x:Key="accountListTemplate" DataType="{x:Type vm:MainViewModel}">
-                <ListBox DockPanel.Dock="Left" Margin="5,10,0,0" Background="Transparent" DataContext="{Binding Main, Source={StaticResource Locator}}" SelectedIndex="{Binding SelectedAccountIndex, Mode=TwoWay}" ItemsSource="{Binding Accounts}" ItemTemplate="{DynamicResource accountListItemTemplate}" d:DataContext="{d:DesignData /SampleData/MainViewModelSampleData.xaml}" d:DesignWidth="300" d:DesignHeight="350" />
+                <ListBox DockPanel.Dock="Left" Margin="5,10,0,0" Background="Transparent" DataContext="{Binding DataContext, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type metro:Flyout}}}" ItemsSource="{Binding Accounts}" SelectedIndex="{Binding SelectedAccountIndex, Mode=OneWay}" ItemTemplate="{DynamicResource accountListItemTemplate}" d:DesignWidth="300" d:DesignHeight="350" />
             </DataTemplate>
             <DataTemplate x:Key="accountListItemTemplate" DataType="{x:Type vm:AccountViewModel}">
-                <Button Command="{Binding ActivateCommand}" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch" Style="{StaticResource iconButtonStyle}">
-                    <DockPanel Margin="5" d:DataContext="{d:DesignData /SampleData/AccountViewModelSampleData.xaml}">
+                <Button Command="{Binding ActivateCommand}" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch" Style="{StaticResource iconButtonStyle}" d:DataContext="{d:DesignInstance Type={x:Type vm:AccountViewModel}, IsDesignTimeCreatable=True}">
+                    <DockPanel Margin="5">
                         <Image DockPanel.Dock="Left" Width="35" Height="35" Margin="0" HorizontalAlignment="Left" Source="{Binding UserIconUrl}" VerticalAlignment="Center" />
                         <TextBlock TextWrapping="Wrap" DockPanel.Dock="Top" VerticalAlignment="Center" Margin="10,0,5,0">
                             <Run Text="{Binding UserName}" Foreground="White" />
@@ -135,10 +139,15 @@
                 </DataTemplate.Triggers>
             </DataTemplate>
             <DataTemplate x:Key="accountTemplate" DataType="{x:Type vm:AccountViewModel}">
-                <Grid d:DesignWidth="450" d:DesignHeight="550" d:DataContext="{d:DesignData /SampleData/AccountViewModelSampleData.xaml}">
+                <Grid d:DesignWidth="450" d:DesignHeight="550" d:DataContext="{d:DesignInstance Type={x:Type vm:AccountViewModel}, IsDesignTimeCreatable=True}">
                     <i:Interaction.Behaviors>
                         <ctl:FixedDataStateBehavior Binding="{Binding IsLoading}" Value="True" TrueState="ProggressBusy" FalseState="ProggressIddle" />
                     </i:Interaction.Behaviors>
+                    <i:Interaction.Triggers>
+                        <livet:InteractionMessageTrigger Messenger="{Binding Messenger}" MessageKey="Account/Dialog">
+                            <ctl:MetroDialogMessageAction />
+                        </livet:InteractionMessageTrigger>
+                    </i:Interaction.Triggers>
                     <VisualStateManager.VisualStateGroups>
                         <VisualStateGroup x:Name="ProggressStates">
                             <VisualState x:Name="ProggressIddle">
@@ -173,23 +182,23 @@
                     		</VisualState>
                     	</VisualStateGroup>
                 	</VisualStateManager.VisualStateGroups>
-                	<controls:MetroContentControl>
+                    <metro:MetroContentControl>
                 		<Grid>
                             <Image HorizontalAlignment="Left" VerticalAlignment="Top" Width="38" Height="38" Margin="20,4,0,0" Source="{Binding UserIconUrl}" />
-                            <controls:MetroAnimatedSingleRowTabControl Margin="10,12,0,0" SelectedIndex="{Binding SelectedIndex}" VerticalAlignment="Stretch" Padding="0" TabStripMargin="50,0,0,0">
-                                <controls:MetroTabItem Header="Stream" Padding="0,0,6,0" IsSelected="{Binding IsActive, Mode=OneWayToSource}" DataContext="{Binding Stream}">
-                                    <controls:MetroAnimatedSingleRowTabControl Margin="0,-5,0,0" ItemsSource="{Binding Items}" SelectedIndex="{Binding SelectedIndex}" ItemContainerStyle="{DynamicResource streamStyle}" ContentTemplate="{DynamicResource streamTemplate}" TabStripMargin="5,0,0,0" />
-                				</controls:MetroTabItem>
-                                <controls:MetroTabItem Padding="0,0,6,0" DataContext="{Binding Notification}" IsSelected="{Binding IsActive}">
-                                    <controls:MetroTabItem.Header>
+                            <metro:MetroAnimatedSingleRowTabControl Margin="10,12,0,0" VerticalAlignment="Stretch" Padding="0" TabStripMargin="50,0,0,0">
+                                <metro:MetroTabItem Header="Stream" Padding="0,0,6,0" IsSelected="{Binding IsActive, Mode=OneWayToSource}" DataContext="{Binding Stream}">
+                                    <metro:MetroAnimatedSingleRowTabControl Margin="0,-5,0,0" ItemsSource="{Binding Items}" SelectedIndex="{Binding SelectedIndex, Mode=TwoWay}" ItemContainerStyle="{DynamicResource streamStyle}" ContentTemplate="{DynamicResource streamTemplate}" TabStripMargin="5,0,0,0" />
+                				</metro:MetroTabItem>
+                                <metro:MetroTabItem Padding="0,0,6,0" DataContext="{Binding Notification}" IsSelected="{Binding IsActive, Mode=OneWayToSource}">
+                                    <metro:MetroTabItem.Header>
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock Text="Notification" FontSize="26.67" Foreground="{Binding (TextElement.Foreground), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ContentPresenter}}}" />
                                             <TextBlock Text="{Binding UnreadItemCount}" FontSize="18" Foreground="{StaticResource AccentColorBrush}" Visibility="{Binding ExistUnreadItem, Converter={StaticResource booleanToVisibilityConverter}}" />
                                         </StackPanel>
-                                    </controls:MetroTabItem.Header>
-                                    <controls:MetroAnimatedSingleRowTabControl Margin="0,-5,0,0" ItemsSource="{Binding Items}" SelectedIndex="{Binding SelectedIndex}" ItemContainerStyle="{DynamicResource streamStyle}" ContentTemplate="{DynamicResource notificationTemplate}" TabStripMargin="5,0,0,0" />
-                                </controls:MetroTabItem>
-                			</controls:MetroAnimatedSingleRowTabControl>
+                                    </metro:MetroTabItem.Header>
+                                    <metro:MetroAnimatedSingleRowTabControl Margin="0,-5,0,0" ItemsSource="{Binding Items}" SelectedIndex="{Binding SelectedIndex, Mode=TwoWay}" ItemContainerStyle="{DynamicResource streamStyle}" ContentTemplate="{DynamicResource notificationTemplate}" TabStripMargin="5,0,0,0" />
+                                </metro:MetroTabItem>
+                			</metro:MetroAnimatedSingleRowTabControl>
                 			<Button Width="Auto" Margin="63,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Command="{Binding OpenAccountListCommand}" Style="{DynamicResource iconButtonStyle}">
                 				<StackPanel Margin="0" Orientation="Horizontal">
                 					<TextBlock Foreground="DarkGray" Style="{DynamicResource postTextStyle}" MinWidth="50" Margin="0,0,2,0" Text="{Binding UserName}" />
@@ -197,9 +206,9 @@
                 				</StackPanel>
                 			</Button>
                 		</Grid>
-                	</controls:MetroContentControl>
+                	</metro:MetroContentControl>
                 	<Border x:Name="border" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="White" d:IsHidden="True">
-                		<controls:ProgressRing x:Name="progressRing" HorizontalAlignment="Stretch" Height="40" VerticalAlignment="Stretch" Width="40" IsActive="True"/>
+                        <metro:ProgressRing x:Name="progressRing" HorizontalAlignment="Stretch" Height="40" VerticalAlignment="Stretch" Width="40" IsActive="True"/>
                 	</Border>
                     <Rectangle Height="42" Width="10" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,8,0,0">
                         <i:Interaction.Triggers>
@@ -216,127 +225,128 @@
             <DataTemplate x:Key="streamTemplate" DataType="{x:Type vm:StreamViewModel}">
                 <DataTemplate.Resources>
                     <DataTemplate DataType="{x:Type vm:ResumeButtonViewModel}">
-                        <Button Margin="0" Padding="10" VerticalAlignment="Center" Command="{Binding ResumeCommand}" Style="{DynamicResource iconButtonStyle}" Background="LightGreen" d:DataContext="{d:DesignData /SampleData/ResumeStreamButtonViewModelSampleData.xaml}">
-                            <TextBlock Foreground="#FF4CA84C" Text="{Binding NewItemCount, StringFormat='新着{0}件。表示する場合はここを押してください。'}" />
+                        <Button Margin="0" Padding="10" VerticalAlignment="Center" Command="{Binding ClickCommand}" Style="{DynamicResource iconButtonStyle}">
+                            <TextBlock Foreground="Gray">
+                                <Run Text="新着" />
+                                <Run Text="{Binding UnreadActivityCount}" Foreground="{StaticResource AccentColorBrush}" />
+                                <Run Text="件。表示する場合はここを押してください。" />
+                            </TextBlock>
                         </Button>
                     </DataTemplate>
                 </DataTemplate.Resources>
-                <Grid d:DesignWidth="400" d:DesignHeight="300">
-            		<i:Interaction.Behaviors>
-                        <ctl:FixedDataStateBehavior Binding="{Binding DataContext.IsConnected, Mode=OneWay, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Grid}}}" Value="True" TrueState="Connected" FalseState="Disconnected"/>
-                        <ctl:FixedDataStateBehavior Binding="{Binding DataContext.IsLoading, Mode=OneWay, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Grid}}}" Value="True" TrueState="ProggressBusy" FalseState="ProggressIddle"/>
-                        <ctl:FixedDataStateBehavior Binding="{Binding DataContext.IsIniting, Mode=OneWay, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Grid}}}" Value="True" TrueState="RenderBusy" FalseState="RenderIddle"/>
-            		</i:Interaction.Behaviors>
-            		<VisualStateManager.VisualStateGroups>
-            			<VisualStateGroup x:Name="ProggressStates">
-            				<VisualState x:Name="ProggressIddle">
-            					<Storyboard>
-            						<BooleanAnimationUsingKeyFrames Storyboard.TargetProperty="(ProgressBar.IsIndeterminate)" Storyboard.TargetName="metroProgressBar">
-            							<DiscreteBooleanKeyFrame KeyTime="0:0:0.3" Value="False"/>
-            						</BooleanAnimationUsingKeyFrames>
-            						<ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Visibility)" Storyboard.TargetName="border">
-            							<DiscreteObjectKeyFrame KeyTime="0:0:0.3" Value="{x:Static Visibility.Collapsed}"/>
-            						</ObjectAnimationUsingKeyFrames>
-            						<DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Opacity)" Storyboard.TargetName="metroProgressBar">
-            							<EasingDoubleKeyFrame KeyTime="0" Value="1"/>
-            							<EasingDoubleKeyFrame KeyTime="0:0:0.3" Value="0"/>
-            						</DoubleAnimationUsingKeyFrames>
-            					</Storyboard>
-            				</VisualState>
-            				<VisualState x:Name="ProggressBusy">
-            					<Storyboard>
-            						<BooleanAnimationUsingKeyFrames Storyboard.TargetProperty="(ProgressBar.IsIndeterminate)" Storyboard.TargetName="metroProgressBar">
-            							<DiscreteBooleanKeyFrame KeyTime="0" Value="True"/>
-            						</BooleanAnimationUsingKeyFrames>
-            						<ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Visibility)" Storyboard.TargetName="border">
-            							<DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Visible}"/>
-            						</ObjectAnimationUsingKeyFrames>
-            					</Storyboard>
-            				</VisualState>
-            			</VisualStateGroup>
-            			<VisualStateGroup x:Name="StreamStates">
-            				<VisualState x:Name="Connected">
-            					<Storyboard>
-            						<ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Visibility)" Storyboard.TargetName="button">
-            							<DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Collapsed}"/>
-            						</ObjectAnimationUsingKeyFrames>
-            					</Storyboard>
-            				</VisualState>
-            				<VisualState x:Name="Disconnected">
-            					<Storyboard>
-            						<ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Visibility)" Storyboard.TargetName="button">
-            							<DiscreteObjectKeyFrame KeyTime="0">
-            								<DiscreteObjectKeyFrame.Value>
-            									<Visibility>Visible</Visibility>
-            								</DiscreteObjectKeyFrame.Value>
-            							</DiscreteObjectKeyFrame>
-            						</ObjectAnimationUsingKeyFrames>
-            					</Storyboard>
-            				</VisualState>
-            			</VisualStateGroup>
-            			<VisualStateGroup x:Name="RenderingStates">
-            				<VisualStateGroup.Transitions>
-            					<VisualTransition GeneratedDuration="0" To="RenderBusy">
-            						<Storyboard>
-                                        <DoubleAnimation Duration="0:0:0.15" To="0" Storyboard.TargetProperty="(UIElement.Opacity)" Storyboard.TargetName="listBox" From="1"/>
-                                        <DoubleAnimation Duration="0:0:0.15" To="0" Storyboard.TargetProperty="(UIElement.Opacity)" Storyboard.TargetName="button" From="1"/>
-            						</Storyboard>
-            					</VisualTransition>
-            					<VisualTransition From="RenderBusy" GeneratedDuration="0">
-            						<Storyboard>
-            							<DoubleAnimation Duration="0:0:0.15" Storyboard.TargetProperty="(UIElement.Opacity)" Storyboard.TargetName="listBox" From="0" To="1"/>
-            							<DoubleAnimation Duration="0:0:0.15" Storyboard.TargetProperty="(UIElement.Opacity)" Storyboard.TargetName="button" From="0" To="1"/>
-            						</Storyboard>
-            					</VisualTransition>
-            				</VisualStateGroup.Transitions>
-            				<VisualState x:Name="RenderIddle">
-            					<Storyboard>
-            						<DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Opacity)" Storyboard.TargetName="listBox">
-            							<EasingDoubleKeyFrame KeyTime="0" Value="1"/>
-            						</DoubleAnimationUsingKeyFrames>
-            						<DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Opacity)" Storyboard.TargetName="button">
-            							<EasingDoubleKeyFrame KeyTime="0" Value="1"/>
-            						</DoubleAnimationUsingKeyFrames>
-            					</Storyboard>
-            				</VisualState>
-            				<VisualState x:Name="RenderBusy">
-            					<Storyboard>
-            						<DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Opacity)" Storyboard.TargetName="listBox">
-            							<EasingDoubleKeyFrame KeyTime="0" Value="0"/>
-            						</DoubleAnimationUsingKeyFrames>
-            						<DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Opacity)" Storyboard.TargetName="button">
-            							<EasingDoubleKeyFrame KeyTime="0" Value="0"/>
-            						</DoubleAnimationUsingKeyFrames>
-            					</Storyboard>
-            				</VisualState>
-            			</VisualStateGroup>
-            		</VisualStateManager.VisualStateGroups>
-            		<Grid.RowDefinitions>
+                <Grid x:Name="grid" d:DesignWidth="400" d:DesignHeight="300" d:DataContext="{d:DesignInstance Type={x:Type vm:StreamViewModel}, IsDesignTimeCreatable=True}">
+                    <VisualStateManager.VisualStateGroups>
+                        <VisualStateGroup x:Name="SessionStateGroup">
+                            <VisualState x:Name="Disconnected">
+                                <Storyboard>
+                                    <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Visibility)" Storyboard.TargetName="reconnectButton">
+                                        <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Visible}"/>
+                                    </ObjectAnimationUsingKeyFrames>
+                                    <BooleanAnimationUsingKeyFrames Storyboard.TargetProperty="(ProgressBar.IsIndeterminate)" Storyboard.TargetName="metroProgressBar">
+                                        <DiscreteBooleanKeyFrame KeyTime="0" Value="False"/>
+                                    </BooleanAnimationUsingKeyFrames>
+                                    <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Opacity)" Storyboard.TargetName="grid">
+                                        <EasingDoubleKeyFrame KeyTime="0" Value="1"/>
+                                    </DoubleAnimationUsingKeyFrames>
+                                    <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Visibility)" Storyboard.TargetName="border">
+                                        <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Collapsed}"/>
+                                    </ObjectAnimationUsingKeyFrames>
+                                    <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Opacity)" Storyboard.TargetName="metroProgressBar">
+                                        <EasingDoubleKeyFrame KeyTime="0" Value="1"/>
+                                    </DoubleAnimationUsingKeyFrames>
+                                    <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Visibility)" Storyboard.TargetName="listBox">
+                                        <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Visible}"/>
+                                    </ObjectAnimationUsingKeyFrames>
+                                    <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Opacity)" Storyboard.TargetName="listBox">
+                                        <EasingDoubleKeyFrame KeyTime="0" Value="1"/>
+                                    </DoubleAnimationUsingKeyFrames>
+                                </Storyboard>
+                            </VisualState>
+                            <VisualState x:Name="Initializing">
+                                <Storyboard>
+                                    <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Visibility)" Storyboard.TargetName="border">
+                                        <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Visible}"/>
+                                    </ObjectAnimationUsingKeyFrames>
+                                    <BooleanAnimationUsingKeyFrames Storyboard.TargetProperty="(ProgressBar.IsIndeterminate)" Storyboard.TargetName="metroProgressBar">
+                                        <DiscreteBooleanKeyFrame KeyTime="0" Value="False"/>
+                                        <DiscreteBooleanKeyFrame KeyTime="0:0:0.3" Value="True"/>
+                                    </BooleanAnimationUsingKeyFrames>
+                                    <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Opacity)" Storyboard.TargetName="metroProgressBar">
+                                        <EasingDoubleKeyFrame KeyTime="0:0:0.3" Value="0"/>
+                                        <EasingDoubleKeyFrame KeyTime="0:0:0.6" Value="1"/>
+                                    </DoubleAnimationUsingKeyFrames>
+                                    <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Visibility)" Storyboard.TargetName="reconnectButton">
+                                        <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Collapsed}"/>
+                                    </ObjectAnimationUsingKeyFrames>
+                                    <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Opacity)" Storyboard.TargetName="listBox">
+                                        <EasingDoubleKeyFrame KeyTime="0" Value="1"/>
+                                        <EasingDoubleKeyFrame KeyTime="0:0:0.3" Value="0"/>
+                                    </DoubleAnimationUsingKeyFrames>
+                                </Storyboard>
+                            </VisualState>
+                            <VisualState x:Name="Connected">
+                                <Storyboard>
+                                    <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Visibility)" Storyboard.TargetName="reconnectButton">
+                                        <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Collapsed}"/>
+                                    </ObjectAnimationUsingKeyFrames>
+                                    <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Visibility)" Storyboard.TargetName="border">
+                                        <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Collapsed}"/>
+                                    </ObjectAnimationUsingKeyFrames>
+                                    <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Opacity)" Storyboard.TargetName="metroProgressBar">
+                                        <EasingDoubleKeyFrame KeyTime="0" Value="1"/>
+                                    </DoubleAnimationUsingKeyFrames>
+                                    <BooleanAnimationUsingKeyFrames Storyboard.TargetProperty="(ProgressBar.IsIndeterminate)" Storyboard.TargetName="metroProgressBar">
+                                        <DiscreteBooleanKeyFrame KeyTime="0" Value="False"/>
+                                    </BooleanAnimationUsingKeyFrames>
+                                    <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Opacity)" Storyboard.TargetName="listBox">
+                                        <EasingDoubleKeyFrame KeyTime="0" Value="0"/>
+                                        <EasingDoubleKeyFrame KeyTime="0:0:0.3" Value="1"/>
+                                    </DoubleAnimationUsingKeyFrames>
+                                </Storyboard>
+                            </VisualState>
+                        </VisualStateGroup>
+                        <VisualStateGroup x:Name="StreamStateGroup">
+                            <VisualState x:Name="Streaming"/>
+                            <VisualState x:Name="Pausing"/>
+                        </VisualStateGroup>
+                    </VisualStateManager.VisualStateGroups>
+                    <i:Interaction.Triggers>
+                        <ctl:NeoLivetDataTrigger Binding="{Binding Status}" Value="UnLoaded">
+                            <ei:GoToStateAction StateName="Disconnected"/>
+                        </ctl:NeoLivetDataTrigger>
+                        <ctl:NeoLivetDataTrigger Binding="{Binding Status}" Value="Initing">
+                            <ei:GoToStateAction StateName="Initializing"/>
+                        </ctl:NeoLivetDataTrigger>
+                        <ctl:NeoLivetDataTrigger Binding="{Binding Status}" Value="Connected">
+                            <ei:GoToStateAction StateName="Connected"/>
+                        </ctl:NeoLivetDataTrigger>
+                    </i:Interaction.Triggers>
+                    <Grid.RowDefinitions>
             			<RowDefinition Height="Auto"/>
             			<RowDefinition Height="*"/>
             		</Grid.RowDefinitions>
-            		<Button x:Name="button" Padding="10,6" BorderBrush="Orange" Foreground="DarkOrange" Content="ストリームの受信に失敗しました。再接続する場合はここを押してください。" BorderThickness="0,1,0,1" VerticalAlignment="Center" Command="{Binding ReconnectCommand}" Style="{DynamicResource iconButtonStyle}" Grid.Row="0" Margin="5,0" />
-                    <ListBox x:Name="listBox" Focusable="False" Background="Transparent"
-            			     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                             ScrollViewer.VerticalScrollBarVisibility="Visible"
-            			     VirtualizingPanel.IsVirtualizing="True"
-            			     VirtualizingPanel.VirtualizationMode="Standard"
-            			     VirtualizingPanel.ScrollUnit="Pixel"
-                             VirtualizingPanel.CacheLength="0,0"
-            			     BorderThickness="0" ItemsSource="{Binding Activities}"
-            			     ItemContainerStyle="{DynamicResource cardStyle}" Grid.RowSpan="1" Grid.Row="1">
-                        <ListBox.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <VirtualizingStackPanel IsItemsHost="True">
-                                    <i:Interaction.Behaviors>
-                                        <ctl:ScrollBehavior VerticalOffset="{Binding ScrollOffset, Mode=OneWayToSource}" />
-                                    </i:Interaction.Behaviors>
-                                </VirtualizingStackPanel>
-                            </ItemsPanelTemplate>
-                        </ListBox.ItemsPanel>
-                    </ListBox>
+            		<Button x:Name="reconnectButton" Padding="10,6" BorderBrush="Orange" Foreground="DarkOrange" Content="ストリームの受信に失敗しました。再接続する場合はここを押してください。" BorderThickness="0,1,0,1" VerticalAlignment="Center" Command="{Binding ReconnectCommand}" Style="{DynamicResource iconButtonStyle}" Grid.Row="0" Margin="5,0" />
+            		<ListBox x:Name="listBox" Focusable="False" Background="Transparent"
+            			ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+            			ScrollViewer.VerticalScrollBarVisibility="Visible"
+            			VirtualizingPanel.IsVirtualizing="True"
+            			VirtualizingPanel.VirtualizationMode="Standard"
+            			VirtualizingPanel.ScrollUnit="Pixel"
+            			VirtualizingPanel.CacheLength="0,0"
+            			BorderThickness="0" ItemsSource="{Binding Activities}"
+            			ItemContainerStyle="{DynamicResource cardStyle}" Grid.RowSpan="1" Grid.Row="1">
+            			<ListBox.ItemsPanel>
+            				<ItemsPanelTemplate>
+            					<VirtualizingStackPanel IsItemsHost="True">
+            						<i:Interaction.Behaviors>
+            							<ctl:ScrollBehavior VerticalOffset="{Binding ScrollOffset, Mode=OneWayToSource}" />
+            						</i:Interaction.Behaviors>
+            					</VirtualizingStackPanel>
+            				</ItemsPanelTemplate>
+            			</ListBox.ItemsPanel>
+            		</ListBox>
             		<Border x:Name="border" HorizontalAlignment="Stretch" Grid.RowSpan="2" VerticalAlignment="Stretch" >
-            			<controls:MetroProgressBar x:Name="metroProgressBar" VerticalAlignment="Top" IsIndeterminate="True" Foreground="{StaticResource AccentColorBrush}" />
+            			<metro:MetroProgressBar x:Name="metroProgressBar" VerticalAlignment="Top" IsIndeterminate="True" Foreground="{StaticResource AccentColorBrush}" />
             		</Border>
             	</Grid>
             </DataTemplate>
@@ -383,7 +393,7 @@
                              VirtualizingPanel.CacheLength="0,0"
                              ItemsSource="{Binding Items}"
             			     ItemContainerStyle="{DynamicResource cardStyle}" />
-                    <controls:MetroProgressBar x:Name="metroProgressBar" HorizontalAlignment="Stretch" VerticalAlignment="Top" Foreground="{StaticResource AccentColorBrush}"/>
+                    <metro:MetroProgressBar x:Name="metroProgressBar" HorizontalAlignment="Stretch" VerticalAlignment="Top" Foreground="{StaticResource AccentColorBrush}"/>
                     <TextBlock HorizontalAlignment="Center" TextWrapping="Wrap" Text="All caught up!" VerticalAlignment="Center" FontSize="18" Visibility="{Binding NoItem, Converter={StaticResource booleanToVisibilityConverter}}" Margin="0,-100,0,0" Foreground="LightGray"/>
                 </Grid>
             </DataTemplate>
@@ -391,7 +401,7 @@
                 <DataTemplate.Resources>
                     <ctl:IsExpandCommentCountToStringConverter x:Key="commentExpanderHeaderConverter" />
                 </DataTemplate.Resources>
-                <Grid Margin="10" d:DataContext="{d:DesignData /SampleData/ActivityViewModelSampleData.xaml}">
+                <Grid Margin="10" d:DataContext="{d:DesignInstance Type={x:Type vm:ActivityViewModel}, IsDesignTimeCreatable=True}">
                     <i:Interaction.Behaviors>
                         <ctl:FixedDataStateBehavior Binding="{Binding ShareBoxStatus, Mode=OneWay}" Value="Deactive" TrueState="ShareBoxDeactive" FalseState="ShareBoxActive"/>
                         <ctl:FixedDataStateBehavior Binding="{Binding ShareBoxStatus, Mode=OneWay}" Value="Sending" TrueState="ShareBoxBusy" FalseState="ShareBoxIddle"/>
@@ -493,7 +503,7 @@
                                             </MultiBinding>
                                         </TextBlock.Text>
                                     </TextBlock>
-                                    <controls:ProgressRing IsActive="{Binding IsLoadingCommentList}" Width="22" Height="22" HorizontalAlignment="Right" />
+                                    <metro:ProgressRing IsActive="{Binding IsLoadingCommentList}" Width="22" Height="22" HorizontalAlignment="Right" />
                                 </Grid>
                             </ToggleButton>
                         </Border>
@@ -533,7 +543,7 @@
                 </Grid>
             </DataTemplate>
             <DataTemplate DataType="{x:Type vm:CommentViewModel}">
-                <Border BorderBrush="LightGray" BorderThickness="0,0,0,1" Padding="0,5,5,5" d:DataContext="{d:DesignData /SampleData/CommentViewModelSampleData.xaml}">
+                <Border BorderBrush="LightGray" BorderThickness="0,0,0,1" Padding="0,5,5,5" d:DataContext="{d:DesignInstance Type={x:Type vm:CommentViewModel}, IsDesignTimeCreatable=True}">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal">
                             <Image Width="25" Height="25" SnapsToDevicePixels="True" Source="{Binding ActorIcon}" />
@@ -554,7 +564,7 @@
                 </Border>
             </DataTemplate>
             <DataTemplate DataType="{x:Type vm:AttachedLinkViewModel}">
-                <Border BorderBrush="LightGray" BorderThickness="0,1,0,0" Margin="0,0,0,5" Padding="0,8,0,0" d:DataContext="{d:DesignData /SampleData/AttachedLinkViewModelSampleData.xaml}" d:DesignWidth="300" d:DesignHeight="120">
+                <Border BorderBrush="LightGray" BorderThickness="0,1,0,0" Margin="0,0,0,5" Padding="0,8,0,0" d:DesignWidth="300" d:DesignHeight="120">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="auto" />
@@ -577,7 +587,7 @@
                 </Border>
             </DataTemplate>
             <DataTemplate DataType="{x:Type vm:AttachedYouTubeViewModel}">
-                <Grid Margin="0,0,0,5" Background="Black" Cursor="Hand" d:DataContext="{d:DesignData /SampleData/AttachedLinkViewModelSampleData.xaml}" d:DesignWidth="530" d:DesignHeight="300">
+                <Grid Margin="0,0,0,5" Background="Black" Cursor="Hand" d:DesignWidth="530" d:DesignHeight="300">
                     <i:Interaction.Triggers>
                         <i:EventTrigger EventName="MouseLeftButtonDown">
                             <ei:LaunchUriOrFileAction Path="{Binding AncourUrl}" />
@@ -674,7 +684,7 @@
                         </DoubleAnimationUsingKeyFrames>
                     </Storyboard>
                 </DataTemplate.Resources>
-                <Grid d:DesignWidth="550" d:DesignHeight="300" Background="Black" ClipToBounds="True" Margin="0,0,0,5" d:DataContext="{d:DesignData /SampleData/AttachedAlbumViewModelSampleData.xaml}">
+                <Grid d:DesignWidth="550" d:DesignHeight="300" Background="Black" ClipToBounds="True" Margin="0,0,0,5">
                     <Image x:Name="image" MaxWidth="{Binding Width}" MaxHeight="{Binding Height}" Source="{Binding LargeImage}" Cursor="Hand" >
                     	<i:Interaction.Triggers>
                     		<i:EventTrigger EventName="MouseLeftButtonDown">
@@ -740,7 +750,7 @@
                 </Border>
             </DataTemplate>
             <DataTemplate DataType="{x:Type vm:NotificationWithActivityViewModel}">
-                <StackPanel x:Name="stackPanel" Margin="10" d:DataContext="{d:DesignData /SampleData/NotificationWithActivityViewModelSampleData.xaml}" d:DesignWidth="400" d:DesignHeight="300">
+                <StackPanel x:Name="stackPanel" Margin="10" d:DesignWidth="400" d:DesignHeight="300">
                     <StackPanel.Resources>
                         <Storyboard x:Key="feedinAnimeStoryboard">
             			<DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Opacity)" Storyboard.TargetName="stackPanel">
@@ -772,7 +782,7 @@
                 </StackPanel>
             </DataTemplate>
             <DataTemplate DataType="{x:Type vm:NotificationWithProfileViewModel}">
-                <StackPanel x:Name="border" Margin="10" d:DataContext="{d:DesignData /SampleData/NotificationWithProfileViewModelSampleData.xaml}" d:DesignWidth="360" d:DesignHeight="720">
+                <StackPanel x:Name="border" Margin="10" d:DesignWidth="360" d:DesignHeight="720">
             	    <StackPanel.Resources>
             			<Storyboard x:Key="feedinAnimeStoryboard">
             				<DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Opacity)" Storyboard.TargetName="border">
@@ -800,7 +810,7 @@
             	</StackPanel>
             </DataTemplate>
             <DataTemplate DataType="{x:Type vm:OtherTypeNotificationViewModel}">
-                <Grid x:Name="border" Margin="10" d:DataContext="{d:DesignData /SampleData/OtherTypeNotificationViewModelSampleData.xaml}">
+                <Grid x:Name="border" Margin="10">
             		<Grid.Resources>
             			<Storyboard x:Key="feedinAnimeStoryboard">
             				<DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Opacity)" Storyboard.TargetName="border">
@@ -821,7 +831,7 @@
             				<ei:ControlStoryboardAction Storyboard="{StaticResource feedinAnimeStoryboard}"/>
             			</i:EventTrigger>
             		</i:Interaction.Triggers>
-            		<TextBlock x:Name="textBlock" Foreground="Gray" Text="{Binding Message}"><Run Text="AAAAAA"/></TextBlock>
+                    <TextBlock x:Name="textBlock" Foreground="Gray" Text="{Binding Message}" />
             	</Grid>
             </DataTemplate>
             <DataTemplate DataType="{x:Type vm:ProfileRegisterViewModel}">
@@ -829,7 +839,7 @@
                     <Grid>
                         <StackPanel Margin="0">
                             <TextBlock Margin="10,5,5,3" Text="{Binding Name}" />
-                            <Rectangle Height="65" Fill="Black" />
+                            <Rectangle Height="65" Fill="LightGray" />
                             <TextBlock Margin="10,5,5,8" Text="x人の共通の知り合い" />
                         </StackPanel>
                         <StackPanel HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,10,10,10">
@@ -852,12 +862,17 @@
             </DataTemplate>
         </ResourceDictionary>
     </Window.Resources>
-    <controls:MetroWindow.Flyouts>
-        <controls:FlyoutsControl>
-            <controls:Flyout Header="Account" Background="Black" Foreground="White" IsOpen="{Binding IsAccountSelectorMode}" Position="Right" ContentTemplate="{DynamicResource accountListTemplate}" />
-        </controls:FlyoutsControl>
-    </controls:MetroWindow.Flyouts>
-    <Grid d:DataContext="{d:DesignData /SampleData/MainViewModelSampleData.xaml}">
-        <TabControl ItemsSource="{Binding Pages}" SelectedIndex="{Binding SelectedPageIndex, Mode=OneWay}" Style="{StaticResource pageSwitcherStyle}" ItemContainerStyle="{StaticResource accountStyle}" />
+    <metro:MetroWindow.Flyouts>
+        <metro:FlyoutsControl>
+            <metro:Flyout Header="Account" Background="Black" Foreground="White" IsOpen="{Binding IsAccountSelectorMode}" Position="Right" ContentTemplate="{DynamicResource accountListTemplate}" />
+        </metro:FlyoutsControl>
+    </metro:MetroWindow.Flyouts>
+    <Grid>
+        <i:Interaction.Triggers>
+            <livet:InteractionMessageTrigger Messenger="{Binding Messenger}" MessageKey="Main/Dialog">
+                <ctl:MetroDialogMessageAction />
+            </livet:InteractionMessageTrigger>
+        </i:Interaction.Triggers>
+        <TabControl ItemsSource="{Binding Accounts}" SelectedIndex="{Binding SelectedAccountIndex, Mode=OneWay}" Style="{StaticResource pageSwitcherStyle}" ItemContainerStyle="{StaticResource accountStyle}" />
     </Grid>
-</controls:MetroWindow>
+</metro:MetroWindow>
