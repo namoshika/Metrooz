@@ -152,7 +152,6 @@
     <Compile Include="ViewModels\Notification\NotificationViewModel.cs" />
     <Compile Include="ViewModels\Notification\NotificationWithProfileViewModel.cs" />
     <Compile Include="ViewModels\Notification\NotificationWithActivityViewModel.cs" />
-    <Compile Include="ViewModels\ObservableCollectionEx.cs" />
     <Compile Include="Models\AccountManager.cs" />
     <Compile Include="Models\Stream\Activity.cs" />
     <Compile Include="Models\Account.cs" />

@@ -1,7 +1,6 @@
 ﻿using Livet;
 using Livet.EventListeners;
 using Livet.Commands;
-using SunokoLibrary.Collections.ObjectModel;
 using SunokoLibrary.Web.GooglePlus;
 using System;
 using System.Collections.Generic;

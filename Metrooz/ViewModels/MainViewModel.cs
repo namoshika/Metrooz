@@ -2,7 +2,6 @@
 using Livet.Messaging;
 using MahApps.Metro.Controls.Dialogs;
 using SunokoLibrary.Web.GooglePlus;
-using SunokoLibrary.Collections.ObjectModel;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
