@@ -1,4 +1,10 @@
-﻿using System.Windows;
+﻿/*
+ * このソースコードは下記のプロジェクトLivetから拝借したものです。
+ * Livet Copyright (c) 2010-2011 Livet Project
+ * Livet is provided with zlib/libpng license.
+ * https://github.com/ugaya40/Livet
+ */
+using System.Windows;
 
 namespace Metrooz.Controls
 {
