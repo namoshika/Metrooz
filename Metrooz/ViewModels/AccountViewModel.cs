@@ -135,7 +135,7 @@ namespace Metrooz.ViewModels
             try
             {
                 await _syncerActivities.WaitAsync();
-                if (IsActive == false)
+                if (_manager.Accounts.IndexOf(this) != _manager.SelectedAccountIndex)
                     return;
 
                 IsLoading = true;
