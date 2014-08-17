@@ -48,7 +48,7 @@ namespace Metrooz.ViewModels
             }
             else
             {
-                _selectedAccountIndex = -1;
+                _selectedAccountIndex = int.MinValue;
                 _isAccountSelectorMode = false;
                 _noSelectableAccount = false;
                 _accountManagerModel = AccountManager.Current;
@@ -56,7 +56,8 @@ namespace Metrooz.ViewModels
                     _accountManagerModel.Accounts, model => new AccountViewModel(model, this), App.Current.Dispatcher));
             }
         }
-        AccountManager _accountManagerModel;
+        readonly object lockObj_selectedIndex = new object();
+        readonly AccountManager _accountManagerModel;
         bool _isAccountSelectorMode;
         bool _noSelectableAccount;
         int _selectedAccountIndex;
@@ -66,10 +67,16 @@ namespace Metrooz.ViewModels
             get { return _selectedAccountIndex; }
             set
             {
-                var oldVal = _selectedAccountIndex;
-                var newVal = value;
-                _selectedAccountIndex = value;
-                RaisePropertyChanged(() => SelectedAccountIndex);
+                int oldVal, newVal;
+                lock (lockObj_selectedIndex)
+                {
+                    oldVal = _selectedAccountIndex;
+                    newVal = value;
+                    if (newVal == oldVal)
+                        return;
+                    _selectedAccountIndex = value;
+                }
+                RaisePropertyChanged();
 
                 //選択アカウントのアクティブ化
                 if (oldVal >= 0 && oldVal < Accounts.Count)

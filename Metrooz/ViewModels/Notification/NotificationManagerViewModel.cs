@@ -27,6 +27,7 @@ namespace Metrooz.ViewModels
             Items = new DispatcherCollection<NotificationStreamViewModel>(App.Current.Dispatcher);
             CompositeDisposable.Add(_modelPropChangedEventListener = new PropertyChangedEventListener(model));
             CompositeDisposable.Add(_thisPropChangedEventListener = new PropertyChangedEventListener(this));
+            CompositeDisposable.Add(Observable.Interval(TimeSpan.FromSeconds(60)).Subscribe(Interval_Fired));
 
             _modelPropChangedEventListener.Add(() => model.UnreadItemCount, UnreadItemCount_PropertyChanged);
             _thisPropChangedEventListener.Add(() => IsActive, IsActive_PropertyChanged);
@@ -73,8 +74,11 @@ namespace Metrooz.ViewModels
             get { return _selectedIndex; }
             set
             {
+                Task tsk;
                 _selectedIndex = value;
                 RaisePropertyChanged(() => SelectedIndex);
+                if (_selectedIndex >= 0 && _selectedIndex < Items.Count)
+                    tsk = Items[_selectedIndex].Update();
             }
         }
 
@@ -111,9 +115,15 @@ namespace Metrooz.ViewModels
         {
             UnreadItemCount = _managerModel.UnreadItemCount;
             ExistUnreadItem = _managerModel.UnreadItemCount > 0;
-            if (_isActive == false || Items[0].IsActive == false)
+            if (_isActive == false || _selectedIndex != 0)
                 return;
             await Items[0].Update();
+        }
+        async void Interval_Fired(long count)
+        {
+            if (_isActive == false)
+                return;
+            await Task.Run(async () => await Items[SelectedIndex].Update());
         }
     }
     public class NotificationStreamViewModel : ViewModel
@@ -124,19 +134,16 @@ namespace Metrooz.ViewModels
             Name = name;
             CompositeDisposable.Add(_modelPropChangedEventListener = new PropertyChangedEventListener(model));
             CompositeDisposable.Add(_thisPropChangedEventListener = new PropertyChangedEventListener(this));
-            CompositeDisposable.Add(Observable.Interval(TimeSpan.FromSeconds(60)).Subscribe(Interval_Fired));
             CompositeDisposable.Add(Items = ViewModelHelper.CreateReadOnlyDispatcherCollection(
                 _streamModel.Items, item => WrapViewModel(item, DateTime.UtcNow), App.Current.Dispatcher));
-
             _modelPropChangedEventListener.Add(() => model.Status, Status_ChangedProperty);
-            _thisPropChangedEventListener.Add(() => IsActive, IsActive_PropertyChanged);
         }
         readonly PropertyChangedEventListener _modelPropChangedEventListener;
         readonly PropertyChangedEventListener _thisPropChangedEventListener;
         readonly SemaphoreSlim _syncerItems = new SemaphoreSlim(1);
         NotificationStream _streamModel;
         ReadOnlyDispatcherCollection<NotificationViewModel> _items;
-        int _isActive, _isLoading, _noItem;
+        bool _isLoading, _noItem;
 
         public string Name { get; private set; }
         public ReadOnlyDispatcherCollection<NotificationViewModel> Items
@@ -148,30 +155,21 @@ namespace Metrooz.ViewModels
                 RaisePropertyChanged(() => Items);
             }
         }
-        public bool IsActive
-        {
-            get { return _isActive == 1; }
-            set
-            {
-                _isActive = value ? 1 : 0;
-                RaisePropertyChanged(() => IsActive);
-            }
-        }
         public bool IsLoading
         {
-            get { return _isLoading == 1; }
+            get { return _isLoading; }
             set
             {
-                _isLoading = value ? 1 : 0;
+                _isLoading = value;
                 RaisePropertyChanged(() => IsLoading);
             }
         }
         public bool NoItem
         {
-            get { return _noItem == 1; }
+            get { return _noItem; }
             set
             {
-                _noItem = value ? 1 : 0;
+                _noItem = value;
                 RaisePropertyChanged(() => NoItem);
             }
         }
@@ -199,18 +197,6 @@ namespace Metrooz.ViewModels
             throw new ArgumentException("引数itemに適用できるVMが存在しません。");
         }
 
-        async void IsActive_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
-        {
-            if (IsActive == false)
-                return;
-            await Task.Run(async () => await Update());
-        }
-        async void Interval_Fired(long count)
-        {
-            if (IsActive == false)
-                return;
-            await Task.Run(async () => await Update());
-        }
         void Status_ChangedProperty(object sender, EventArgs e)
         { IsLoading = _streamModel.Status == StreamStateType.Initing; }
     }

@@ -7,6 +7,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows.Threading;
 
 namespace Metrooz.ViewModels
@@ -34,6 +35,7 @@ namespace Metrooz.ViewModels
                 new ObservableCollection<StreamViewModel>(
                     Enumerable.Range(0, 3).Select(idx => new StreamViewModel())), App.Current.Dispatcher));
         }
+        readonly object lockObj_selectedIndex = new object();
         readonly PropertyChangedEventListener _thisPropChangedEventListener;
         readonly Account _accountModel;
         readonly StreamManager _streamManagerModel;
@@ -55,8 +57,19 @@ namespace Metrooz.ViewModels
             get { return _selectedIndex; }
             set
             {
-                _selectedIndex = value;
-                RaisePropertyChanged(() => SelectedIndex);
+                lock (lockObj_selectedIndex)
+                {
+                    var newValue = value;
+                    var oldValue = _selectedIndex;
+                    if (newValue == oldValue)
+                        return;
+                    _selectedIndex = value;
+                    if (oldValue >= 0 && oldValue < Items.Count)
+                        Task.Run(() => Items[oldValue].Activate(false));
+                    RaisePropertyChanged(() => SelectedIndex);
+                    if (newValue >= 0 && newValue < Items.Count)
+                        Task.Run(() => Items[newValue].Activate(true));
+                }
             }
         }
         public ReadOnlyDispatcherCollection<StreamViewModel> Items { get { return _streams; } }

@@ -28,22 +28,21 @@ namespace Metrooz.ViewModels
             ResumeButton = new ResumeButtonViewModel() { ClickCommand = ReconnectCommand };
             CompositeDisposable.Add(_modelPropChangedEventListener = new PropertyChangedEventListener(circle));
             CompositeDisposable.Add(_thisPropChangedEventListener = new PropertyChangedEventListener(this));
-            CompositeDisposable.Add(Activities = ViewModelHelper.CreateReadOnlyDispatcherCollection<Activity, ViewModel>(
+            CompositeDisposable.Add(_activities = ViewModelHelper.CreateReadOnlyDispatcherCollection<Activity, ViewModel>(
                 _circleModel.Activities, item => new ActivityViewModel(item, _isActive), App.Current.Dispatcher));
 
             _modelPropChangedEventListener.Add(() => circle.Status, Model_Status_PropertyChanged);
             _modelPropChangedEventListener.Add(() => circle.ChangedActivityCount, Model_ChangedActivityCount_PropertyChanged);
-            _thisPropChangedEventListener.Add(() => IsActive, IsActive_PropertyChanged);
             _thisPropChangedEventListener.Add(() => ScrollOffset, ScrollOffset_PropertyChanged);
         }
         public StreamViewModel()
         {
             _name = "StreamName";
             _status = StreamStateType.UnLoaded;
-            CompositeDisposable.Add(Activities = new ReadOnlyDispatcherCollection<ViewModel>(
+            CompositeDisposable.Add((IDisposable)(Items = new ReadOnlyDispatcherCollection<ViewModel>(
                 new DispatcherCollection<ViewModel>(
                 new ObservableCollection<ViewModel>(
-                    Enumerable.Range(0, 3).Select(idx => new ActivityViewModel())), App.Current.Dispatcher)));
+                    Enumerable.Range(0, 3).Select(idx => new ActivityViewModel())), App.Current.Dispatcher))));
             ResumeButton = new ResumeButtonViewModel();
         }
         const double SCROLL_OFFSET_PAUSE_STREAM = 150;
@@ -51,20 +50,13 @@ namespace Metrooz.ViewModels
         readonly PropertyChangedEventListener _thisPropChangedEventListener;
         readonly System.Threading.SemaphoreSlim _activitiesSemaph = new System.Threading.SemaphoreSlim(1, 1);
         readonly Stream _circleModel;
+        readonly ReadOnlyDispatcherCollection<ViewModel> _activities;
         bool _isActive;
         double _scrollOffset;
         string _name;
         StreamStateType _status;
+        ICollection<ViewModel> _items;
 
-        public bool IsActive
-        {
-            get { return _isActive; }
-            set
-            {
-                _isActive = value;
-                RaisePropertyChanged(() => IsActive);
-            }
-        }
         public double ScrollOffset
         {
             get { return _scrollOffset; }
@@ -92,59 +84,54 @@ namespace Metrooz.ViewModels
                 RaisePropertyChanged();
             }
         }
-        public ReadOnlyDispatcherCollection<ViewModel> Activities { get; private set; }
+        public ICollection<ViewModel> Items
+        {
+            get { return _items; }
+            set
+            {
+                if (_items == value)
+                    return;
+                _items = value;
+                RaisePropertyChanged();
+            }
+        }
         public ResumeButtonViewModel ResumeButton { get; private set; }
         public ICommand ReconnectCommand { get; private set; }
         public ICommand ResumeCommand { get; private set; }
 
-        async void Activate()
-        {
-            await Task.Run(async () =>
-                {
-                    try
-                    {
-                        await _activitiesSemaph.WaitAsync().ConfigureAwait(false);
-                        await App.Current.Dispatcher.InvokeAsync(async () =>
-                            {
-                                //Activitiesが変更されるのはDispatcher上なので、こちらもDispatcher上で
-                                //処理する事で列挙中にActivities変更に出くわさないようにする。
-                                if (Activities.Count > 0)
-                                    await Task.Factory.ContinueWhenAll(Activities.OfType<ActivityViewModel>()
-                                        .Select(item => item.Refresh(IsActive)).ToArray(), tsks => { });
-                            });
-                        if (IsActive == false)
-                            return;
-                        switch (_circleModel.Status)
-                        {
-                            case StreamStateType.UnLoaded:
-                            case StreamStateType.Paused:
-                                await _circleModel.Activate();
-                                break;
-                        }
-                    }
-                    finally
-                    { _activitiesSemaph.Release(); }
-                });
-        }
-        protected async override void Dispose(bool disposing)
+        public async Task Activate(bool isActive)
         {
             try
             {
                 await _activitiesSemaph.WaitAsync().ConfigureAwait(false);
-                if (Activities != null)
-                    Activities.Dispose();
-                base.Dispose(disposing);
+                await App.Current.Dispatcher.InvokeAsync(async () =>
+                {
+                    //Activitiesが変更されるのはDispatcher上なので、こちらもDispatcher上で
+                    //処理する事で列挙中にActivities変更に出くわさないようにする。
+                    if (Items.Count > 0)
+                        await Task.Factory.ContinueWhenAll(Items.OfType<ActivityViewModel>()
+                            .Select(item => Task.Run(() => item.Refresh(isActive))).ToArray(), tsks => { });
+                });
+                _isActive = isActive;
+                if (isActive == false)
+                    return;
+                switch (_circleModel.Status)
+                {
+                    case StreamStateType.UnLoaded:
+                    case StreamStateType.Paused:
+                        await _circleModel.Activate();
+                        break;
+                }
             }
             finally
             { _activitiesSemaph.Release(); }
         }
-
-        async void IsActive_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        protected override void Dispose(bool disposing)
         {
-            if (ViewModelUtility.IsDesginMode)
-                return;
-            await Task.Factory.StartNew(Activate);
+            _isActive = false;
+            base.Dispose(disposing);
         }
+
         async void ScrollOffset_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             if (ViewModelUtility.IsDesginMode)
@@ -156,15 +143,20 @@ namespace Metrooz.ViewModels
         }
         void Model_Status_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            Status = _circleModel.Status;
-            if (Status == StreamStateType.Paused)
-                Activities.SourceCollection.Insert(0, ResumeButton);
+            var value = _circleModel.Status;
+            if (value == StreamStateType.Paused)
+            {
+                var timeline = new List<ViewModel>(_activities);
+                timeline.Insert(0, ResumeButton);
+                Items = timeline;
+            }
             else
-                Activities.SourceCollection.Remove(ResumeButton);
+                Items = _activities;
+            Status = value;
         }
         void Model_ChangedActivityCount_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         { ResumeButton.UnreadActivityCount = _circleModel.ChangedActivityCount; }
-        async void ReconnectCommand_Executed() { await Task.Factory.StartNew(Activate); }
+        async void ReconnectCommand_Executed() { await Task.Run(async () => await Activate(true)); }
     }
     public class ResumeButtonViewModel : ViewModel
     {

@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Reactive;
+using System.Reactive.Linq;
 using System.Windows.Media;
 using System.Windows.Threading;
 
@@ -18,8 +20,14 @@ namespace Metrooz.ViewModels
         public CommentViewModel(Comment model, bool isActive)
         {
             _model = model;
-            _model.Refreshed += model_Refreshed;
-            var tsk = Refresh(isActive);
+            _isActive = isActive;
+            CompositeDisposable.Add(
+                Observable.Merge(
+                    Observable.Return(Unit.Default),
+                    Observable.FromEventPattern<EventHandler, EventArgs>(
+                        handler => _model.Refreshed += handler,
+                        handler => _model.Refreshed -= handler).Select(info => Unit.Default))
+                    .Subscribe(unit => Task.Run(() => Refresh(_isActive))));
         }
         public CommentViewModel()
         {
@@ -84,13 +92,5 @@ namespace Metrooz.ViewModels
             else
                 ActorIcon = null;
         }
-        protected override void Dispose(bool disposing)
-        {
-            base.Dispose(disposing);
-            _model.Refreshed -= model_Refreshed;
-        }
-        
-        void model_Refreshed(object sender, EventArgs e)
-        { var tsk = Refresh(_isActive); }
     }
 }

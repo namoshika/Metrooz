@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
+using System.Reactive;
+using System.Reactive.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -28,10 +30,15 @@ namespace Metrooz.ViewModels
             _comments.CollectionChanged += _comments_CollectionChanged;
             SendCommentCommand = new ViewModelCommand(SendCommentCommand_Executed);
             CancelCommentCommand = new ViewModelCommand(CancelCommentCommand_Executed);
+            CompositeDisposable.Add(_comments);
             CompositeDisposable.Add(_thisPropChangedEventListener = new PropertyChangedEventListener(this));
-
-            var tsk = Refresh(isActive);
-            _model.Updated += _activity_Refreshed;
+            CompositeDisposable.Add(
+                Observable.Merge(
+                    Observable.Return(Unit.Default),
+                    Observable.FromEventPattern<EventHandler, EventArgs>(
+                        handler => _model.Updated += handler,
+                        handler => _model.Updated -= handler).Select(info => Unit.Default))
+                    .Subscribe(info => Task.Run(() => Refresh(_isActive))));
             _thisPropChangedEventListener.Add(() => IsCheckedCommentsHeader, IsCheckedCommentsHeader_PropertyChanged);
         }
         public ActivityViewModel()
@@ -195,9 +202,26 @@ namespace Metrooz.ViewModels
             try
             {
                 await _activitySemaph.WaitAsync();
-                await _model.CoreInfo.UpdateGetActivityAsync(false, ActivityUpdateApiFlag.GetActivities);
-                if (_model.CoreInfo.PostStatus != PostStatusType.Removed)
+                //下層VMのRefresh()
+                if (_comments.Count > 0)
+                    await App.Current.Dispatcher.InvokeAsync(async () =>
+                    {
+                        //Activitiesが変更されるのはDispatcher上なので、こちらもDispatcher上で
+                        //処理する事で列挙中にActivities変更に出くわさないようにする。
+                        await Task.Factory.ContinueWhenAll(
+                            _comments.Select(item => Task.Run(() => item.Refresh(isActive))).ToArray(), tsks => { });
+                    });
+
+                //Activate処理
+                _isActive = isActive;
+                if (isActive)
                 {
+                    //アクティブ化ならCoreInfoのデータ更新
+                    await _model.CoreInfo.UpdateGetActivityAsync(false, ActivityUpdateApiFlag.GetActivities);
+                    if (_model.CoreInfo.PostStatus == PostStatusType.Removed)
+                        return;
+
+                    //Activityが削除されていなければプロパティ更新する
                     var postDate = TimeZone.CurrentTimeZone.ToLocalTime(_model.CoreInfo.PostDate);
                     ActivityUrl = _model.CoreInfo.PostUrl;
                     CommentLength = _model.CoreInfo.CommentLength;
@@ -205,61 +229,34 @@ namespace Metrooz.ViewModels
                     PostUserName = _model.CoreInfo.PostUser.Name;
                     PostDate = postDate >= DateTime.Today ? postDate.ToString("HH:mm") : postDate.ToString("yyyy/MM/dd");
                     PostContentInline = _model.CoreInfo.ParsedText;
-                    _isActive = isActive;
-                    if (isActive)
+                    ActorIcon = await DataCacheDictionary.DownloadImage(
+                        new Uri(_model.CoreInfo.PostUser.IconImageUrl.Replace("$SIZE_SEGMENT", "s40-c-k").Replace("$SIZE_NUM", "80")));
+                    if (_model.CoreInfo.AttachedContent != null)
+                        AttachedContent = await AttachedContentViewModel.Create(_model.CoreInfo.AttachedContent);
+                }
+                else
+                {
+                    ActorIcon = null;
+                    if (AttachedContent == null)
                     {
-                        ActorIcon = await DataCacheDictionary.DownloadImage(
-                            new Uri(_model.CoreInfo.PostUser.IconImageUrl.Replace("$SIZE_SEGMENT", "s40-c-k").Replace("$SIZE_NUM", "80")));
-                        if (_model.CoreInfo.AttachedContent != null)
-                            AttachedContent = await AttachedContentViewModel.Create(_model.CoreInfo.AttachedContent);
+                        AttachedContent.Dispose();
+                        AttachedContent = null;
                     }
-                    else
-                    {
-                        ActorIcon = null;
-                        if (AttachedContent == null)
-                        {
-                            AttachedContent.Dispose();
-                            AttachedContent = null;
-                        }
-                    }
-                    if (_comments.Count > 0)
-                        await App.Current.Dispatcher.InvokeAsync(async () =>
-                            {
-                                //Activitiesが変更されるのはDispatcher上なので、こちらもDispatcher上で
-                                //処理する事で列挙中にActivities変更に出くわさないようにする。
-                                await Task.Factory.ContinueWhenAll(
-                                    _comments.Select(item => item.Refresh(isActive)).ToArray(), tsks => { });
-                            });
                 }
             }
             catch (FailToOperationException) { }
             finally { _activitySemaph.Release(); }
         }
-        protected async override void Dispose(bool disposing)
+        protected override void Dispose(bool disposing)
         {
-            try
-            {
-                await _activitySemaph.WaitAsync();
-                base.Dispose(disposing);
-                if (_model != null)
-                    _model.Updated -= _activity_Refreshed;
-                if (_comments != null)
-                    _comments.Dispose();
-            }
-            finally { _activitySemaph.Release(); }
+            _isActive = false;
+            base.Dispose(disposing);
         }
 
-        void _activity_Refreshed(object sender, EventArgs e)
-        { var tsk = App.Current.Dispatcher.InvokeAsync(async () => await Refresh(_isActive)); }
-        async void _comments_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        void _comments_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
-            try
-            {
-                await _activitySemaph.WaitAsync();
-                CommentLength = _model.CoreInfo.CommentLength;
-                IsEnableCommentsHeader = _model.CoreInfo.CommentLength > 2;
-            }
-            finally { _activitySemaph.Release(); }
+            CommentLength = _model.CoreInfo.CommentLength;
+            IsEnableCommentsHeader = _model.CoreInfo.CommentLength > 2;
         }
         async void IsCheckedCommentsHeader_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
