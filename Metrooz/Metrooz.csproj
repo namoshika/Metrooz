@@ -42,10 +42,15 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
     <PlatformTarget>AnyCPU</PlatformTarget>
     <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
     <PlatformTarget>AnyCPU</PlatformTarget>
     <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Prefer32Bit>false</Prefer32Bit>
+    <Optimize>true</Optimize>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Livet">
@@ -204,9 +209,9 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\SnkLib.Web.GooglePlus\CookieGetterSharp\CookieGetterSharp\CookieGetterSharp.csproj">
-      <Project>{acb84f0e-b482-46b0-8c29-1fac6c85d622}</Project>
-      <Name>CookieGetterSharp</Name>
+    <ProjectReference Include="..\SnkLib.Web.GooglePlus\CookieGetterSharp\SnkLib.App.CookieGetter\SnkLib.App.CookieGetter.csproj">
+      <Project>{bb3f3039-e8c2-4cb8-9257-59b92f03a87c}</Project>
+      <Name>SnkLib.App.CookieGetter</Name>
     </ProjectReference>
     <ProjectReference Include="..\SnkLib.Web.GooglePlus\SnkLib.MainLibrary\SnkLib.MainLibrary.csproj">
       <Project>{a19c98e5-7048-43e2-98f0-689a3ffe2a82}</Project>

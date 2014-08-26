@@ -1,4 +1,5 @@
-﻿using SunokoLibrary.Web.GooglePlus;
+﻿using SunokoLibrary.Application.Browsers;
+using SunokoLibrary.Web.GooglePlus;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -6,7 +7,6 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Hal.CookieGetterSharp;
 
 namespace Metrooz.Models
 {
@@ -19,8 +19,9 @@ namespace Metrooz.Models
             await Task.WhenAll(Accounts.Select(item => item.Deactivate()).ToArray());
             Accounts.Clear();
 
-            var cookieGetter = CookieGetter.CreateInstance(BrowserType.GoogleChrome);
-            if (cookieGetter.Status.IsAvailable == false)
+            //var cookieGetter = new IEBrowserManager().CreateIEPMCookieGetter();
+            var cookieGetter = new GoogleChromeBrowserManager().CreateCookieImporters().First();
+            if (cookieGetter.IsAvailable == false)
                 return false;
 
             IPlatformClientBuilder[] builders;
